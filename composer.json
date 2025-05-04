@@ -1,0 +1,55 @@
+{
+  "type": "library",
+  "name": "machinateur/twig-block-hash",
+  "description": "A twig implementation/integration of the Shopware 6 IntelliJ plugin's twig template-hash feature.",
+  "keywords": ["twig", "extension", "php", "block-tag", "shopware"],
+  "homepage": "https://github.com/machinateur/twig-block-hash",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "machinateur",
+      "email": "hello@machinateur.dev",
+      "homepage": "https://machinateur.dev/"
+    }
+  ],
+  "minimum-stability": "stable",
+  "require-dev": {
+    "cweagans/composer-patches": "^1.7",
+    "phpunit/phpunit": "^9.5",
+    "shopware/administration": "^6.4",
+    "shopware/core": "^6.4",
+    "shopware/storefront": "^6.4"
+  },
+  "require": {
+    "php": ">=8.2.0",
+    "composer-runtime-api": "*",
+    "machinateur/twig-comment-lexer": "^1.0",
+    "symfony/console": "^7.2",
+    "symfony/finder": "^7.2",
+    "twig/twig": "^3.15"
+  },
+  "autoload": {
+    "psr-4": {
+      "Machinateur\\Shopware\\TwigBlockVersion\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Machinateur\\Shopware\\TwigBlockVersion\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit -c phpunit.xml.dist",
+    "shopware:twig-block:validate": "\\Machinateur\\Shopware\\TwigBlockVersion\\Command\\ShopwareTwigBlockValidateCommand"
+  },
+  "config": {
+    "allow-plugins": {
+      "cweagans/composer-patches": true,
+      "symfony/runtime": true
+    },
+    "sort-packages": true
+  },
+  "extra": {
+    "patches-file": "patches.json"
+  }
+}

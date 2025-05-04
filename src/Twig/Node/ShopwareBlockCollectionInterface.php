@@ -1,0 +1,56 @@
+<?php
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 machinateur
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+declare(strict_types=1);
+
+namespace Machinateur\Shopware\TwigBlockVersion\Twig\Node;
+
+/**
+ * Types:
+ *
+ * - `_Comment`           : An indexed array containing `template`, `parent_template` (nullable), `block` (nullable), `hash` and `version` (nullable) of the target (parent). TODO: Update.
+ * - `_CommentCollection` : An array of `_Block`s by their name.
+ *
+ * @phpstan-import-type _LineRange  from TwigBlockStackInterface
+ *
+ * @phpstan-type _Comment           array{
+ *     'template'        : string,
+ *     'parent_template' : string|null,
+ *     'block'           : string|null,
+ *     'block_lines'     : _LineRange,
+ *     'hash'            : string,
+ *     'version'         : string|null,
+ * }
+ * @phpstan-type _CommentCollection array<_Comment>
+ */
+interface ShopwareBlockCollectionInterface extends TwigTemplateInterface, TwigBlockStackInterface
+{
+    public function addComment(string $comment, ?string $version = null): void;
+
+    /**
+     * @return _CommentCollection
+     */
+    public function getComments(): array;
+}

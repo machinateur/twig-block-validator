@@ -1,0 +1,9 @@
+{
+  "patches": {
+    "shopware/core": {
+      "Remove unsafe database call from `BundleHierarchyBuilder::getAppTemplateNamespaces()` at runtime without `DATABASE_URL`"
+      : "patches/BundleHierarchyBuilder_getAppTemplateNamespaces_no_database.patch"
+
+    }
+  }
+}
