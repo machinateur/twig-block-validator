@@ -1,5 +1,9 @@
 # Twig Block Version Validator for Shopware 6
 
+A twig implementation/integration of the Shopware 6 IntelliJ plugin's twig template-hash feature.
+
+> This project is a proof-of-concept at the moment.
+
 ## Example
 
 ```bash
