@@ -13,7 +13,7 @@ To validate against the dev-dependency `shopware/storefront:^6.4` installed at `
  expecting version `6.7` in the comments in `tests/res/` (`__main__` as default namespace), run:
 
 ```bash
-bin/shopware-beaver shopware:twig-block:validate -t "@Storefront:vendor/shopware/storefront/Resources/views" -c "tests/res/" -r 6.7
+$ bin/shopware-beaver shopware:twig-block:validate -t "@Storefront:vendor/shopware/storefront/Resources/views" -c "tests/res/" -r 6.7
 
  ! [NOTE] Adding namespace "__main__" with paths:                                                                       
 
@@ -80,7 +80,25 @@ Also make sure the bundle is available in the desired environments, usually `dev
 The validation can be performed by calling the CLI or command (``). Here's it's synopsis:
 
 ```
+$ bin/shopware-beaver shopware:twig-block:validate -h
 
+Usage:
+  shopware:twig-block:validate [options]
+
+Options:
+  -t, --template-path=TEMPLATE-PATH        Twig template path to load (multiple values allowed)
+  -c, --validate-path=VALIDATE-PATH        Twig template path to validate (multiple values allowed)
+  -r, --default-version[=DEFAULT-VERSION]  The version number required
+  -h, --help                               Display help for the given command. When no command is given display help for the list command
+      --silent                             Do not output any message
+  -q, --quiet                              Only errors are displayed. All other output is suppressed
+  -V, --version                            Display this application version
+      --ansi|--no-ansi                     Force (or disable --no-ansi) ANSI output
+  -n, --no-interaction                     Do not ask any interactive question
+  -e, --env=ENV                            The Environment name. [default: "dev"]
+      --no-debug                           Switch off debug mode.
+      --profile                            Enables profiling (requires debug).
+  -v|vv|vvv, --verbose                     Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
 ```
 
 ## Standalone
@@ -106,3 +124,7 @@ Find the source archive and prebuilt phar attached to
   - Use profiler or stopwatch
 - Improve independency from shopware version
   - This is needed in order to support standalone
+
+## License
+
+It's MIT.
