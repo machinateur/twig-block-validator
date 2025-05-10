@@ -25,7 +25,7 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockValidator\Tests\Extension;
+namespace Machinateur\TwigBlockValidator\Tests\Extension;
 
 use PHPUnit\Framework\TestCase;
 
