@@ -25,9 +25,8 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockValidator;
+namespace Machinateur\TwigBlockValidator;
 
-use Shopware\Core\Kernel;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Config\Loader\DelegatingLoader;
 use Symfony\Component\Config\Loader\LoaderResolver;
@@ -39,6 +38,10 @@ use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
 class TwigBlockValidatorBundle extends AbstractBundle
 {
+    final public    const VERSION     = 'beta';
+
+    final protected const CONFIG_EXTS = '.{yaml,yml}';
+
     /**
      * @see https://symfony.com/doc/7.2/bundles.html#bundle-directory-structure
      * @see https://symfony.com/doc/4.x/bundles.html#bundle-directory-structure
@@ -59,15 +62,13 @@ class TwigBlockValidatorBundle extends AbstractBundle
 
     /**
      * Looks for service definition files inside the `Resources/config`
-     *  directory and loads either xml or yml files.
+     *  directory and loads `yml`/`yaml` files.
      */
-    private function registerContainerFile(ContainerBuilder $container): void
+    protected function registerContainerFile(ContainerBuilder $container): void
     {
         $fileLocator = new FileLocator($this->getPath());
         $loaderResolver = new LoaderResolver([
-            //new \Symfony\Component\DependencyInjection\Loader\PhpFileLoader($container, $fileLocator),
             new YamlFileLoader($container, $fileLocator),
-            //new \Symfony\Component\DependencyInjection\Loader\XmlFileLoader($container, $fileLocator),
         ]);
         $delegatingLoader = new DelegatingLoader($loaderResolver);
 
@@ -96,29 +97,25 @@ class TwigBlockValidatorBundle extends AbstractBundle
         return $pathArray;
     }
 
-    private function buildDefaultConfig(ContainerBuilder $container): void
+    protected function buildDefaultConfig(ContainerBuilder $container): void
     {
         $locator = new FileLocator('Resources/config');
 
         $resolver = new LoaderResolver([
-            //new \Symfony\Component\DependencyInjection\Loader\XmlFileLoader($container, $locator),
             new YamlFileLoader($container, $locator),
-            //new \Symfony\Component\DependencyInjection\Loader\IniFileLoader($container, $locator),
-            //new \Symfony\Component\DependencyInjection\Loader\PhpFileLoader($container, $locator),
             new GlobFileLoader($container, $locator),
             new DirectoryLoader($container, $locator),
-            //new \Symfony\Component\DependencyInjection\Loader\ClosureLoader($container),
         ]);
 
         $configLoader = new DelegatingLoader($resolver);
 
         $confDir = $this->getPath() . '/Resources/config';
 
-        $configLoader->load($confDir . '/{packages}/*' . Kernel::CONFIG_EXTS, 'glob');
+        $configLoader->load($confDir . '/{packages}/*' . self::CONFIG_EXTS, 'glob');
 
         $env = $container->getParameter('kernel.environment');
         \assert(\is_string($env));
 
-        $configLoader->load($confDir . '/{packages}/' . $env . '/*' . Kernel::CONFIG_EXTS, 'glob');
+        $configLoader->load($confDir . '/{packages}/' . $env . '/*' . self::CONFIG_EXTS, 'glob');
     }
 }

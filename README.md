@@ -7,13 +7,15 @@ This project is a pure PHP implementation and twig integration of the Shopware 6
 
 > This project is a proof-of-concept at the moment.
 
-## Example
+This tool may also be used without Shopware, it supports both.
+
+## Example with Shopware
 
 To validate against the dev-dependency `shopware/storefront:^6.4` installed at `vendor/shopware/storefront/Resources/views`,
  expecting version `6.7` in the comments in `tests/res/` (`__main__` as default namespace), run:
 
 ```bash
-$ bin/shopware-beaver shopware:twig-block:validate -t "@Storefront:vendor/shopware/storefront/Resources/views" -c "tests/res/" -r 6.7
+$ bin/shopware-beaver twig:block:validate -t "@Storefront:vendor/shopware/storefront/Resources/views" -c "tests/res/" -r 6.7
 
  ! [NOTE] Adding namespace "__main__" with paths:                                                                       
 
@@ -59,8 +61,8 @@ In general, the version is recommended, but since this tool is not strictly limi
 
 Requirements:
 - PHP `8.2` or above
-- At least Shopware `6.4`
 - Twig version `^3.15`
+- At least Shopware `6.4` (optional)
 
 In your shopware project or plugin, run:
 
@@ -77,29 +79,46 @@ Also make sure the bundle is available in the desired environments, usually `dev
 
 ## How to validate
 
-The validation can be performed by calling the CLI or command (``). Here's it's synopsis:
+The validation can be performed by calling the CLI or command (`twig:block:validate`).
+ Here's it's synopsis:
 
 ```
-$ bin/shopware-beaver shopware:twig-block:validate -h
+$ bin/twig-block-validate -h
 
 Usage:
-  shopware:twig-block:validate [options]
+  twig:block:validate [options]
 
 Options:
-  -t, --template-path=TEMPLATE-PATH        Twig template path to load (multiple values allowed)
-  -c, --validate-path=VALIDATE-PATH        Twig template path to validate (multiple values allowed)
-  -r, --default-version[=DEFAULT-VERSION]  The version number required
-  -h, --help                               Display help for the given command. When no command is given display help for the list command
-      --silent                             Do not output any message
-  -q, --quiet                              Only errors are displayed. All other output is suppressed
-  -V, --version                            Display this application version
-      --ansi|--no-ansi                     Force (or disable --no-ansi) ANSI output
-  -n, --no-interaction                     Do not ask any interactive question
-  -e, --env=ENV                            The Environment name. [default: "dev"]
-      --no-debug                           Switch off debug mode.
-      --profile                            Enables profiling (requires debug).
-  -v|vv|vvv, --verbose                     Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
+  -t, --template=TEMPLATE          Twig template path to load (multiple values allowed)
+  -c, --validate=VALIDATE          Twig template path to validate (multiple values allowed)
+  -r, --use-version[=USE-VERSION]  The version number required
+  -h, --help                       Display help for the given command. When no command is given display help for the list command
+      --silent                     Do not output any message
+  -q, --quiet                      Only errors are displayed. All other output is suppressed
+  -V, --version                    Display this application version
+      --ansi|--no-ansi             Force (or disable --no-ansi) ANSI output
+  -n, --no-interaction             Do not ask any interactive question
+  -e, --env=ENV                    The Environment name. [default: "dev"]
+      --no-debug                   Switch off debug mode.
+      --profile                    Enables profiling (requires debug).
+  -v|vv|vvv, --verbose             Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
 ```
+
+### Which CLI to use
+
+There are a total of three different CLIs available:
+
+- `bin/shopware-beaver`:
+  A shopware integrated CLI.
+  - Runs a full shopware-aware CLI (in `dev` env), which supports all built-in twig extensions.
+  - If used inside a project directly as a bundle, it supports any custom functions, blocks, etc.
+- `bin/console`:
+  A symfony CLI application.
+  - Runs a symfony kernel with symfony framework and debug commands (in `dev` or `test`).
+  - Only supports the twig extensions that are available in the symfony context.
+- `bin/twig-block-validate`
+  - Runs only the `twig:block:validate` command as standalone application.
+  - Only supports the twig extensions that are available in the symfony context.
 
 ## Standalone
 

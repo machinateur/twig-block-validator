@@ -25,36 +25,27 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockValidator\Twig\Node;
-
-use Twig\Attribute\YieldReady;
-use Twig\Compiler;
-use Twig\Node\Node;
+namespace Machinateur\TwigBlockValidator\Twig\Node;
 
 /**
- * An AST representation of the block comments within a set of templates.
+ * @phpstan-import-type _LineRange  from TwigBlockStackInterface
  *
- * The implementation logic for {@see ShopwareBlockCollectionInterface} is externalized
- *  to {@see ShopwareBlockCollectionTrait}, which is more reusable.
+ * @phpstan-type _Comment           array{
+ *     'template'        : string,
+ *     'parent_template' : string|null,
+ *     'block'           : string|null,
+ *     'block_lines'     : _LineRange,
+ *     'hash'            : string,
+ *     'version'         : string|null,
+ * }
+ * @phpstan-type _CommentCollection array<_Comment>
  */
-#[YieldReady()]
-class ShopwareBlockCollectionNode extends Node implements ShopwareBlockCollectionInterface
+interface CommentCollectionInterface extends TwigTemplateInterface, TwigBlockStackInterface
 {
-    use ShopwareBlockCollectionTrait;
+    public function addComment(string $comment, ?string $version = null): void;
 
     /**
-     * Disallow setting any child nodes, same as with {@see \Twig\Node\EmptyNode}.
+     * @return _CommentCollection
      */
-    public function setNode(string $name, Node $node): void
-    {
-        throw new \LogicException('ContextTagNode cannot have children.');
-    }
-
-    /**
-     * Compiling a `ShopwareBlockCollectionNode` is no-op, as it will never have children. :(
-     */
-    public function compile(Compiler $compiler): void
-    {
-        // No-op.
-    }
+    public function getComments(): array;
 }

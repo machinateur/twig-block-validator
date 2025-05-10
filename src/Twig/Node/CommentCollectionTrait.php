@@ -25,16 +25,16 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockValidator\Twig\Node;
+namespace Machinateur\TwigBlockValidator\Twig\Node;
 
-use Machinateur\Shopware\TwigBlockValidator\Twig\Extension\ShopwareBlockVersionExtension;
+use Machinateur\TwigBlockValidator\Twig\Extension\BlockVersionExtension;
 
 /**
- * An encapsulation of the {@see ShopwareBlockCollectionInterface} implementation.
+ * An encapsulation of the {@see CommentCollectionInterface} implementation.
  *
- * @phpstan-import-type _CommentCollection from ShopwareBlockCollectionInterface
+ * @phpstan-import-type _CommentCollection from CommentCollectionInterface
  */
-trait ShopwareBlockCollectionTrait
+trait CommentCollectionTrait
 {
     use TwigTemplateTrait;
     use TwigBlockStackTrait;
@@ -47,7 +47,7 @@ trait ShopwareBlockCollectionTrait
     public function addComment(string $comment, ?string $defaultVersion = null): void
     {
         try {
-            $parsed = ShopwareBlockVersionExtension::matchComment($comment);
+            $parsed = BlockVersionExtension::matchComment($comment);
 
             // Remove the full match.
             \array_shift($parsed);

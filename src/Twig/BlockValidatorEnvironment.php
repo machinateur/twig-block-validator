@@ -25,13 +25,13 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockValidator\Twig;
+namespace Machinateur\TwigBlockValidator\Twig;
 
-use Machinateur\Shopware\TwigBlockValidator\Service\NamespacedPathnameBuilder;
-use Machinateur\Shopware\TwigBlockValidator\Twig\Extension\ShopwareBlockVersionExtension;
-use Machinateur\Shopware\TwigBlockValidator\Twig\Node\ShopwareBlockCollectionInterface;
-use Machinateur\Shopware\TwigBlockValidator\Twig\Node\TwigBlockStackInterface;
-use Machinateur\Shopware\TwigBlockValidator\Twig\NodeVisitor\BlockNodeVisitor;
+use Machinateur\TwigBlockValidator\Service\NamespacedPathnameBuilder;
+use Machinateur\TwigBlockValidator\Twig\Extension\BlockVersionExtension;
+use Machinateur\TwigBlockValidator\Twig\Node\CommentCollectionInterface;
+use Machinateur\TwigBlockValidator\Twig\Node\TwigBlockStackInterface;
+use Machinateur\TwigBlockValidator\Twig\NodeVisitor\BlockNodeVisitor;
 use Machinateur\Twig\Extension\CommentExtension;
 use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Contracts\Cache\CacheInterface;
@@ -47,7 +47,7 @@ use Twig\Loader\FilesystemLoader;
 use Twig\TemplateWrapper;
 
 /**
- * @phpstan-import-type _CommentCollection  from ShopwareBlockCollectionInterface
+ * @phpstan-import-type _CommentCollection  from CommentCollectionInterface
  * @phpstan-import-type _Block              from TwigBlockStackInterface
  */
 class BlockValidatorEnvironment extends Environment implements ResetInterface
@@ -73,7 +73,7 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
         $this->addExtension(new CommentExtension());
 
         // Add the parser extension, needed for block tracking.
-        ShopwareBlockVersionExtension::setParser($this);
+        BlockVersionExtension::setParser($this);
         // Use node visitor directly, instead of using the extension class, to extract the block collection.
         $this->addNodeVisitor(
             $this->nodeVisitor = new BlockNodeVisitor(defaultVersion: $version)

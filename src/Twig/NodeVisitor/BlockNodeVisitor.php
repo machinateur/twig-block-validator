@@ -25,9 +25,9 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockValidator\Twig\NodeVisitor;
+namespace Machinateur\TwigBlockValidator\Twig\NodeVisitor;
 
-use Machinateur\Shopware\TwigBlockValidator\Twig\Node\ShopwareBlockCollectionNode;
+use Machinateur\TwigBlockValidator\Twig\Node\CommentCollectionNode;
 use Machinateur\Twig\Node\CommentNode;
 use Twig\Environment;
 use Twig\Node\BlockNode;
@@ -45,11 +45,11 @@ class BlockNodeVisitor implements NodeVisitorInterface
     private ?BlockNode $block = null;
 
 
-    protected ShopwareBlockCollectionNode $collection;
+    protected CommentCollectionNode $collection;
 
-    public function __construct(?ShopwareBlockCollectionNode $collection = null, private ?string $defaultVersion = null)
+    public function __construct(?CommentCollectionNode $collection = null, private ?string $defaultVersion = null)
     {
-        $this->collection = $collection ?? new ShopwareBlockCollectionNode();
+        $this->collection = $collection ?? new CommentCollectionNode();
     }
 
     public function enterNode(Node $node, Environment $env): Node
@@ -116,20 +116,20 @@ class BlockNodeVisitor implements NodeVisitorInterface
         return 0;
     }
 
-    public function getCollection(): ShopwareBlockCollectionNode
+    public function getCollection(): CommentCollectionNode
     {
         return $this->collection;
     }
 
-    public function setCollection(ShopwareBlockCollectionNode $collection): void
+    public function setCollection(CommentCollectionNode $collection): void
     {
         $this->collection = $collection;
     }
 
-    public function resetCollection(): ShopwareBlockCollectionNode
+    public function resetCollection(): CommentCollectionNode
     {
         $collection = $this->getCollection();
-        $this->setCollection(new ShopwareBlockCollectionNode());
+        $this->setCollection(new CommentCollectionNode());
         return $collection;
     }
 

@@ -25,7 +25,7 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockValidator\Service;
+namespace Machinateur\TwigBlockValidator\Service;
 
 use Symfony\Component\Finder\SplFileInfo;
 use Twig\Error\LoaderError;

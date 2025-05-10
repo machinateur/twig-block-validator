@@ -25,15 +25,15 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockValidator\Validator;
+namespace Machinateur\TwigBlockValidator\Validator;
 
 use Composer\Semver\Semver;
-use Machinateur\Shopware\TwigBlockValidator\Command\ConsoleTrait;
-use Machinateur\Shopware\TwigBlockValidator\Service\NamespacedPathnameBuilder;
-use Machinateur\Shopware\TwigBlockValidator\Twig\BlockValidatorEnvironment;
-use Machinateur\Shopware\TwigBlockValidator\Twig\Extension\ShopwareBlockVersionExtension;
-use Machinateur\Shopware\TwigBlockValidator\Twig\Node\ShopwareBlockCollectionInterface;
-use Machinateur\Shopware\TwigBlockValidator\Twig\Node\TwigBlockStackInterface;
+use Machinateur\TwigBlockValidator\Command\ConsoleTrait;
+use Machinateur\TwigBlockValidator\Service\NamespacedPathnameBuilder;
+use Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment;
+use Machinateur\TwigBlockValidator\Twig\Extension\BlockVersionExtension;
+use Machinateur\TwigBlockValidator\Twig\Node\CommentCollectionInterface;
+use Machinateur\TwigBlockValidator\Twig\Node\TwigBlockStackInterface;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Contracts\Service\ResetInterface;
@@ -41,8 +41,8 @@ use Twig\Error\LoaderError;
 use Twig\Error\SyntaxError;
 
 /**
- * @phpstan-import-type _Comment            from ShopwareBlockCollectionInterface
- * @phpstan-import-type _CommentCollection  from ShopwareBlockCollectionInterface
+ * @phpstan-import-type _Comment            from CommentCollectionInterface
+ * @phpstan-import-type _CommentCollection  from CommentCollectionInterface
  * @phpstan-import-type _Block              from TwigBlockStackInterface
  *
  * @phpstan-type _ValidatedComment          _Comment&array{
@@ -57,11 +57,6 @@ use Twig\Error\SyntaxError;
 class TwigBlockValidator implements ResetInterface
 {
     use ConsoleTrait;
-
-    /**
-     * @var array<string, _Block>
-     */
-    private array $blocks = [];
 
     private readonly NamespacedPathnameBuilder $namespacedPathnameBuilder;
 
@@ -153,7 +148,7 @@ class TwigBlockValidator implements ResetInterface
         $parentBlock = $this->resolveParentBlock($template, $blockName);
         // Get source code of the parent block.
         $sourceCode  = $this->getBlockContent($template, $parentBlock);
-        $sourceHash  = ShopwareBlockVersionExtension::hash($sourceCode);
+        $sourceHash  = BlockVersionExtension::hash($sourceCode);
 
         // Enrich the comment, i.e. _ValidatedComment.
         $comment['source_hash']    = $sourceHash;
@@ -342,10 +337,7 @@ class TwigBlockValidator implements ResetInterface
                     yield $namespace => $file;
                 } catch (LoaderError $error) {
                     $errors[] = $error;
-
-                    throw $error;
                 }
-
             }
 
             if (0 < \count($errors)) {

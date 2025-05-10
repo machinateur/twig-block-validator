@@ -25,10 +25,10 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockValidator\Command;
+namespace Machinateur\TwigBlockValidator\Command;
 
 use Composer\InstalledVersions;
-use Machinateur\Shopware\TwigBlockValidator\Validator\TwigBlockValidator;
+use Machinateur\TwigBlockValidator\Validator\TwigBlockValidator;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -40,15 +40,18 @@ use Twig\Loader\FilesystemLoader;
 /**
  * @phpstan-import-type _NamespacedPathMap  from TwigBlockValidator
  */
-class ShopwareTwigBlockValidateCommand extends Command
+class TwigBlockValidateCommand extends Command
 {
     use ConsoleTrait;
 
-    public const DEFAULT_NAME = 'shopware:twig-block:validate';
+    public const DEFAULT_NAME = 'twig:block:validate';
 
+    /**
+     * @param string|null $name     The override command name. This is useful for adding it as composer script.
+     */
     public function __construct(
         private readonly TwigBlockValidator $validator,
-        ?string $name = null,
+        ?string                             $name = null,
     ) {
         parent::__construct($name);
     }
@@ -61,9 +64,9 @@ class ShopwareTwigBlockValidateCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addOption('template-path', 't', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Twig template path to load')
-            ->addOption('validate-path', 'c', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Twig template path to validate')
-            ->addOption('default-version', 'r', InputOption::VALUE_OPTIONAL, 'The version number required')
+            ->addOption('template', 't', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Twig template path to load')
+            ->addOption('validate', 'c', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Twig template path to validate')
+            ->addOption('use-version', 'r', InputOption::VALUE_OPTIONAL, 'The version number required')
         ;
     }
 
@@ -72,15 +75,9 @@ class ShopwareTwigBlockValidateCommand extends Command
         $console     ??= new SymfonyStyle($input, $output);
         $this->setConsole($console);
 
-        $templatePaths = (array)$input->getOption('template-path');
-        $validatePaths = (array)$input->getOption('validate-path');
-        $version       = $input->getOption('default-version');
-
-        try {
-            $version ??= InstalledVersions::getVersion('shopware/storefront');
-        } catch (\OutOfBoundsException) {
-            // Failed to get the package, as it is not installed.
-        }
+        $templatePaths = (array)$input->getOption('template');
+        $validatePaths = (array)$input->getOption('validate');
+        $version       = $input->getOption('use-version');
 
         $templatePaths = $this->resolveNamespaces($templatePaths);
         $validatePaths = $this->resolveNamespaces($validatePaths);
@@ -93,10 +90,20 @@ class ShopwareTwigBlockValidateCommand extends Command
     }
 
     /**
+     * Prepare a namespaced path map from a list of paths.
+     *
+     * Format:
+     *
+     * ```
+     * @Storefront:vendor/shopware/storefront/Resources/views
+     * @Administration:vendor/shopware/administration/Resources/views
+     * ...
+     * ```
+     *
      * @param array<string> $templatePaths
      * @return _NamespacedPathMap
      */
-    private function resolveNamespaces(array $templatePaths): array
+    protected function resolveNamespaces(array $templatePaths): array
     {
         $paths = [];
         foreach ($templatePaths as $path) {

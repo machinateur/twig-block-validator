@@ -25,7 +25,7 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockValidator\Twig;
+namespace Machinateur\TwigBlockValidator\Twig;
 
 use Twig\Node\BlockNode;
 use Twig\Node\BodyNode;

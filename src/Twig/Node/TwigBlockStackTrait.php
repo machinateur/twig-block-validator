@@ -25,7 +25,7 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockValidator\Twig\Node;
+namespace Machinateur\TwigBlockValidator\Twig\Node;
 
 /**
  * Implements {@see TwigBlockStackInterface}.

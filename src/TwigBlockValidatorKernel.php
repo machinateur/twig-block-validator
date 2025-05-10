@@ -25,27 +25,34 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockValidator\Twig\Node;
+namespace Machinateur\TwigBlockValidator;
 
-/**
- * @phpstan-import-type _LineRange  from TwigBlockStackInterface
- *
- * @phpstan-type _Comment           array{
- *     'template'        : string,
- *     'parent_template' : string|null,
- *     'block'           : string|null,
- *     'block_lines'     : _LineRange,
- *     'hash'            : string,
- *     'version'         : string|null,
- * }
- * @phpstan-type _CommentCollection array<_Comment>
- */
-interface ShopwareBlockCollectionInterface extends TwigTemplateInterface, TwigBlockStackInterface
+use Symfony\Bundle\DebugBundle\DebugBundle;
+use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
+use Symfony\Bundle\MonologBundle\MonologBundle;
+use Symfony\Bundle\TwigBundle\TwigBundle;
+use Symfony\Component\Config\Loader\LoaderInterface;
+use Symfony\Component\HttpKernel\Kernel;
+
+class TwigBlockValidatorKernel extends Kernel
 {
-    public function addComment(string $comment, ?string $version = null): void;
+    public function registerBundles(): iterable
+    {
+        // TODO: Allow injection of external bundles, for standalone use.
 
-    /**
-     * @return _CommentCollection
-     */
-    public function getComments(): array;
+        yield new FrameworkBundle();
+        yield new TwigBundle();
+        // Needed for prettier console output.
+        yield new MonologBundle();
+
+        if (\in_array($this->getEnvironment(), ['dev', 'test'], true)) {
+            yield new DebugBundle();
+        }
+
+        yield new TwigBlockValidatorBundle();
+    }
+
+    public function registerContainerConfiguration(LoaderInterface $loader): void
+    {
+    }
 }
