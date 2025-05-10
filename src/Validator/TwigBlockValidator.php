@@ -76,7 +76,7 @@ class TwigBlockValidator implements ResetInterface
     /**
      * @param _NamespacedPathMap $scopePaths
      * @param _NamespacedPathMap $templatePaths
-     * @param string|null       $version
+     * @param string|null        $version
      */
     public function validate(array $scopePaths, array $templatePaths = [], ?string $version = null): void
     {
@@ -135,7 +135,6 @@ class TwigBlockValidator implements ResetInterface
         // Reset the default version.
         $nodeVisitor->setDefaultVersion($defaultVersion);
     }
-
 
     /**
      * Validate a single comment block. Shortcut method, internal logic.
@@ -361,7 +360,5 @@ class TwigBlockValidator implements ResetInterface
     public function reset(): void
     {
         $this->setConsole();
-
-        $this->blocks = [];
     }
 }

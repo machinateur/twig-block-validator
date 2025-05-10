@@ -59,7 +59,7 @@ class TwigBlockValidatorBundle extends AbstractBundle
 
     /**
      * Looks for service definition files inside the `Resources/config`
-     * directory and loads either xml or yml files.
+     *  directory and loads either xml or yml files.
      */
     private function registerContainerFile(ContainerBuilder $container): void
     {
