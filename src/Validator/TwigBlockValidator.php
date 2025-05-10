@@ -144,12 +144,14 @@ class TwigBlockValidator implements ResetInterface
         $version        = $comment['version'];
 
         // Resolve the template block in hierarchy.
-        //  TODO: This might need to be adapted, due to special template inheritance logic of `sw_extends` by shopware.
         $parentBlock = $this->resolveParentBlock($template, $blockName);
-        // Get source code of the parent block.
-        $sourceCode  = $this->getBlockContent($template, $parentBlock);
-        $sourceHash  = BlockVersionExtension::hash($sourceCode);
-
+        if (null !== $parentBlock) {
+            // Get source code of the parent block.
+            $sourceCode  = $this->getBlockContent($parentBlock);
+            $sourceHash  = BlockVersionExtension::hash($sourceCode);
+        } else {
+            $sourceHash  = '--';
+        }
         // Enrich the comment, i.e. _ValidatedComment.
         $comment['source_hash']    = $sourceHash;
         $comment['source_version'] = $defaultVersion;
@@ -183,26 +185,43 @@ class TwigBlockValidator implements ResetInterface
     /**
      * Resolve a given template and block name combination to a block struct.
      *
-     * @return _Block
+     * @return _Block|null
      *
      * @throws LoaderError  when the block cannot be resolved
      */
-    protected function resolveParentBlock(string $template, string $blockName): array
+    protected function resolveParentBlock(string $template, string $blockName): ?array
     {
+        $block  = null;
+        $errors = [];
+
         $originalTemplate = $template;
-        do {
-            $blocks   = $this->twig->getBlocks($template);
-            $block    = $blocks[$blockName] ?? null;
-            if ( ! isset($block['parent_template'])) {
-                break;
+        try {
+            do {
+                $blocks   = $this->twig->getBlocks($template);
+                $block    = $blocks[$blockName] ?? null;
+                if ( ! isset($block['parent_template'])) {
+                    break;
+                }
+
+                $template = $block['parent_template'];
+                $this->twig->load($template);
+            } while (null !== $block);
+
+            if (null === $block) {
+                throw new LoaderError(\sprintf('The block "%s" was not found in template "%s" (or ancestors).', $blockName, $originalTemplate));
             }
+        } catch (LoaderError $error) {
+            $errors[] = $error;
+        }
 
-            $template = $block['parent_template'];
-            $this->twig->load($template);
-        } while (null === $block);
-
-        if (null === $block) {
-            throw new LoaderError(\sprintf('The block "%s" was not found in template "%s" (or ancestors).', $blockName, $originalTemplate));
+        if (0 < \count($errors)) {
+            $this->console?->warning([
+                'Twig loader errors!',
+            ]);
+            $this->console?->listing(
+                \array_map(static fn (LoaderError $error) => $error->getMessage()
+                    . (($prev = $error->getPrevious()) instanceof \Throwable ? "\n  ".$prev->getMessage() : ''), $errors)
+            );
         }
 
         return $block;
@@ -218,9 +237,10 @@ class TwigBlockValidator implements ResetInterface
      *
      * @phpstan-type _MatchWithOffset   array<int, array{0:string,1:int}>
      */
-    protected function getBlockContent(string $template, array $block): string
+    protected function getBlockContent(array $block): string
     {
         // Prepare required variables from the given block.
+        $template                          = $block['template'];
         $blockName                         = $block['block'];
         [$blockLinesStart, $blockLinesEnd] = $block['block_lines'];
 
@@ -303,7 +323,10 @@ class TwigBlockValidator implements ResetInterface
             $this->console?->warning([
                 'Twig loader errors!',
             ]);
-            $this->console?->listing(\array_map(static fn (LoaderError $error) => $error->getMessage(), $errors));
+            $this->console?->listing(
+                \array_map(static fn (LoaderError $error) => $error->getMessage()
+                    . (($prev = $error->getPrevious()) instanceof \Throwable ? "\n  ".$prev->getMessage() : ''), $errors)
+            );
         }
     }
 
@@ -344,7 +367,10 @@ class TwigBlockValidator implements ResetInterface
                 $this->console?->warning([
                     'Twig loader errors!',
                 ]);
-                $this->console?->listing(\array_map(static fn (LoaderError $error) => $error->getMessage(), $errors));
+                $this->console?->listing(
+                    \array_map(static fn (LoaderError $error) => $error->getMessage()
+                        . (($prev = $error->getPrevious()) instanceof \Throwable ? "\n  ".$prev->getMessage() : ''), $errors)
+                );
             }
         }
     }
