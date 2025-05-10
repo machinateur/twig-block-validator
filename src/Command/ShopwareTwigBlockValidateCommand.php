@@ -25,10 +25,10 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockVersion\Command;
+namespace Machinateur\Shopware\TwigBlockValidator\Command;
 
 use Composer\InstalledVersions;
-use Machinateur\Shopware\TwigBlockVersion\Service\TwigBlockVersionValidator;
+use Machinateur\Shopware\TwigBlockValidator\Validator\TwigBlockValidator;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -37,32 +37,25 @@ use Symfony\Component\Console\Style\OutputStyle;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Twig\Loader\FilesystemLoader;
 
+/**
+ * @phpstan-import-type _NamespacedPathMap  from TwigBlockValidator
+ */
 class ShopwareTwigBlockValidateCommand extends Command
 {
-    // TODO: Make this class optional, if we need to avoid the symfony/console dependency.
-    //  Should be moved to a bundle/plugin anyways.
+    use ConsoleTrait;
 
-    // TODO: Add validation over global twig environment.
-    //  - loop through all templates in the loader
-    //  - check against actual hashes
+    public const DEFAULT_NAME = 'shopware:twig-block:validate';
 
-    // TODO: Extract parent block content and use sha512 to generate the hash.
-    //  Also consider sw-version.
-
-    protected static $defaultName = 'shopware:twig-block:validate';
-
-    private readonly TwigBlockVersionValidator $validator;
-
-    public function __construct(?string $name = null, ?TwigBlockVersionValidator $validator = null)
-    {
+    public function __construct(
+        private readonly TwigBlockValidator $validator,
+        ?string $name = null,
+    ) {
         parent::__construct($name);
-
-        $this->validator = $validator ?? new TwigBlockVersionValidator();
     }
 
     public static function getDefaultName(): ?string
     {
-        return self::$defaultName;
+        return self::DEFAULT_NAME;
     }
 
     protected function configure(): void
@@ -77,6 +70,7 @@ class ShopwareTwigBlockValidateCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output, ?OutputStyle $console = null): int
     {
         $console     ??= new SymfonyStyle($input, $output);
+        $this->setConsole($console);
 
         $templatePaths = (array)$input->getOption('template-path');
         $validatePaths = (array)$input->getOption('validate-path');
@@ -92,7 +86,7 @@ class ShopwareTwigBlockValidateCommand extends Command
         $validatePaths = $this->resolveNamespaces($validatePaths);
 
         $this->validator->setConsole($console);
-        $this->validator->validate($templatePaths, $validatePaths, $version);
+        $this->validator->validate($validatePaths, $templatePaths, $version);
         $this->validator->reset();
 
         return Command::SUCCESS;
@@ -100,7 +94,7 @@ class ShopwareTwigBlockValidateCommand extends Command
 
     /**
      * @param array<string> $templatePaths
-     * @return array<string, array<string>>
+     * @return _NamespacedPathMap
      */
     private function resolveNamespaces(array $templatePaths): array
     {
@@ -114,6 +108,15 @@ class ShopwareTwigBlockValidateCommand extends Command
                 [$namespace, $path] = \explode(':', $path);
             } else {
                 $namespace = FilesystemLoader::MAIN_NAMESPACE;
+            }
+
+            // Ignore non-existent paths for now.
+            if ( ! \is_dir($path)) {
+                if ($this->output?->isVerbose()) {
+                    $this->console?->block('The directory "%s" was not found. Skipping.', 'WARNING', 'fg=black;bg=yellow');
+                }
+
+                continue;
             }
 
             $paths[$namespace][] = $path;

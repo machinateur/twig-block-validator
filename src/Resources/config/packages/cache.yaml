@@ -1,0 +1,13 @@
+framework:
+  cache:
+    pools:
+      # define main cache pool
+      twig_block_validator.cache:
+        adapters:
+          - cache.adapter.array
+          - cache.adapter.filesystem
+
+      twig_block_validator.block.cache:
+        adapter: 'twig_block_validator.cache'
+      twig_block_validator.comment.cache:
+        adapter: 'twig_block_validator.cache'

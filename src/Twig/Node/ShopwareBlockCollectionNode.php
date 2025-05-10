@@ -25,7 +25,7 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockVersion\Twig\Node;
+namespace Machinateur\Shopware\TwigBlockValidator\Twig\Node;
 
 use Twig\Attribute\YieldReady;
 use Twig\Compiler;

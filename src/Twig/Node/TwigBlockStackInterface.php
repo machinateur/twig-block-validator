@@ -25,7 +25,7 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockVersion\Twig\Node;
+namespace Machinateur\Shopware\TwigBlockValidator\Twig\Node;
 
 /**
  * @phpstan-type _LineRange     array{0:int,1:int}

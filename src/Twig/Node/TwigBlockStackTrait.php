@@ -25,7 +25,7 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockVersion\Twig\Node;
+namespace Machinateur\Shopware\TwigBlockValidator\Twig\Node;
 
 /**
  * Implements {@see TwigBlockStackInterface}.
@@ -81,12 +81,12 @@ trait TwigBlockStackTrait
         \assert(\is_array($lines));
 
         // Add block when popping it.
-        $this->blocks[] = [ // TODO: Build hierarchy right here, instead of passing through cache in validator.
+        $this->blocks[] = [
             'template'        => $this->getTemplate(),
             'parent_template' => $this->getParentTemplate(),
             'block'           => $name,
             'block_lines'     => $lines,
-            'block_level'     => \count($this->lines),
+            'block_level'     => \count($this->blocks),
         ];
     }
 

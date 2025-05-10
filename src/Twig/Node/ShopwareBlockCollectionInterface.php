@@ -25,7 +25,7 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockVersion\Twig\Node;
+namespace Machinateur\Shopware\TwigBlockValidator\Twig\Node;
 
 /**
  * Types:
@@ -40,8 +40,6 @@ namespace Machinateur\Shopware\TwigBlockVersion\Twig\Node;
  *     'parent_template' : string|null,
  *     'block'           : string|null,
  *     'block_lines'     : _LineRange,
- *     'hash'            : string,
- *     'version'         : string|null,
  * }
  * @phpstan-type _CommentCollection array<_Comment>
  */

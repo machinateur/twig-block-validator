@@ -3,6 +3,7 @@
 
 // See https://github.com/shopware/shopware/blob/6.6.x/bin/shopware.
 
+use Machinateur\Shopware\TwigBlockValidator\Command\ShopwareTwigBlockValidateCommand;
 use Shopware\Core\Framework\Adapter\Kernel\KernelFactory;
 use Shopware\Core\Framework\Plugin\KernelPluginLoader\DbalKernelPluginLoader;
 use Shopware\Core\Framework\Plugin\KernelPluginLoader\StaticKernelPluginLoader;
@@ -19,20 +20,20 @@ if (!file_exists(__DIR__ . '/../.env') && !file_exists(__DIR__ . '/../.env.dist'
 require_once __DIR__ . '/../vendor/autoload_runtime.php';
 
 return static function (array &$context) {
-    set_time_limit(0);
+    \set_time_limit(0);
 
     $classLoader = require __DIR__ . '/../vendor/autoload.php';
 
-    if (!class_exists(Application::class)) {
+    if (!\class_exists(Application::class)) {
         throw new RuntimeException('You need to add "symfony/framework-bundle" as a Composer dependency.');
     }
 
     if (!isset($context['PROJECT_ROOT'])) {
-        $context['PROJECT_ROOT'] = dirname(__DIR__);
+        $context['PROJECT_ROOT'] = \dirname(__DIR__);
     }
 
     $input = new ArgvInput();
-    $env = $input->getParameterOption(['--env', '-e'], $context['APP_ENV'] ?? 'prod', true);
+    $env   = $input->getParameterOption(['--env', '-e'], $context['APP_ENV'] ?? 'prod', true);
     $debug = ($context['APP_DEBUG'] ?? ($env !== 'prod')) && !$input->hasParameterOption('--no-debug', true);
 
     $pluginLoader = new StaticKernelPluginLoader($classLoader, null);
@@ -45,33 +46,15 @@ return static function (array &$context) {
         $pluginLoader = new DbalKernelPluginLoader($classLoader, null, Kernel::getConnection());
     }
 
-    $kernel = KernelFactory::create(
-        $env,
-        $debug,
-        $classLoader,
-        $pluginLoader
-    );
+    $kernel = KernelFactory::create($env, $debug, $classLoader, $pluginLoader);
     \assert($kernel instanceof Kernel);
 
     $application = new Application($kernel);
     $kernel->boot();
 
-    $application->setName('Shopware');
+    $application->setName('Twig Block Version Validator for Shopware 6 (Beaver)');
+    $application->setDefaultCommand(ShopwareTwigBlockValidateCommand::DEFAULT_NAME);
     $application->setVersion($kernel->getContainer()->getParameter('kernel.shopware_version'));
-
-    // Add custom command here.
-    $application->add(
-        // TODO: Move to bundle instead, to allow the command as dev-dependency.
-        new \Machinateur\Shopware\TwigBlockVersion\Command\ShopwareTwigBlockValidateCommand(
-            name: null,
-            validator: new \Machinateur\Shopware\TwigBlockVersion\Service\TwigBlockVersionValidator(
-                platformTwig: $kernel->getContainer()
-                    ->get('twig'),
-                version:      $kernel->getContainer()
-                    ->getParameter('kernel.shopware_version'),
-            )
-        )
-    );
 
     return $application;
 };

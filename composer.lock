@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c35db21e5f3023b2d9a18daaa051ab35",
+    "content-hash": "e01be4ca44e971c12ba0703df3e681cd",
     "packages": [
         {
             "name": "brick/math",
@@ -3329,16 +3329,16 @@
         },
         {
             "name": "machinateur/twig-comment-lexer",
-            "version": "1.0.1",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/machinateur/twig-comment-lexer.git",
-                "reference": "80740f7d2c9e5712d34efcc3ce32d4a6ccb42f02"
+                "reference": "6654acd4372572b7d87097d58fe4fa0222cca77d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/machinateur/twig-comment-lexer/zipball/80740f7d2c9e5712d34efcc3ce32d4a6ccb42f02",
-                "reference": "80740f7d2c9e5712d34efcc3ce32d4a6ccb42f02",
+                "url": "https://api.github.com/repos/machinateur/twig-comment-lexer/zipball/6654acd4372572b7d87097d58fe4fa0222cca77d",
+                "reference": "6654acd4372572b7d87097d58fe4fa0222cca77d",
                 "shasum": ""
             },
             "require": {
@@ -3375,9 +3375,9 @@
             ],
             "support": {
                 "issues": "https://github.com/machinateur/twig-comment-lexer/issues",
-                "source": "https://github.com/machinateur/twig-comment-lexer/tree/1.0.1"
+                "source": "https://github.com/machinateur/twig-comment-lexer/tree/1.0.2"
             },
-            "time": "2025-05-04T20:21:35+00:00"
+            "time": "2025-05-09T22:16:16+00:00"
         },
         {
             "name": "marc-mabe/php-enum",

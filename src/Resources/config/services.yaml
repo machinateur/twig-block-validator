@@ -1,0 +1,17 @@
+services:
+
+  Machinateur\Shopware\TwigBlockValidator\Command\ShopwareTwigBlockValidateCommand:
+    arguments:
+      - '@Machinateur\Shopware\TwigBlockValidator\Validator\TwigBlockValidator'
+    tags:
+      - 'console.command'
+
+  Machinateur\Shopware\TwigBlockValidator\Validator\TwigBlockValidator:
+    arguments:
+      - '@Machinateur\Shopware\TwigBlockValidator\Twig\BlockValidatorEnvironment'
+
+  Machinateur\Shopware\TwigBlockValidator\Twig\BlockValidatorEnvironment:
+    arguments:
+      - '@twig'
+      - '@twig_block_validator.block.cache'
+      - '@twig_block_validator.comment.cache'

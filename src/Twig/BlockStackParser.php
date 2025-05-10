@@ -25,7 +25,7 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockVersion\Twig;
+namespace Machinateur\Shopware\TwigBlockValidator\Twig;
 
 use Twig\Node\BlockNode;
 use Twig\Node\BodyNode;
@@ -61,7 +61,7 @@ class BlockStackParser extends Parser
 
         $token = $this->getCurrentToken();
         /** @var BodyNode  $body */
-        $body  = @$this->getBlock($this->currentBlock);
+        $body  = $this->getBlock($this->currentBlock);
         /** @var BlockNode $block */
         $block = $body->getNode('0');
         $block->setAttribute('line_no_start', $token->getLine());
@@ -77,7 +77,7 @@ class BlockStackParser extends Parser
 
         $token = $this->getCurrentToken();
         /** @var BodyNode  $body */
-        $body  = @$this->getBlock($this->currentBlock);
+        $body  = $this->getBlock($this->currentBlock);
         /** @var BlockNode $block */
         $block = $body->getNode('0');
         $block->setAttribute('line_no_end', $token->getLine());

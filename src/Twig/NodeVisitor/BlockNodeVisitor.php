@@ -25,9 +25,9 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockVersion\Twig\NodeVisitor;
+namespace Machinateur\Shopware\TwigBlockValidator\Twig\NodeVisitor;
 
-use Machinateur\Shopware\TwigBlockVersion\Twig\Node\ShopwareBlockCollectionNode;
+use Machinateur\Shopware\TwigBlockValidator\Twig\Node\ShopwareBlockCollectionNode;
 use Machinateur\Twig\Node\CommentNode;
 use Twig\Environment;
 use Twig\Node\BlockNode;
@@ -126,9 +126,11 @@ class BlockNodeVisitor implements NodeVisitorInterface
         $this->collection = $collection;
     }
 
-    public function resetCollection(): void
+    public function resetCollection(): ShopwareBlockCollectionNode
     {
+        $collection = $this->getCollection();
         $this->setCollection(new ShopwareBlockCollectionNode());
+        return $collection;
     }
 
     public function getDefaultVersion(): ?string

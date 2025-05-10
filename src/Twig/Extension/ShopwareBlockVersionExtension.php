@@ -25,10 +25,10 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockVersion\Twig\Extension;
+namespace Machinateur\Shopware\TwigBlockValidator\Twig\Extension;
 
-use Machinateur\Shopware\TwigBlockVersion\Twig\BlockStackParser;
-use Machinateur\Shopware\TwigBlockVersion\Twig\NodeVisitor\BlockNodeVisitor;
+use Machinateur\Shopware\TwigBlockValidator\Twig\BlockStackParser;
+use Machinateur\Shopware\TwigBlockValidator\Twig\NodeVisitor\BlockNodeVisitor;
 use Twig\Environment;
 use Twig\Extension\AbstractExtension;
 
@@ -54,6 +54,8 @@ use Twig\Extension\AbstractExtension;
  */
 class ShopwareBlockVersionExtension extends AbstractExtension
 {
+    public const ALGO = 'sha256';
+
     public static function setParser(Environment $environment): void
     {
         $environment->setParser(
@@ -83,7 +85,15 @@ class ShopwareBlockVersionExtension extends AbstractExtension
      */
     public static function hash(string $data): string
     {
-        return \hash('sha256', $data);
+        return \hash(self::ALGO, $data);
+    }
+
+    /**
+     * Encode the given file as `sha256` hash.
+     */
+    public static function hashFile(string $file): string
+    {
+        return \hash_file(self::ALGO, $file);
     }
 
     public function getNodeVisitors(): array

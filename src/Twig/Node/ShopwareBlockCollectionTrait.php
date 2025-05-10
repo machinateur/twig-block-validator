@@ -25,9 +25,9 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\Shopware\TwigBlockVersion\Twig\Node;
+namespace Machinateur\Shopware\TwigBlockValidator\Twig\Node;
 
-use Machinateur\Shopware\TwigBlockVersion\Twig\Extension\ShopwareBlockVersionExtension;
+use Machinateur\Shopware\TwigBlockValidator\Twig\Extension\ShopwareBlockVersionExtension;
 
 /**
  * An encapsulation of the {@see ShopwareBlockCollectionInterface} implementation.
