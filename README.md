@@ -13,7 +13,7 @@ To validate against the dev-dependency `shopware/storefront:^6.4` installed at `
  expecting version `6.7` in the comments in `tests/res/` (`__main__` as default namespace), run:
 
 ```bash
-time bin/shopware-beaver shopware:twig-block:validate -t "@Storefront:vendor/shopware/storefront/Resources/views" -c "tests/res/" -r 6.7
+bin/shopware-beaver shopware:twig-block:validate -t "@Storefront:vendor/shopware/storefront/Resources/views" -c "tests/res/" -r 6.7
 
  ! [NOTE] Adding namespace "__main__" with paths:                                                                       
 
