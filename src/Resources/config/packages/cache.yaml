@@ -5,7 +5,7 @@ framework:
       twig_block_validator.cache:
         adapters:
           - cache.adapter.array
-          - cache.adapter.filesystem
+          #- cache.adapter.filesystem
 
       twig_block_validator.block.cache:
         adapter: 'twig_block_validator.cache'
