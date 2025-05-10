@@ -9,8 +9,23 @@ This project is a pure PHP implementation and twig integration of the Shopware 6
 
 ## Example
 
+To validate against the dev-dependency `shopware/storefront:^6.4` installed at `vendor/shopware/storefront/Resources/views`,
+ expecting version `6.7` in the comments in `tests/res/` (`__main__` as default namespace), run:
+
 ```bash
-bin/shopware shopware:twig-block:validate -t @Storefront:vendor/shopware/storefront/Resources/views -c tests/res/ -r 6.7
+time bin/shopware-beaver shopware:twig-block:validate -t "@Storefront:vendor/shopware/storefront/Resources/views" -c "tests/res/" -r 6.7
+
+ ! [NOTE] Adding namespace "__main__" with paths:                                                                       
+
+ * tests/res/
+
+ ! [NOTE] Adding namespace "Storefront" with paths:                                                                     
+
+ * vendor/shopware/storefront/Resources/views
+
+ ! [NOTE] Loading namespace "__main__" files:                                                                           
+
+ * template.html.twig
 
 Analysis result
 ===============
@@ -22,6 +37,23 @@ Analysis result
                                                                                                                    ee173de4df62556b65c720ab394292fbcd8d4afaf6724885ba70c651ef5c57d0   6.7                 
  ------------------------------ ----------------------------------------------------- --------------------------- ------------------------------------------------------------------ --------- ---------- 
 ```
+
+Here's [the example template](tests/res/template.html.twig) that would produce the above errors:
+
+```twig
+{% sw_extends '@Storefront/storefront/page/account/index.html.twig' %}
+
+{% block page_account_main_content %}
+    {# shopware-block: c46e2748def26f1ff33af5eb04a9732fe2c2824f6fdf0aa98c94104b6afee48d@v6.6.0 #}
+
+    Test content
+{% endblock %}
+```
+
+I just generated a random SHA265 for this test.
+
+In general, the version is recommended, but since this tool is not strictly limited to working with
+ shopware, it is not enforced and the provided version (`-r` flag) will be the default version, if none is set for a block.
 
 ## Installation
 
@@ -41,6 +73,14 @@ Also make sure the bundle is available in the desired environments, usually `dev
 ```php
 // ...
     Machinateur\Shopware\TwigBlockValidator\TwigBlockValidatorBundle::class => ['dev' => true, 'test' => true],
+```
+
+## How to validate
+
+The validation can be performed by calling the CLI or command (``). Here's it's synopsis:
+
+```
+
 ```
 
 ## Standalone
