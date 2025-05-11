@@ -39,8 +39,8 @@ use Twig\Extension\AbstractExtension;
  * The comments can be used inside twig-blocks of templates that extend others, and look as follows:
  *
  * ```
+ * {# twig-block: <parent-block-hash>@<sw-version> #}
  * {% block some_core_block %}
- *   {# shopware-block: <parent-block-hash>@<sw-version> #}
  *   ...
  * {% endblock %}
  * ```

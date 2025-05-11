@@ -42,8 +42,7 @@ use Twig\NodeVisitor\NodeVisitorInterface;
  */
 class BlockNodeVisitor implements NodeVisitorInterface
 {
-    private ?BlockNode $block = null;
-
+    private ?Node $previousNode = null;
 
     protected CommentCollectionNode $collection;
 
@@ -83,12 +82,15 @@ class BlockNodeVisitor implements NodeVisitorInterface
                 (int)$node->getAttribute('line_no_start'),
                 (int)$node->getAttribute('line_no_end'),
             );
-        }
 
-        // Only use nodes that are not "exposed", and thus are marked as real comments, not usages of the tag.
-        if ($node instanceof CommentNode && ! $node->exposed) {
-            //$comment = $node->getAttribute('text');
-            $this->collection->addComment($node->text, $this->defaultVersion);
+            // Only use nodes that are not "exposed", and thus are marked as real comments, not usages of the tag.
+            //  The comment has to be located exactly oon the line before the block start.
+            //   Call `addComment()` only after entering the *next* node.
+            if ($this->previousNode instanceof CommentNode && ! $this->previousNode->exposed
+                && $this->previousNode->getTemplateLine() === $node->getTemplateLine() - 1)
+            {
+                $this->collection->addComment($this->previousNode->text, $this->defaultVersion);
+            }
         }
 
         return $node;
@@ -103,6 +105,10 @@ class BlockNodeVisitor implements NodeVisitorInterface
 
         if ($node instanceof BlockNode) {
             $this->collection->popBlockStack();
+        }
+
+        if ($node instanceof CommentNode) {
+            $this->previousNode = $node;
         }
 
         return $node;
