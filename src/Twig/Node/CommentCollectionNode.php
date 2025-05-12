@@ -37,7 +37,7 @@ use Twig\Node\Node;
  * The implementation logic for {@see CommentCollectionInterface} is externalized
  *  to {@see CommentCollectionTrait}, which is more reusable.
  */
-#[YieldReady()]
+#[YieldReady]
 class CommentCollectionNode extends Node implements CommentCollectionInterface
 {
     use CommentCollectionTrait;
