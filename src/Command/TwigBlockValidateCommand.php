@@ -102,7 +102,9 @@ class TwigBlockValidateCommand extends Command
      */
     protected function resolveNamespaces(array $templatePaths): array
     {
-        $paths = [];
+        $console = $this->output->getConsole();
+
+        $paths   = [];
         foreach ($templatePaths as $path) {
             if (\str_contains($path, ':')) {
                 if ($path[0] === '@') {
@@ -116,8 +118,8 @@ class TwigBlockValidateCommand extends Command
 
             // Ignore non-existent paths for now.
             if ( ! \is_dir($path)) {
-                if ($this->output?->isVerbose()) {
-                    $this->console?->block('The directory "%s" was not found. Skipping.', 'WARNING', 'fg=black;bg=yellow');
+                if ($console?->isVeryVerbose()) {
+                    $console?->block('The directory "%s" was not found. Skipping.', 'WARNING', 'fg=black;bg=yellow');
                 }
 
                 continue;

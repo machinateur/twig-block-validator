@@ -238,7 +238,10 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
         );
     }
 
-    public function getConsole(): SymfonyStyle
+    /**
+     * @internal
+     */
+    public function getConsole(): ?SymfonyStyle
     {
         return $this->console;
     }
