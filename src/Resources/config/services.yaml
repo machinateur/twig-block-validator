@@ -3,12 +3,18 @@ services:
   Machinateur\TwigBlockValidator\Command\TwigBlockValidateCommand:
     arguments:
       - '@Machinateur\TwigBlockValidator\Validator\TwigBlockValidator'
+      - '@Machinateur\TwigBlockValidator\Validator\TwigBlockValidatorOutput'
     tags:
       - 'console.command'
 
   Machinateur\TwigBlockValidator\Validator\TwigBlockValidator:
     arguments:
       - '@Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment'
+      - '@event_dispatcher'
+
+  Machinateur\TwigBlockValidator\Validator\TwigBlockValidatorOutput:
+    tags:
+      - 'kernel.event_subscriber'
 
   Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment:
     arguments:

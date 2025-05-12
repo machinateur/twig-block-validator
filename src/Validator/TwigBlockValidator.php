@@ -28,16 +28,25 @@ declare(strict_types=1);
 namespace Machinateur\TwigBlockValidator\Validator;
 
 use Composer\Semver\Semver;
-use Machinateur\TwigBlockValidator\Command\ConsoleTrait;
+use Machinateur\TwigBlockValidator\Event\Validator\TwigValidateCommentsErrorEvent;
+use Machinateur\TwigBlockValidator\Event\Validator\TwigLoadFilesEvent;
+use Machinateur\TwigBlockValidator\Event\Validator\TwigLoadPathsErrorEvent;
+use Machinateur\TwigBlockValidator\Event\Validator\TwigLoadPathsEvent;
+use Machinateur\TwigBlockValidator\Event\Validator\TwigRegisterPathsErrorEvent;
+use Machinateur\TwigBlockValidator\Event\Validator\TwigRegisterPathsEvent;
+use Machinateur\TwigBlockValidator\Event\Validator\TwigCollectBlocksEvent;
+use Machinateur\TwigBlockValidator\Event\Validator\TwigValidateCommentsEvent;
 use Machinateur\TwigBlockValidator\Service\NamespacedPathnameBuilder;
 use Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment;
 use Machinateur\TwigBlockValidator\Twig\Extension\BlockVersionExtension;
 use Machinateur\TwigBlockValidator\Twig\Node\CommentCollectionInterface;
 use Machinateur\TwigBlockValidator\Twig\Node\TwigBlockStackInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
-use Symfony\Contracts\Service\ResetInterface;
+use Twig\Error\Error as TwigError;
 use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
 /**
@@ -54,21 +63,20 @@ use Twig\Error\SyntaxError;
  *
  * @phpstan-type _NamespacedPathMap         array<string, array<string>>
  */
-class TwigBlockValidator implements ResetInterface
+class TwigBlockValidator
 {
-    use ConsoleTrait;
-
     private readonly NamespacedPathnameBuilder $namespacedPathnameBuilder;
 
     public function __construct(
         private readonly BlockValidatorEnvironment $twig,
+        private readonly EventDispatcherInterface  $dispatcher,
     ) {
-        $this->setConsole();
-
         $this->namespacedPathnameBuilder = new NamespacedPathnameBuilder($this->twig->getLoader());
     }
 
     /**
+     * Validate given paths against the provided templates using the given fallback version.
+     *
      * @param _NamespacedPathMap $scopePaths
      * @param _NamespacedPathMap $templatePaths
      * @param string|null        $version
@@ -86,55 +94,92 @@ class TwigBlockValidator implements ResetInterface
         $defaultVersion = $nodeVisitor->getDefaultVersion();
         $nodeVisitor->setDefaultVersion($version);
 
-        /** @var _CommentCollection[] $comments */
-        $comments = [];
-        // Get all comments.
-        foreach ($this->loadPaths($scopePaths) as $namespace => $file) {
-            $comments[] = $this->twig->getComments(
-                $this->namespacedPathnameBuilder->buildNamespacedPathname($namespace, $file)
+        /** @var list<TwigError> $errors */
+        $errors   = [];
+        $comments = $this->loadComments($scopePaths, $errors);
+
+        if (0 < \count($comments)) {
+            $this->dispatcher->dispatch(
+                $event = new TwigValidateCommentsEvent($comments, $version)
             );
-        }
-        /** @var _CommentCollection $comments */
-        $comments = \array_merge(...$comments);
 
-        // Run analysis and print result. This looks messed up.
-        $this->console?->title('Analysis result');
-        $table = $this->console?->createTable();
-        $table?->setHeaders(['template', 'parent template', 'block', 'hash', 'version', 'mismatch']);
-        // Validate the blocks and prepare result table output.
-        /** @var _ValidatedBlockCollection $comments */
-        foreach ($comments as & $comment) {
-            $this->validateComment($comment, $version);
+            $event->notify(TwigValidateCommentsEvent::CALL_BEGIN);
 
-            if (null === $table) {
-                continue;
+            /** @var _ValidatedBlockCollection $comments */
+            foreach ($comments as & $comment) {
+                try {
+                    $this->validateComment($comment, $version);
+
+                    $event->notify(TwigValidateCommentsEvent::CALL_STEP, $comment);
+                } catch (TwigError $error) {
+                    $errors[] = $error;
+
+                    continue;
+                }
+
             }
 
-            $row = [
-                ...$comment,
-                'block_lines' => \sprintf('%d-%d', ...$comment['block_lines']),
-                'hash'    => !$comment['match']['hash']
-                    ? \sprintf("<fg=white;bg=red>%s</>\n<fg=black;bg=green>%s</>", $comment['hash'], $comment['source_hash'])
-                    : $comment['hash'],
-                'version' => !$comment['match']['version']
-                    ? \sprintf("<fg=white;bg=red>%s</>\n<fg=black;bg=green>%s</>", $comment['version'], $comment['source_version'])
-                    : $comment['version'],
-                'valid'   => \sprintf('[%s]', $comment['valid'] ? ' ' : 'x'),
-            ];
-            unset($row['block_lines'], $row['source_hash'], $row['source_version'], $row['match']);
-
-            $table?->addRow($row);
+            $event->notify(TwigValidateCommentsEvent::CALL_END);
         }
-        $table?->render();
+
+        if (0 < \count($errors)) {
+            $this->dispatcher->dispatch(
+                new TwigValidateCommentsErrorEvent($errors)
+            );
+        }
 
         // Reset the default version.
         $nodeVisitor->setDefaultVersion($defaultVersion);
     }
 
     /**
+     * Load the given paths, optionally save all errors to the provided array.
+     *  Collect all blocks and comments from these templates.
+     *
+     * @param _NamespacedPathMap $scopePaths
+     * @param list<TwigError>    $errors
+     *
+     * @return _CommentCollection
+     */
+    protected function loadComments(array $scopePaths, array & $errors = []): array
+    {
+        $blocks    = [];
+        $comments  = [];
+        $templates = [];
+
+        // Get all comments and blocks.
+        foreach ($this->loadPaths($scopePaths) as $namespace => $file) {
+            /** @var SplFileInfo $file */
+            $templates[] = $template = $this->namespacedPathnameBuilder->buildNamespacedPathname($namespace, $file);
+
+            try {
+                $blocks[]   = $this->twig->getBlocks($template);
+                $comments[] = $this->twig->getComments($template);
+            } catch (TwigError $error) {
+                $errors[]   = $error;
+            }
+        }
+
+        /** @var _Block[]           $blocks */
+        $blocks   = \array_merge(...$blocks);
+        /** @var _CommentCollection $comments */
+        $comments = \array_merge(...$comments);
+
+        $this->dispatcher->dispatch(
+            new TwigCollectBlocksEvent($templates, $blocks)
+        );
+
+        return $comments;
+    }
+
+    /**
      * Validate a single comment block. Shortcut method, internal logic.
      *
      * @param _Comment|_ValidatedComment $comment
+     *
+     * @throws LoaderError      when the block cannot be resolved or the template does not exist
+     * @throws RuntimeError     when the generated code is erroneous
+     * @throws SyntaxError      when there is a syntax error, like missing tags
      */
     public function validateComment(array & $comment, string $defaultVersion): bool
     {
@@ -160,20 +205,6 @@ class TwigBlockValidator implements ResetInterface
         $matchHash    = $hash === $sourceHash;
         $matchVersion = Semver::satisfies($version, '~'.$defaultVersion);
 
-        if ($this->output?->isDebug()) {
-            $this->console?->warning(\sprintf('Mismatch from block hash to source hash for "%s"!', $template));
-            $this->console?->writeln(\sprintf("> <fg=black;bg=green>%s</>", $hash));
-            $this->console?->writeln(\sprintf("< <fg=white;bg=red>%s</>", $sourceHash));
-            $this->console?->newLine();
-        }
-
-        if ($this->output?->isDebug()) {
-            $this->console?->warning(\sprintf('Mismatch from block version to source version for "%s"!', $template));
-            $this->console?->writeln(\sprintf("> <fg=black;bg=green>%s</>", $version));
-            $this->console?->writeln(\sprintf("< <fg=white;bg=red>%s</>", $defaultVersion));
-            $this->console?->newLine();
-        }
-
         $comment['match'] = [
             'hash'    => $matchHash,
             'version' => $matchVersion,
@@ -187,41 +218,26 @@ class TwigBlockValidator implements ResetInterface
      *
      * @return _Block|null
      *
-     * @throws LoaderError  when the block cannot be resolved
+     * @throws LoaderError      when the block cannot be resolved or the template does not exist
+     * @throws RuntimeError     when the generated code is erroneous
+     * @throws SyntaxError      when there is a syntax error, like missing tags
      */
     protected function resolveParentBlock(string $template, string $blockName): ?array
     {
-        $block  = null;
-        $errors = [];
-
         $originalTemplate = $template;
-        try {
-            do {
-                $blocks   = $this->twig->getBlocks($template);
-                $block    = $blocks[$blockName] ?? null;
-                if ( ! isset($block['parent_template'])) {
-                    break;
-                }
-
-                $template = $block['parent_template'];
-                $this->twig->load($template);
-            } while (null !== $block);
-
-            if (null === $block) {
-                throw new LoaderError(\sprintf('The block "%s" was not found in template "%s" (or ancestors).', $blockName, $originalTemplate));
+        do {
+            $blocks   = $this->twig->getBlocks($template);
+            $block    = $blocks[$blockName] ?? null;
+            if ( ! isset($block['parent_template'])) {
+                break;
             }
-        } catch (LoaderError $error) {
-            $errors[] = $error;
-        }
 
-        if (0 < \count($errors)) {
-            $this->console?->warning([
-                'Twig loader errors!',
-            ]);
-            $this->console?->listing(
-                \array_map(static fn (LoaderError $error) => $error->getMessage()
-                    . (($prev = $error->getPrevious()) instanceof \Throwable ? "\n  ".$prev->getMessage() : ''), $errors)
-            );
+            $template = $block['parent_template'];
+            $this->twig->load($template);
+        } while (null !== $block);
+
+        if (null === $block) {
+            throw new LoaderError(\sprintf('The block "%s" was not found in template "%s" (or ancestors).', $blockName, $originalTemplate));
         }
 
         return $block;
@@ -307,25 +323,23 @@ class TwigBlockValidator implements ResetInterface
 
         // Register all paths with the loader.
         foreach ($scopePaths as $namespace => $paths) {
-            $this->console?->note(\sprintf('Adding namespace "%s" with paths:', $namespace));
-            $this->console?->listing($paths);
+            $this->dispatcher->dispatch(
+                new TwigRegisterPathsEvent($namespace, $paths)
+            );
 
             foreach ($paths as $path) {
                 try {
                     $this->twig->addPath($path, $namespace);
                 } catch (LoaderError $error) {
-                    $errors[] = $error;
+                    $key          = $this->namespacedPathnameBuilder->buildNamespacedPathname($namespace, $path);
+                    $errors[$key] = $error;
                 }
             }
         }
 
         if (0 < \count($errors)) {
-            $this->console?->warning([
-                'Twig loader errors!',
-            ]);
-            $this->console?->listing(
-                \array_map(static fn (LoaderError $error) => $error->getMessage()
-                    . (($prev = $error->getPrevious()) instanceof \Throwable ? "\n  ".$prev->getMessage() : ''), $errors)
+            $this->dispatcher->dispatch(
+                new TwigRegisterPathsErrorEvent($errors)
             );
         }
     }
@@ -340,43 +354,46 @@ class TwigBlockValidator implements ResetInterface
     public function loadPaths(array $scopePaths): \Generator
     {
         foreach ($scopePaths as $namespace => $paths) {
-            $this->console?->note(\sprintf('Loading namespace "%s" files:', $namespace));
+            $this->dispatcher->dispatch(
+                new TwigLoadPathsEvent($namespace, $paths)
+            );
 
             $finder = new Finder();
             $finder->in($paths)
                 ->files()
                 ->name('*.twig');
 
+            $this->dispatcher->dispatch(
+                $event = new TwigLoadFilesEvent($namespace, $paths, $finder)
+            );
+
             /** @var list<LoaderError> $errors */
             $errors = [];
 
-            // Now load all files.
-            foreach ($finder as $file) {
-                $this->console?->text(\sprintf('* %s', $file->getRelativePathname()));
+            $event->notify(TwigLoadFilesEvent::CALL_BEGIN);
 
+            // Now load all files.
+            foreach ($finder->getIterator() as $file) {
                 try {
                     $this->twig->loadFile($file, $namespace);
 
-                    yield $namespace => $file;
+                    $event->notify(TwigLoadFilesEvent::CALL_STEP, $file);
                 } catch (LoaderError $error) {
                     $errors[] = $error;
+
+                    continue;
                 }
+
+                yield $namespace => $file;
             }
 
+            $event->notify(TwigLoadFilesEvent::CALL_END);
+
             if (0 < \count($errors)) {
-                $this->console?->warning([
-                    'Twig loader errors!',
-                ]);
-                $this->console?->listing(
-                    \array_map(static fn (LoaderError $error) => $error->getMessage()
-                        . (($prev = $error->getPrevious()) instanceof \Throwable ? "\n  ".$prev->getMessage() : ''), $errors)
+                $this->dispatcher->dispatch(
+                    new TwigLoadPathsErrorEvent($errors)
                 );
             }
         }
-    }
-
-    public function reset(): void
-    {
-        $this->setConsole();
     }
 }
