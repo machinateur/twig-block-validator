@@ -153,15 +153,27 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
     {
         $console = $this->console;
 
-        $event->callback(TwigLoadFilesEvent::CALL_BEGIN,
-            static fn () => $console?->progressStart($event->finder->count())
-        );
-        $event->callback(TwigLoadFilesEvent::CALL_STEP,
-            static fn (SplFileInfo $file) => $console?->progressAdvance()
-        );
-        $event->callback(TwigLoadFilesEvent::CALL_END,
-            static fn () => $console?->progressFinish()
-        );
+        if ($console->isVeryVerbose()) {
+            $event->callback(TwigLoadFilesEvent::CALL_BEGIN,
+                static fn () => $console?->note('Loading files:')
+            );
+            $event->callback(TwigLoadFilesEvent::CALL_STEP,
+                static fn (SplFileInfo $file) => $console?->text(\sprintf('  * %s', $file->getRelativePathname()))
+            );
+            $event->callback(TwigLoadFilesEvent::CALL_END,
+                static fn () => $console?->comment('Count: ' . $event->finder->count())
+            );
+        } else {
+            $event->callback(TwigLoadFilesEvent::CALL_BEGIN,
+                static fn () => $console?->progressStart($event->finder->count())
+            );
+            $event->callback(TwigLoadFilesEvent::CALL_STEP,
+                static fn (SplFileInfo $file) => $console?->progressAdvance()
+            );
+            $event->callback(TwigLoadFilesEvent::CALL_END,
+                static fn () => $console?->progressFinish()
+            );
+        }
     }
 
     public function onTwigCollectBlocks(TwigCollectBlocksEvent $event): void
