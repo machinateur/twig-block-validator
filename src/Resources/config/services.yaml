@@ -21,3 +21,10 @@ services:
       - '@twig'
       - '@twig_block_validator.block.cache'
       - '@twig_block_validator.comment.cache'
+
+  Machinateur\TwigBlockValidator\Command\TwigBlockAnnotateCommand:
+    arguments:
+      - '@Machinateur\TwigBlockValidator\Validator\TwigBlockAnnotator'
+      - '@Machinateur\TwigBlockValidator\Validator\TwigBlockAnnotatorOutput'
+    tags:
+      - 'console.command'
