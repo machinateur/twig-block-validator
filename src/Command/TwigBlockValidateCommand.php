@@ -47,7 +47,7 @@ class TwigBlockValidateCommand extends Command
      */
     public function __construct(
         private readonly TwigBlockValidator       $validator,
-        private readonly TwigBlockValidatorOutput $output,
+        private readonly TwigBlockValidatorOutput $validatorOutput,
         ?string                                   $name = null,
     ) {
         parent::__construct($name);
@@ -69,7 +69,7 @@ class TwigBlockValidateCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->output->init($input, $output);
+        $this->validatorOutput->init($input, $output);
 
         $templatePaths = (array)$input->getOption('template');
         $validatePaths = (array)$input->getOption('validate');
@@ -80,7 +80,7 @@ class TwigBlockValidateCommand extends Command
 
         $this->validator->validate($validatePaths, $templatePaths, $version);
 
-        $this->output->reset();
+        $this->validatorOutput->reset();
 
         return Command::SUCCESS;
     }
@@ -101,7 +101,7 @@ class TwigBlockValidateCommand extends Command
      */
     protected function resolveNamespaces(array $templatePaths): array
     {
-        $console = $this->output->getConsole();
+        $console = $this->validatorOutput->getConsole();
 
         $paths   = [];
         foreach ($templatePaths as $path) {
