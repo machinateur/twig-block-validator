@@ -25,9 +25,7 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\TwigBlockValidator\Event\Validator;
-
-use Machinateur\TwigBlockValidator\Event\NotifiableInterface;
+namespace Machinateur\TwigBlockValidator\Event;
 
 /**
  * An implementation for {@see NotifiableInterface}.

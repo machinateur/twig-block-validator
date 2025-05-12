@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace Machinateur\TwigBlockValidator\Event\Validator;
 
 use Machinateur\TwigBlockValidator\Event\NotifiableInterface;
+use Machinateur\TwigBlockValidator\Event\NotifiableTrait;
 use Machinateur\TwigBlockValidator\Twig\Node\CommentCollectionInterface;
 
 /**
