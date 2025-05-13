@@ -7,7 +7,7 @@ framework:
           - cache.adapter.array
           #- cache.adapter.filesystem
 
-      twig_block_validator.block.cache:
+      twig_block_validator.cache.block:
         adapter: 'twig_block_validator.cache'
-      twig_block_validator.comment.cache:
+      twig_block_validator.cache.comment:
         adapter: 'twig_block_validator.cache'

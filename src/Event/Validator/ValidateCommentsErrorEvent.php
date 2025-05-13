@@ -29,7 +29,7 @@ namespace Machinateur\TwigBlockValidator\Event\Validator;
 
 use Twig\Error\Error as TwigError;
 
-readonly class TwigValidateCommentsErrorEvent
+readonly class ValidateCommentsErrorEvent
 {
     /**
      * @param list<TwigError> $errors

@@ -33,8 +33,8 @@ use Machinateur\TwigBlockValidator\Event\Validator\TwigLoadPathsEvent;
 use Machinateur\TwigBlockValidator\Event\Validator\TwigRegisterPathsErrorEvent;
 use Machinateur\TwigBlockValidator\Event\Validator\TwigRegisterPathsEvent;
 use Machinateur\TwigBlockValidator\Event\Validator\TwigCollectBlocksEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigValidateCommentsErrorEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigValidateCommentsEvent;
+use Machinateur\TwigBlockValidator\Event\Validator\ValidateCommentsErrorEvent;
+use Machinateur\TwigBlockValidator\Event\Validator\ValidateCommentsEvent;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -61,8 +61,8 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
 
             TwigCollectBlocksEvent::class      => 'onTwigCollectBlocks',
 
-            TwigValidateCommentsEvent::class      => 'onTwigValidateComments',
-            TwigValidateCommentsErrorEvent::class => 'onTwigValidateCommentsError',
+            ValidateCommentsEvent::class      => 'onValidateComments',
+            ValidateCommentsErrorEvent::class => 'onValidateCommentsError',
         ];
     }
 
@@ -181,16 +181,16 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
         $this->console?->note(\sprintf('Collected %d blocks across %d templates.', \count($event->blocks), \count($event->paths)));
     }
 
-    public function onTwigValidateComments(TwigValidateCommentsEvent $event): void
+    public function onValidateComments(ValidateCommentsEvent $event): void
     {
         $defaultVersion = $event->version;
         $console        = $this->console;
         $table          = $this->console?->createTable();
 
-        $event->callback(TwigValidateCommentsEvent::CALL_BEGIN,
+        $event->callback(ValidateCommentsEvent::CALL_BEGIN,
             static fn () => $table?->setHeaders(['template', 'parent template', 'block', 'hash', 'version', 'mismatch'])
         );
-        $event->callback(TwigValidateCommentsEvent::CALL_STEP,
+        $event->callback(ValidateCommentsEvent::CALL_STEP,
             static function (array $comment) use ($console, $table, $defaultVersion) {
                 if (null === $table) {
                     return;
@@ -225,12 +225,12 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
                 }
             }
         );
-        $event->callback(TwigValidateCommentsEvent::CALL_END,
+        $event->callback(ValidateCommentsEvent::CALL_END,
             static fn () => $table?->render()
         );
     }
 
-    public function onTwigValidateCommentsError(TwigValidateCommentsErrorEvent $event): void
+    public function onValidateCommentsError(ValidateCommentsErrorEvent $event): void
     {
         $this->console?->warning([
             'Twig errors!',

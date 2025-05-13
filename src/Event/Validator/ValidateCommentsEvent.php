@@ -35,7 +35,7 @@ use Machinateur\TwigBlockValidator\Twig\Node\CommentCollectionInterface;
  * @phpstan-import-type _Comment            from CommentCollectionInterface
  * @phpstan-import-type _CommentCollection  from CommentCollectionInterface
  */
-class TwigValidateCommentsEvent implements NotifiableInterface
+class ValidateCommentsEvent implements NotifiableInterface
 {
     use NotifiableTrait;
 

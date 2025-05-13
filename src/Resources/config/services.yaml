@@ -9,7 +9,8 @@ services:
 
   Machinateur\TwigBlockValidator\Validator\TwigBlockValidator:
     arguments:
-      - '@Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment'
+      - '@twig_block_validator.twig'
+      - '@Machinateur\TwigBlockValidator\Service\TwigBlockResolver'
       - '@event_dispatcher'
 
   Machinateur\TwigBlockValidator\Validator\TwigBlockValidatorOutput:
@@ -19,8 +20,12 @@ services:
   Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment:
     arguments:
       - '@twig'
-      - '@twig_block_validator.block.cache'
-      - '@twig_block_validator.comment.cache'
+      - '@twig_block_validator.cache.block'
+      - '@twig_block_validator.cache.comment'
+      - '@event_dispatcher'
+
+  twig_block_validator.twig:
+    alias: 'Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment'
 
   Machinateur\TwigBlockValidator\Command\TwigBlockAnnotateCommand:
     arguments:
@@ -29,6 +34,14 @@ services:
     tags:
       - 'console.command'
 
-  Machinateur\TwigBlockValidator\Annotator\TwigBlockAnnotator: ~
+  Machinateur\TwigBlockValidator\Annotator\TwigBlockAnnotator:
+    arguments:
+      - '@twig_block_validator.twig'
+      - '@Machinateur\TwigBlockValidator\Service\TwigBlockResolver'
+      - '@event_dispatcher'
 
   Machinateur\TwigBlockValidator\Annotator\TwigBlockAnnotatorOutput: ~
+
+  Machinateur\TwigBlockValidator\Service\TwigBlockResolver:
+    arguments:
+      - '@twig_block_validator.twig'

@@ -28,15 +28,16 @@ declare(strict_types=1);
 namespace Machinateur\TwigBlockValidator\Validator;
 
 use Composer\Semver\Semver;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigValidateCommentsErrorEvent;
+use Machinateur\TwigBlockValidator\Event\Validator\ValidateCommentsErrorEvent;
 use Machinateur\TwigBlockValidator\Event\Validator\TwigLoadFilesEvent;
 use Machinateur\TwigBlockValidator\Event\Validator\TwigLoadPathsErrorEvent;
 use Machinateur\TwigBlockValidator\Event\Validator\TwigLoadPathsEvent;
 use Machinateur\TwigBlockValidator\Event\Validator\TwigRegisterPathsErrorEvent;
 use Machinateur\TwigBlockValidator\Event\Validator\TwigRegisterPathsEvent;
 use Machinateur\TwigBlockValidator\Event\Validator\TwigCollectBlocksEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigValidateCommentsEvent;
+use Machinateur\TwigBlockValidator\Event\Validator\ValidateCommentsEvent;
 use Machinateur\TwigBlockValidator\Service\NamespacedPathnameBuilder;
+use Machinateur\TwigBlockValidator\Service\TwigBlockResolver;
 use Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment;
 use Machinateur\TwigBlockValidator\Twig\Extension\BlockVersionExtension;
 use Machinateur\TwigBlockValidator\Twig\Node\CommentCollectionInterface;
@@ -61,7 +62,7 @@ use Twig\Error\SyntaxError;
  * }
  * @phpstan-type _ValidatedBlockCollection  array<_ValidatedComment>
  *
- * @phpstan-type _NamespacedPathMap         array<string, array<string>>
+ * @phpstan-import-type _NamespacedPathMap  from BlockValidatorEnvironment
  */
 class TwigBlockValidator
 {
@@ -69,6 +70,7 @@ class TwigBlockValidator
 
     public function __construct(
         private readonly BlockValidatorEnvironment $twig,
+        private readonly TwigBlockResolver         $blockResolver,
         private readonly EventDispatcherInterface  $dispatcher,
     ) {
         $this->namespacedPathnameBuilder = new NamespacedPathnameBuilder($this->twig->getLoader());
@@ -86,8 +88,10 @@ class TwigBlockValidator
         // First reset the validator's environment, in case this is called more than once in the same process.
         $this->twig->reset();
 
-        $this->registerPaths($scopePaths);
-        $this->registerPaths($templatePaths);
+        $this->twig->registerPaths($scopePaths);
+        if ($templatePaths) {
+            $this->twig->registerPaths($templatePaths);
+        }
 
         $nodeVisitor = $this->twig->getBlockNodeVisitor();
         // Get the previous default version to restore it after validation.
@@ -96,35 +100,32 @@ class TwigBlockValidator
 
         /** @var list<TwigError> $errors */
         $errors   = [];
-        $comments = $this->loadComments($scopePaths, $errors);
+        $comments = $this->twig->loadComments($scopePaths, $errors);
 
         if (0 < \count($comments)) {
             $this->dispatcher->dispatch(
-                $event = new TwigValidateCommentsEvent($comments, $version)
+                $event = new ValidateCommentsEvent($comments, $version)
             );
 
-            $event->notify(TwigValidateCommentsEvent::CALL_BEGIN);
+            $event->notify(ValidateCommentsEvent::CALL_BEGIN);
 
             /** @var _ValidatedBlockCollection $comments */
             foreach ($comments as & $comment) {
                 try {
                     $this->validateComment($comment, $version);
 
-                    $event->notify(TwigValidateCommentsEvent::CALL_STEP, $comment);
+                    $event->notify(ValidateCommentsEvent::CALL_STEP, $comment);
                 } catch (TwigError $error) {
                     $errors[] = $error;
-
-                    continue;
                 }
-
             }
 
-            $event->notify(TwigValidateCommentsEvent::CALL_END);
+            $event->notify(ValidateCommentsEvent::CALL_END);
         }
 
         if (0 < \count($errors)) {
             $this->dispatcher->dispatch(
-                new TwigValidateCommentsErrorEvent($errors)
+                new ValidateCommentsErrorEvent($errors)
             );
         }
 
@@ -133,47 +134,7 @@ class TwigBlockValidator
     }
 
     /**
-     * Load the given paths, optionally save all errors to the provided array.
-     *  Collect all blocks and comments from these templates.
-     *
-     * @param _NamespacedPathMap $scopePaths
-     * @param list<TwigError>    $errors
-     *
-     * @return _CommentCollection
-     */
-    protected function loadComments(array $scopePaths, array & $errors = []): array
-    {
-        $blocks    = [];
-        $comments  = [];
-        $templates = [];
-
-        // Get all comments and blocks.
-        foreach ($this->loadPaths($scopePaths) as $namespace => $file) {
-            /** @var SplFileInfo $file */
-            $templates[] = $template = $this->namespacedPathnameBuilder->buildNamespacedPathname($namespace, $file);
-
-            try {
-                $blocks[]   = $this->twig->getBlocks($template);
-                $comments[] = $this->twig->getComments($template);
-            } catch (TwigError $error) {
-                $errors[]   = $error;
-            }
-        }
-
-        /** @var _Block[]           $blocks */
-        $blocks   = \array_merge(...$blocks);
-        /** @var _CommentCollection $comments */
-        $comments = \array_merge(...$comments);
-
-        $this->dispatcher->dispatch(
-            new TwigCollectBlocksEvent($templates, $blocks)
-        );
-
-        return $comments;
-    }
-
-    /**
-     * Validate a single comment block. Shortcut method, internal logic.
+     * Validate a single comment for a block. Shortcut method, internal logic.
      *
      * @param _Comment|_ValidatedComment $comment
      *
@@ -189,7 +150,7 @@ class TwigBlockValidator
         $version        = $comment['version'];
 
         // Resolve the template block in hierarchy.
-        $parentBlock = $this->resolveParentBlock($template, $blockName);
+        $parentBlock = $this->blockResolver->resolveParentBlock($template, $blockName);
         if (null !== $parentBlock) {
             // Get source code of the parent block.
             $sourceCode  = $this->getBlockContent($parentBlock);
@@ -211,36 +172,6 @@ class TwigBlockValidator
         ];
 
         return $comment['valid'] = ($matchHash && $matchVersion);
-    }
-
-    /**
-     * Resolve a given template and block name combination to a block struct.
-     *
-     * @return _Block|null
-     *
-     * @throws LoaderError      when the block cannot be resolved or the template does not exist
-     * @throws RuntimeError     when the generated code is erroneous
-     * @throws SyntaxError      when there is a syntax error, like missing tags
-     */
-    protected function resolveParentBlock(string $template, string $blockName): ?array
-    {
-        $originalTemplate = $template;
-        do {
-            $blocks   = $this->twig->getBlocks($template);
-            $block    = $blocks[$blockName] ?? null;
-            if ( ! isset($block['parent_template'])) {
-                break;
-            }
-
-            $template = $block['parent_template'];
-            $this->twig->load($template);
-        } while (null !== $block);
-
-        if (null === $block) {
-            throw new LoaderError(\sprintf('The block "%s" was not found in template "%s" (or ancestors).', $blockName, $originalTemplate));
-        }
-
-        return $block;
     }
 
     /**
@@ -309,91 +240,5 @@ class TwigBlockValidator
 
         // Return the combined source code lines array as string. Newline is normalized to "\n" (twig default).
         return \implode("\n", $sourceCodeLines);
-    }
-
-    /**
-     * Add the given paths for the given namespaces, without resetting the namespace paths of the loader.
-     *
-     * @param _NamespacedPathMap $scopePaths
-     */
-    protected function registerPaths(array $scopePaths): void
-    {
-        /** @var list<LoaderError> $errors */
-        $errors = [];
-
-        // Register all paths with the loader.
-        foreach ($scopePaths as $namespace => $paths) {
-            $this->dispatcher->dispatch(
-                new TwigRegisterPathsEvent($namespace, $paths)
-            );
-
-            foreach ($paths as $path) {
-                try {
-                    $this->twig->addPath($path, $namespace);
-                } catch (LoaderError $error) {
-                    $key          = $this->namespacedPathnameBuilder->buildNamespacedPathname($namespace, $path);
-                    $errors[$key] = $error;
-                }
-            }
-        }
-
-        if (0 < \count($errors)) {
-            $this->dispatcher->dispatch(
-                new TwigRegisterPathsErrorEvent($errors)
-            );
-        }
-    }
-
-    /**
-     * Load the given paths for the given namespaces.
-     *
-     * @param _NamespacedPathMap $scopePaths
-     *
-     * @return \Generator<string, SplFileInfo>
-     */
-    public function loadPaths(array $scopePaths): \Generator
-    {
-        foreach ($scopePaths as $namespace => $paths) {
-            $this->dispatcher->dispatch(
-                new TwigLoadPathsEvent($namespace, $paths)
-            );
-
-            $finder = new Finder();
-            $finder->in($paths)
-                ->files()
-                ->name('*.twig');
-
-            $this->dispatcher->dispatch(
-                $event = new TwigLoadFilesEvent($namespace, $paths, $finder)
-            );
-
-            /** @var list<LoaderError> $errors */
-            $errors = [];
-
-            $event->notify(TwigLoadFilesEvent::CALL_BEGIN);
-
-            // Now load all files.
-            foreach ($finder->getIterator() as $file) {
-                try {
-                    $this->twig->loadFile($file, $namespace);
-
-                    $event->notify(TwigLoadFilesEvent::CALL_STEP, $file);
-                } catch (LoaderError $error) {
-                    $errors[] = $error;
-
-                    continue;
-                }
-
-                yield $namespace => $file;
-            }
-
-            $event->notify(TwigLoadFilesEvent::CALL_END);
-
-            if (0 < \count($errors)) {
-                $this->dispatcher->dispatch(
-                    new TwigLoadPathsErrorEvent($errors)
-                );
-            }
-        }
     }
 }
