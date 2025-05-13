@@ -36,13 +36,13 @@ return static function (array & $context) {
     $kernel->boot();
 
     // Note: This causes an error when calling with `-t @Namespaced:path/to/the/templates`, as it mistakes the `:` for a command namespace.
-    $application->setDefaultCommand($defaultName = TwigBlockValidateCommand::getDefaultName());
+    //$application->setDefaultCommand($defaultName = TwigBlockValidateCommand::getDefaultName());
 
     if (null !== $version = InstalledVersions::getVersion('shopware/storefront')) {
         $application->setName('Twig Block Validator (for Shopware 6)');
         //$application->setVersion($version);
 
-        $application->get($defaultName)
+        $application->get(TwigBlockValidateCommand::getDefaultName())
             ->getDefinition()
             ->getOption('use-version')
             ->setDefault($version);

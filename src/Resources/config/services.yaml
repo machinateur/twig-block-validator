@@ -24,7 +24,11 @@ services:
 
   Machinateur\TwigBlockValidator\Command\TwigBlockAnnotateCommand:
     arguments:
-      - '@Machinateur\TwigBlockValidator\Validator\TwigBlockAnnotator'
-      - '@Machinateur\TwigBlockValidator\Validator\TwigBlockAnnotatorOutput'
+      - '@Machinateur\TwigBlockValidator\Annotator\TwigBlockAnnotator'
+      - '@Machinateur\TwigBlockValidator\Annotator\TwigBlockAnnotatorOutput'
     tags:
       - 'console.command'
+
+  Machinateur\TwigBlockValidator\Annotator\TwigBlockAnnotator: ~
+
+  Machinateur\TwigBlockValidator\Annotator\TwigBlockAnnotatorOutput: ~
