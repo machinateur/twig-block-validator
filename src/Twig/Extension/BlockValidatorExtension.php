@@ -104,7 +104,7 @@ class BlockValidatorExtension extends AbstractExtension
     /**
      * Format a comment using the provided hash and version.
      */
-    public static function formatComment(string $sourceHash, ?string $sourceVersion)
+    public static function formatComment(string $sourceHash, ?string $sourceVersion): string
     {
         if (null !== $sourceVersion) {
             $sourceHash .= '@' . $sourceVersion;

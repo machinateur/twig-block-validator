@@ -68,8 +68,11 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
             TwigCollectBlocksEvent::class      => 'onTwigCollectBlocks',
             TwigCollectCommentsEvent::class    => 'onTwigCollectComments',
 
-            ValidateCommentsEvent::class      => 'onValidateComments',
-            ValidateCommentsErrorEvent::class => 'onValidateCommentsError',
+            ValidateCommentsEvent::class       => 'onValidateComments',
+            ValidateCommentsErrorEvent::class  => 'onValidateCommentsError',
+
+            AnnotateBlocksEvent::class         => 'onAnnotateBlocks',
+            AnnotateBlocksErrorEvent::class    => 'onAnnotateBlocksError',
         ];
     }
 
@@ -256,6 +259,8 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
         $defaultVersion = $event->version;
         $console        = $this->console;
         $table          = $this->console?->createTable();
+
+        // TODO
     }
 
     public function onAnnotateBlocksError(AnnotateBlocksErrorEvent $event): void

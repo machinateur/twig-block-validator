@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 use Composer\InstalledVersions;
 use Machinateur\TwigBlockValidator\Command\TwigBlockValidateCommand;
+use Machinateur\TwigBlockValidator\Twig\Extension\BlockValidatorExtension;
 use Machinateur\TwigBlockValidator\TwigBlockValidatorBundle;
 use Machinateur\TwigBlockValidator\TwigBlockValidatorKernel;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
@@ -41,6 +42,8 @@ return static function (array & $context) {
     if (null !== $version = InstalledVersions::getVersion('shopware/storefront')) {
         $application->setName('Twig Block Validator (for Shopware 6)');
         //$application->setVersion($version);
+
+        BlockValidatorExtension::$preferredLabel = 'shopware';
 
         $application->get(TwigBlockValidateCommand::getDefaultName())
             ->getDefinition()

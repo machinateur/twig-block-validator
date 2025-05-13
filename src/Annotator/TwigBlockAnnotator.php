@@ -36,6 +36,8 @@ use Machinateur\TwigBlockValidator\Twig\Node\CommentCollectionInterface;
 use Machinateur\TwigBlockValidator\Twig\Node\TwigBlockStackInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Twig\Error\Error as TwigError;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
 /**
@@ -123,7 +125,11 @@ class TwigBlockAnnotator
 
 
     /**
-     * @param _Block|_AnnotatedBlock $block
+     * @param _Block $block
+     *
+     * @throws SyntaxError
+     * @throws LoaderError
+     * @throws RuntimeError
      */
     protected function processBlock(array & $block, ?string $defaultVersion, ?array $comment): bool
     {
