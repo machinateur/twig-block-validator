@@ -39,7 +39,7 @@ return static function (array & $context) {
     $application->setDefaultCommand($defaultName = TwigBlockValidateCommand::getDefaultName());
 
     if (null !== $version = InstalledVersions::getVersion('shopware/storefront')) {
-        $application->setName('Twig Block Version Validator');
+        $application->setName('Twig Block Validator (for Shopware 6)');
         //$application->setVersion($version);
 
         $application->get($defaultName)
