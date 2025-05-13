@@ -25,9 +25,16 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\TwigBlockValidator\Annotator;
+namespace Machinateur\TwigBlockValidator\Event\Annotator;
 
-class TwigBlockAnnotatorOutput
+use Twig\Error\Error as TwigError;
+
+readonly class AnnotateBlocksErrorEvent
 {
-
+    /**
+     * @param list<TwigError> $errors
+     */
+    public function __construct(
+        public array $errors,
+    ) {}
 }

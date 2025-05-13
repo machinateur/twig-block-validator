@@ -27,19 +27,18 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Command;
 
+use Machinateur\TwigBlockValidator\TwigBlockValidatorOutput;
 use Machinateur\TwigBlockValidator\Validator\TwigBlockValidator;
-use Machinateur\TwigBlockValidator\Validator\TwigBlockValidatorOutput;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Twig\Loader\FilesystemLoader;
 
-/**
- * @phpstan-import-type _NamespacedPathMap  from TwigBlockValidator
- */
 class TwigBlockValidateCommand extends Command
 {
+    use ConsoleCommandTrait;
+
     public const DEFAULT_NAME = 'twig:block:validate';
 
     /**
@@ -47,7 +46,7 @@ class TwigBlockValidateCommand extends Command
      */
     public function __construct(
         private readonly TwigBlockValidator       $validator,
-        private readonly TwigBlockValidatorOutput $validatorOutput,
+        private readonly TwigBlockValidatorOutput $output,
         ?string                                   $name = null,
     ) {
         parent::__construct($name);
@@ -69,7 +68,7 @@ class TwigBlockValidateCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->validatorOutput->init($input, $output);
+        $this->output->init($input, $output);
 
         $templatePaths = (array)$input->getOption('template');
         $validatePaths = (array)$input->getOption('validate');
@@ -80,53 +79,8 @@ class TwigBlockValidateCommand extends Command
 
         $this->validator->validate($validatePaths, $templatePaths, $version);
 
-        $this->validatorOutput->reset();
+        $this->output->reset();
 
         return Command::SUCCESS;
-    }
-
-    /**
-     * Prepare a namespaced path map from a list of paths.
-     *
-     * Format:
-     *
-     * ```
-     * @Storefront:vendor/shopware/storefront/Resources/views
-     * @Administration:vendor/shopware/administration/Resources/views
-     * ...
-     * ```
-     *
-     * @param array<string> $templatePaths
-     * @return _NamespacedPathMap
-     */
-    protected function resolveNamespaces(array $templatePaths): array
-    {
-        $console = $this->validatorOutput->getConsole();
-
-        $paths   = [];
-        foreach ($templatePaths as $path) {
-            if (\str_contains($path, ':')) {
-                if ($path[0] === '@') {
-                    $path = \substr($path, 1);
-                }
-
-                [$namespace, $path] = \explode(':', $path);
-            } else {
-                $namespace = FilesystemLoader::MAIN_NAMESPACE;
-            }
-
-            // Ignore non-existent paths for now.
-            if ( ! \is_dir($path)) {
-                if ($console?->isVeryVerbose()) {
-                    $console?->block('The directory "%s" was not found. Skipping.', 'WARNING', 'fg=black;bg=yellow');
-                }
-
-                continue;
-            }
-
-            $paths[$namespace][] = $path;
-        }
-
-        return $paths;
     }
 }

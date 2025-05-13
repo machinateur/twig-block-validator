@@ -25,9 +25,12 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\TwigBlockValidator\Validator;
+namespace Machinateur\TwigBlockValidator;
 
+use Machinateur\TwigBlockValidator\Event\Annotator\AnnotateBlocksErrorEvent;
+use Machinateur\TwigBlockValidator\Event\Annotator\AnnotateBlocksEvent;
 use Machinateur\TwigBlockValidator\Event\TwigCollectBlocksEvent;
+use Machinateur\TwigBlockValidator\Event\TwigCollectCommentsEvent;
 use Machinateur\TwigBlockValidator\Event\TwigLoadFilesEvent;
 use Machinateur\TwigBlockValidator\Event\TwigLoadPathsErrorEvent;
 use Machinateur\TwigBlockValidator\Event\TwigLoadPathsEvent;
@@ -43,6 +46,9 @@ use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Contracts\Service\ResetInterface;
 use Twig\Error\Error as TwigError;
 
+/**
+ * A subscriber that encapsulates the console output of certain operations through events.
+ */
 class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterface
 {
     /**
@@ -60,6 +66,7 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
             TwigLoadFilesEvent::class          => 'onTwigLoadFiles',
 
             TwigCollectBlocksEvent::class      => 'onTwigCollectBlocks',
+            TwigCollectCommentsEvent::class    => 'onTwigCollectComments',
 
             ValidateCommentsEvent::class      => 'onValidateComments',
             ValidateCommentsErrorEvent::class => 'onValidateCommentsError',
@@ -181,6 +188,11 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
         $this->console?->note(\sprintf('Collected %d blocks across %d templates.', \count($event->blocks), \count($event->paths)));
     }
 
+    public function onTwigCollectComments(TwigCollectCommentsEvent $event): void
+    {
+        $this->console?->note(\sprintf('Found %d comments in %d templates.', \count($event->comments), \count($event->paths)));
+    }
+
     public function onValidateComments(ValidateCommentsEvent $event): void
     {
         $defaultVersion = $event->version;
@@ -200,10 +212,10 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
                     ...$comment,
                     'block_lines' => \sprintf('%d-%d', ...$comment['block_lines']),
                     'hash' => !$comment['match']['hash']
-                        ? \sprintf("<fg=white;bg=red>%s</>\n<fg=black;bg=green>%s</>", $comment['hash'], $comment['source_hash'])
+                        ? \sprintf("<fg=white;bg=red>%s</>\n<fg=black;bg=green>%s</>", $comment['hash'], $comment['source_hash'] ?? '--')
                         : $comment['hash'],
                     'version' => !$comment['match']['version']
-                        ? \sprintf("<fg=white;bg=red>%s</>\n<fg=black;bg=green>%s</>", $comment['version'], $comment['source_version'])
+                        ? \sprintf("<fg=white;bg=red>%s</>\n<fg=black;bg=green>%s</>", $comment['version'], $comment['source_version'] ?? '--')
                         : $comment['version'],
                     'valid' => \sprintf('[%s]', $comment['valid'] ? ' ' : 'x'),
                 ];
@@ -237,6 +249,18 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
         ]);
 
         $this->listingTwigErrors($event->errors);
+    }
+
+    public function onAnnotateBlocks(AnnotateBlocksEvent $event): void
+    {
+        $defaultVersion = $event->version;
+        $console        = $this->console;
+        $table          = $this->console?->createTable();
+    }
+
+    public function onAnnotateBlocksError(AnnotateBlocksErrorEvent $event): void
+    {
+        // TODO
     }
 
     /**

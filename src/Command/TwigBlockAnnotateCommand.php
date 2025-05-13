@@ -28,12 +28,15 @@ declare(strict_types=1);
 namespace Machinateur\TwigBlockValidator\Command;
 
 use Machinateur\TwigBlockValidator\Annotator\TwigBlockAnnotator;
-use Machinateur\TwigBlockValidator\Annotator\TwigBlockAnnotatorOutput;
+use Machinateur\TwigBlockValidator\TwigBlockValidatorOutput;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class TwigBlockAnnotateCommand extends Command
 {
-    // TODO: Implement annotate service infrastructure, to eventually support scanning whole twig code-bases.
+    use ConsoleCommandTrait;
 
     public const DEFAULT_NAME = 'twig:block:annotate';
 
@@ -41,8 +44,8 @@ class TwigBlockAnnotateCommand extends Command
      * @param string|null $name     The override command name. This is useful for adding it as composer script.
      */
     public function __construct(
-        private readonly TwigBlockAnnotator       $validator,
-        private readonly TwigBlockAnnotatorOutput $output,
+        private readonly TwigBlockAnnotator       $annotator,
+        private readonly TwigBlockValidatorOutput $output,
         ?string                                   $name = null,
     ) {
         parent::__construct($name);
@@ -51,5 +54,33 @@ class TwigBlockAnnotateCommand extends Command
     public static function getDefaultName(): ?string
     {
         return self::DEFAULT_NAME;
+    }
+
+    protected function configure(): void
+    {
+        $this
+            ->addArgument('path',)
+            ->addOption('template', 't', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Twig template path to load')
+            ->addOption('validate', 'c', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Twig template path to validate')
+            ->addOption('use-version', 'r', InputOption::VALUE_OPTIONAL, 'The version number required')
+        ;
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $this->output->init($input, $output);
+
+        $templatePaths = (array)$input->getOption('template');
+        $annotatePaths = (array)$input->getOption('validate');
+        $version       = $input->getOption('use-version');
+
+        $templatePaths = $this->resolveNamespaces($templatePaths);
+        $annotatePaths = $this->resolveNamespaces($annotatePaths);
+
+        $this->annotator->annotate($annotatePaths, $templatePaths, $version);
+
+        $this->output->reset();
+
+        return Command::SUCCESS;
     }
 }

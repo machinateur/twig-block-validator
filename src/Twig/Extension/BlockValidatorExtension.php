@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Twig\Extension;
 
+use Composer\Semver\Semver;
 use Machinateur\TwigBlockValidator\Twig\BlockStackParser;
 use Machinateur\TwigBlockValidator\Twig\NodeVisitor\BlockNodeVisitor;
 use Twig\Environment;
@@ -53,7 +54,7 @@ use Twig\Extension\AbstractExtension;
  *
  * @see BlockNodeVisitor
  */
-class BlockVersionExtension extends AbstractExtension
+class BlockValidatorExtension extends AbstractExtension
 {
     public const ALGO    = 'sha256';
 
@@ -62,6 +63,11 @@ class BlockVersionExtension extends AbstractExtension
      */
     public const PATTERN = /** @lang PhpRegExp */
         '{^\s*%s-block:\s*([a-z0-9]{64})(?:@(v?\d+\.\d+\.\d+(?:.\d+)?))?\s*$}sx';
+
+    /**
+     * @var 'twig'|'shopware'
+     */
+    public static string $preferredLabel = 'twig';
 
     /**
      * Install the parser for the given environment.
@@ -96,6 +102,17 @@ class BlockVersionExtension extends AbstractExtension
     }
 
     /**
+     * Format a comment using the provided hash and version.
+     */
+    public static function formatComment(string $sourceHash, ?string $sourceVersion)
+    {
+        if (null !== $sourceVersion) {
+            $sourceHash .= '@' . $sourceVersion;
+        }
+        return \sprintf(' %s-block: %s ', self::$preferredLabel, $sourceHash);
+    }
+
+    /**
      * Encode the given data as `sha256` hash.
      */
     public static function hash(string $data): string
@@ -113,6 +130,7 @@ class BlockVersionExtension extends AbstractExtension
 
     public function getNodeVisitors(): array
     {
+        // TODO: Remove or keep. This extension should be used and added to the environment internally. But the visitor cannot be retrieved at the moment.
         return [
             new BlockNodeVisitor(),
         ];
