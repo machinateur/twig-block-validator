@@ -25,11 +25,11 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\TwigBlockValidator\Event\Validator;
+namespace Machinateur\TwigBlockValidator\Event;
 
 use Twig\Error\LoaderError;
 
-readonly class TwigRegisterPathsErrorEvent
+readonly class TwigLoadPathsErrorEvent
 {
     /**
      * @param list<LoaderError> $errors

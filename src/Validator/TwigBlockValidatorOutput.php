@@ -27,12 +27,12 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Validator;
 
-use Machinateur\TwigBlockValidator\Event\Validator\TwigLoadFilesEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigLoadPathsErrorEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigLoadPathsEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigRegisterPathsErrorEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigRegisterPathsEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigCollectBlocksEvent;
+use Machinateur\TwigBlockValidator\Event\TwigCollectBlocksEvent;
+use Machinateur\TwigBlockValidator\Event\TwigLoadFilesEvent;
+use Machinateur\TwigBlockValidator\Event\TwigLoadPathsErrorEvent;
+use Machinateur\TwigBlockValidator\Event\TwigLoadPathsEvent;
+use Machinateur\TwigBlockValidator\Event\TwigRegisterPathsErrorEvent;
+use Machinateur\TwigBlockValidator\Event\TwigRegisterPathsEvent;
 use Machinateur\TwigBlockValidator\Event\Validator\ValidateCommentsErrorEvent;
 use Machinateur\TwigBlockValidator\Event\Validator\ValidateCommentsEvent;
 use Symfony\Component\Console\Input\InputInterface;

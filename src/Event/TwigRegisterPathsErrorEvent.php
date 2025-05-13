@@ -25,21 +25,16 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\TwigBlockValidator\Event\Validator;
+namespace Machinateur\TwigBlockValidator\Event;
 
-use Machinateur\TwigBlockValidator\Twig\Node\TwigBlockStackInterface;
+use Twig\Error\LoaderError;
 
-/**
- * @phpstan-import-type _Block              from TwigBlockStackInterface
- */
-readonly class TwigCollectBlocksEvent
+readonly class TwigRegisterPathsErrorEvent
 {
     /**
-     * @param array<string> $paths
-     * @param array<_Block> $blocks
+     * @param list<LoaderError> $errors
      */
     public function __construct(
-        public array $paths,
-        public array $blocks,
+        public array $errors,
     ) {}
 }

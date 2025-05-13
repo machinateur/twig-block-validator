@@ -25,15 +25,24 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\TwigBlockValidator\Event\Validator;
+namespace Machinateur\TwigBlockValidator\Event;
 
-readonly class TwigLoadPathsEvent
+use Symfony\Component\Finder\Finder;
+
+class TwigLoadFilesEvent implements NotifiableInterface
 {
+    use NotifiableTrait;
+
+    public const CALL_BEGIN = 'begin';
+    public const CALL_END   = 'end';
+    public const CALL_STEP  = 'step';
+
     /**
      * @param array<string> $paths
      */
     public function __construct(
-        public string $namespace,
-        public array  $paths,
+        public readonly string $namespace,
+        public readonly array  $paths,
+        public readonly Finder $finder,
     ) {}
 }

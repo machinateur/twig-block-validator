@@ -27,18 +27,18 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Twig;
 
-use Machinateur\TwigBlockValidator\Event\Validator\TwigCollectBlocksEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigLoadFilesEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigLoadPathsErrorEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigLoadPathsEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigRegisterPathsErrorEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigRegisterPathsEvent;
+use Machinateur\Twig\Extension\CommentExtension;
+use Machinateur\TwigBlockValidator\Event\TwigCollectBlocksEvent;
+use Machinateur\TwigBlockValidator\Event\TwigLoadFilesEvent;
+use Machinateur\TwigBlockValidator\Event\TwigLoadPathsErrorEvent;
+use Machinateur\TwigBlockValidator\Event\TwigLoadPathsEvent;
+use Machinateur\TwigBlockValidator\Event\TwigRegisterPathsErrorEvent;
+use Machinateur\TwigBlockValidator\Event\TwigRegisterPathsEvent;
 use Machinateur\TwigBlockValidator\Service\NamespacedPathnameBuilder;
 use Machinateur\TwigBlockValidator\Twig\Extension\BlockVersionExtension;
 use Machinateur\TwigBlockValidator\Twig\Node\CommentCollectionInterface;
 use Machinateur\TwigBlockValidator\Twig\Node\TwigBlockStackInterface;
 use Machinateur\TwigBlockValidator\Twig\NodeVisitor\BlockNodeVisitor;
-use Machinateur\Twig\Extension\CommentExtension;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
@@ -52,7 +52,6 @@ use Twig\Error\RuntimeError;
 use Twig\Extension\CoreExtension;
 use Twig\Lexer;
 use Twig\Loader\FilesystemLoader;
-use Twig\Template;
 use Twig\TemplateWrapper;
 
 /**
