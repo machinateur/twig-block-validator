@@ -12,43 +12,39 @@ This tool may also be used without Shopware, it supports both.
 ## Example with Shopware
 
 To validate against the dev-dependency `shopware/storefront:^6.4` installed at `vendor/shopware/storefront/Resources/views`,
- expecting version `6.7` in the comments in `tests/res/` (`__main__` as default namespace), run:
+ expecting version `6.7` in the comments in `tests/res_sw/` (`__main__` as default namespace), run:
 
 ```
-$ bin/shopware twig:block:validate -t "@Storefront:vendor/shopware/storefront/Resources/views" -c "tests/res/" -r 6.7
+$ time bin/shopware twig:block:validate -t '@Storefront:vendor/shopware/storefront/Resources/views' -c tests/res_sw/ -r 6.7
 
- ! [NOTE] Adding namespace "__main__" with paths:                                                                       
+ ! [NOTE] Adding namespace "__main__"...                                                                                
 
- * tests/res/
+ ! [NOTE] Adding namespace "Storefront"...                                                                              
 
- ! [NOTE] Adding namespace "Storefront" with paths:                                                                     
+ ! [NOTE] Loading namespace "__main__".                                                                                 
 
- * vendor/shopware/storefront/Resources/views
+ 1/1 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] 100% < 1 sec
 
- ! [NOTE] Loading namespace "__main__" files:                                                                           
+ ! [NOTE] Collected 1 blocks across 1 templates.                                                                        
 
- * template.html.twig
+ ------------------------------ --------------------------------------- --------------------------- ------------------------------------------------------------------ ---------- ---------- 
+  template                       parent template                         block                       hash                                                               version    mismatch  
+ ------------------------------ --------------------------------------- --------------------------- ------------------------------------------------------------------ ---------- ---------- 
+  @__main__/template.html.twig   @Storefront/storefront/base.html.twig   base_body_skip_to_content   c1954b12f0c43a0244c3d781256b6aa676b5699a9700c10983a468a68a0e5eb1   v6.6.6.0   [x]       
+                                                                                                     4820b0cd1d32b5079aa8f3e988bd756bc0c52ea20a694353370b39a8ded2d5ac   6.7                  
+ ------------------------------ --------------------------------------- --------------------------- ------------------------------------------------------------------ ---------- ---------- 
 
-Analysis result
-===============
-
- ------------------------------ ----------------------------------------------------- --------------------------- ------------------------------------------------------------------ --------- ---------- 
-  template                       parent template                                       block                       hash                                                               version   mismatch  
- ------------------------------ ----------------------------------------------------- --------------------------- ------------------------------------------------------------------ --------- ---------- 
-  @__main__/template.html.twig   @Storefront/storefront/page/account/index.html.twig   page_account_main_content   c46e2748def26f1ff33af5eb04a9732fe2c2824f6fdf0aa98c94104b6afee48d   v6.6.0    [x]       
-                                                                                                                   ee173de4df62556b65c720ab394292fbcd8d4afaf6724885ba70c651ef5c57d0   6.7                 
- ------------------------------ ----------------------------------------------------- --------------------------- ------------------------------------------------------------------ --------- ---------- 
+> 0.18s user 0.08s system 59% cpu 0.433 total (tested on Mac M1)
 ```
 
-Here's [the example template](tests/res/template.html.twig) that would produce the above errors:
+Here's [the example template](tests/res_sw/template.html.twig) that would produce the above errors:
 
 ```twig
-{% sw_extends '@Storefront/storefront/page/account/index.html.twig' %}
+{% sw_extends "@Storefront/storefront/base.html.twig" %}
 
-{# shopware-block: c46e2748def26f1ff33af5eb04a9732fe2c2824f6fdf0aa98c94104b6afee48d@v6.6.0 #}
-{% block page_account_main_content %}
-
-    Test content
+{# shopware-block: c1954b12f0c43a0244c3d781256b6aa676b5699a9700c10983a468a68a0e5eb1@v6.6.6.0 #}
+{% block base_body_skip_to_content %}
+    My overwrite content
 {% endblock %}
 ```
 
@@ -58,7 +54,8 @@ It's also possible to use `twig-block` here,
  but since this was inspired by [Shopware's PhpStorm plugin](https://github.com/shopwareLabs/shopware6-phpstorm-plugin), `shopware-block` is also supported.  
 
 In general, the version is recommended, but since this tool is not strictly limited to working with
- shopware, it is not enforced and the provided version (`-r` flag) will be the default version, if none is set for a block.
+ shopware, it is not enforced. The provided version (`-r` flag) will be the default version, if none is set for a block.
+  If not given, it will try to use the
 
 ## Installation
 
