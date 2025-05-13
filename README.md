@@ -45,14 +45,17 @@ Here's [the example template](tests/res/template.html.twig) that would produce t
 ```twig
 {% sw_extends '@Storefront/storefront/page/account/index.html.twig' %}
 
+{# shopware-block: c46e2748def26f1ff33af5eb04a9732fe2c2824f6fdf0aa98c94104b6afee48d@v6.6.0 #}
 {% block page_account_main_content %}
-    {# shopware-block: c46e2748def26f1ff33af5eb04a9732fe2c2824f6fdf0aa98c94104b6afee48d@v6.6.0 #}
 
     Test content
 {% endblock %}
 ```
 
 I just generated a random SHA265 for this test.
+
+It's also possible to use `twig-block` here,
+ but since this was inspired by [Shopware's PhpStorm plugin](https://github.com/shopwareLabs/shopware6-phpstorm-plugin), `shopware-block` is also supported.  
 
 In general, the version is recommended, but since this tool is not strictly limited to working with
  shopware, it is not enforced and the provided version (`-r` flag) will be the default version, if none is set for a block.
@@ -141,8 +144,6 @@ Find the source archive and prebuilt phar attached to
 - Still needs verification if the content is correctly hashed
 - Memory?
   - Use profiler or stopwatch
-- Improve independency from shopware version
-  - This is needed in order to support standalone
 
 ## License
 

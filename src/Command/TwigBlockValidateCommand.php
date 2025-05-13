@@ -27,14 +27,12 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Command;
 
-use Composer\InstalledVersions;
 use Machinateur\TwigBlockValidator\Validator\TwigBlockValidator;
+use Machinateur\TwigBlockValidator\Validator\TwigBlockValidatorOutput;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\OutputStyle;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use Twig\Loader\FilesystemLoader;
 
 /**
@@ -42,16 +40,15 @@ use Twig\Loader\FilesystemLoader;
  */
 class TwigBlockValidateCommand extends Command
 {
-    use ConsoleTrait;
-
     public const DEFAULT_NAME = 'twig:block:validate';
 
     /**
      * @param string|null $name     The override command name. This is useful for adding it as composer script.
      */
     public function __construct(
-        private readonly TwigBlockValidator $validator,
-        ?string                             $name = null,
+        private readonly TwigBlockValidator       $validator,
+        private readonly TwigBlockValidatorOutput $validatorOutput,
+        ?string                                   $name = null,
     ) {
         parent::__construct($name);
     }
@@ -70,10 +67,9 @@ class TwigBlockValidateCommand extends Command
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output, ?OutputStyle $console = null): int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $console     ??= new SymfonyStyle($input, $output);
-        $this->setConsole($console);
+        $this->validatorOutput->init($input, $output);
 
         $templatePaths = (array)$input->getOption('template');
         $validatePaths = (array)$input->getOption('validate');
@@ -82,9 +78,9 @@ class TwigBlockValidateCommand extends Command
         $templatePaths = $this->resolveNamespaces($templatePaths);
         $validatePaths = $this->resolveNamespaces($validatePaths);
 
-        $this->validator->setConsole($console);
         $this->validator->validate($validatePaths, $templatePaths, $version);
-        $this->validator->reset();
+
+        $this->validatorOutput->reset();
 
         return Command::SUCCESS;
     }
@@ -105,7 +101,9 @@ class TwigBlockValidateCommand extends Command
      */
     protected function resolveNamespaces(array $templatePaths): array
     {
-        $paths = [];
+        $console = $this->validatorOutput->getConsole();
+
+        $paths   = [];
         foreach ($templatePaths as $path) {
             if (\str_contains($path, ':')) {
                 if ($path[0] === '@') {
@@ -119,8 +117,8 @@ class TwigBlockValidateCommand extends Command
 
             // Ignore non-existent paths for now.
             if ( ! \is_dir($path)) {
-                if ($this->output?->isVerbose()) {
-                    $this->console?->block('The directory "%s" was not found. Skipping.', 'WARNING', 'fg=black;bg=yellow');
+                if ($console?->isVeryVerbose()) {
+                    $console?->block('The directory "%s" was not found. Skipping.', 'WARNING', 'fg=black;bg=yellow');
                 }
 
                 continue;

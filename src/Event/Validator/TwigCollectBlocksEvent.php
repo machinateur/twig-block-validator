@@ -25,36 +25,21 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\TwigBlockValidator\Twig\Node;
+namespace Machinateur\TwigBlockValidator\Event\Validator;
 
-use Twig\Attribute\YieldReady;
-use Twig\Compiler;
-use Twig\Node\Node;
+use Machinateur\TwigBlockValidator\Twig\Node\TwigBlockStackInterface;
 
 /**
- * An AST representation of the block comments within a set of templates.
- *
- * The implementation logic for {@see CommentCollectionInterface} is externalized
- *  to {@see CommentCollectionTrait}, which is more reusable.
+ * @phpstan-import-type _Block              from TwigBlockStackInterface
  */
-#[YieldReady]
-class CommentCollectionNode extends Node implements CommentCollectionInterface
+readonly class TwigCollectBlocksEvent
 {
-    use CommentCollectionTrait;
-
     /**
-     * Disallow setting any child nodes, same as with {@see \Twig\Node\EmptyNode}.
+     * @param array<string> $paths
+     * @param array<_Block> $blocks
      */
-    public function setNode(string $name, Node $node): void
-    {
-        throw new \LogicException('ContextTagNode cannot have children.');
-    }
-
-    /**
-     * Compiling a `ShopwareBlockCollectionNode` is no-op, as it will never have children. :(
-     */
-    public function compile(Compiler $compiler): void
-    {
-        // No-op.
-    }
+    public function __construct(
+        public array $paths,
+        public array $blocks,
+    ) {}
 }

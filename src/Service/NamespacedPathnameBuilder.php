@@ -31,26 +31,33 @@ use Symfony\Component\Finder\SplFileInfo;
 use Twig\Error\LoaderError;
 use Twig\Loader\FilesystemLoader;
 
-readonly class NamespacedPathnameBuilder
+/**
+ * This class is not available via dependency injection, as i t requires a twig loader instance as constructor argument.
+ */
+class NamespacedPathnameBuilder
 {
     /**
      * @var \Closure(FilesystemLoader, string, string): array{0:string,1:string}
      *
      * @see FilesystemLoader::parseName()
      */
-    private \Closure $parseName;
+    private readonly \Closure $parseName;
 
     public function __construct(
-        private FilesystemLoader $loader,
+        private readonly FilesystemLoader $loader,
     ) {
         $this->parseName = \Closure::bind(static function (FilesystemLoader $loader, string $name, string $default = FilesystemLoader::MAIN_NAMESPACE): array {
             return $loader->parseName($name, $default);
         }, null, FilesystemLoader::class);
     }
 
-    public function buildNamespacedPathname(string $namespace, SplFileInfo $file): string
+    public function buildNamespacedPathname(string $namespace, SplFileInfo|string $file): string
     {
-        return '@' . $namespace . '/' . $file->getRelativePathname();
+        if ($file instanceof SplFileInfo) {
+            $file = $file->getRelativePathname();
+        }
+
+        return '@' . $namespace . '/' . $file;
     }
 
     /**

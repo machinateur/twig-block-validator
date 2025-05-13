@@ -25,36 +25,20 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\TwigBlockValidator\Twig\Node;
-
-use Twig\Attribute\YieldReady;
-use Twig\Compiler;
-use Twig\Node\Node;
+namespace Machinateur\TwigBlockValidator\Event;
 
 /**
- * An AST representation of the block comments within a set of templates.
- *
- * The implementation logic for {@see CommentCollectionInterface} is externalized
- *  to {@see CommentCollectionTrait}, which is more reusable.
+ * ;)
  */
-#[YieldReady]
-class CommentCollectionNode extends Node implements CommentCollectionInterface
+interface NotifiableInterface
 {
-    use CommentCollectionTrait;
+    /**
+     * Notify a callback previously stored to the event.
+     */
+    public function notify(string $name, mixed...$args): void;
 
     /**
-     * Disallow setting any child nodes, same as with {@see \Twig\Node\EmptyNode}.
+     * Store a callback in the event, for the processing logic to call.
      */
-    public function setNode(string $name, Node $node): void
-    {
-        throw new \LogicException('ContextTagNode cannot have children.');
-    }
-
-    /**
-     * Compiling a `ShopwareBlockCollectionNode` is no-op, as it will never have children. :(
-     */
-    public function compile(Compiler $compiler): void
-    {
-        // No-op.
-    }
+    public function callback(string $name, callable $callback): void;
 }
