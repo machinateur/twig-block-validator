@@ -34,7 +34,6 @@ use Machinateur\TwigBlockValidator\Event\TwigLoadPathsErrorEvent;
 use Machinateur\TwigBlockValidator\Event\TwigLoadPathsEvent;
 use Machinateur\TwigBlockValidator\Event\TwigRegisterPathsErrorEvent;
 use Machinateur\TwigBlockValidator\Event\TwigRegisterPathsEvent;
-use Machinateur\TwigBlockValidator\Service\NamespacedPathnameBuilder;
 use Machinateur\TwigBlockValidator\Twig\Extension\BlockVersionExtension;
 use Machinateur\TwigBlockValidator\Twig\Node\CommentCollectionInterface;
 use Machinateur\TwigBlockValidator\Twig\Node\TwigBlockStackInterface;

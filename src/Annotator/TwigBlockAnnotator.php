@@ -27,20 +27,21 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Annotator;
 
-use Machinateur\TwigBlockValidator\Service\NamespacedPathnameBuilder;
 use Machinateur\TwigBlockValidator\Service\TwigBlockResolver;
 use Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 class TwigBlockAnnotator
 {
-    private readonly NamespacedPathnameBuilder $namespacedPathnameBuilder;
-
     public function __construct(
         private readonly BlockValidatorEnvironment $twig,
         private readonly TwigBlockResolver         $blockResolver,
         private readonly EventDispatcherInterface  $dispatcher,
     ) {
-        $this->namespacedPathnameBuilder = new NamespacedPathnameBuilder($this->twig->getLoader());
+    }
+
+    public function annotate(array $scopePaths, array $templatePaths = [], ?string $version = null): void
+    {
+        // TODO
     }
 }

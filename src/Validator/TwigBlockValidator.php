@@ -30,7 +30,6 @@ namespace Machinateur\TwigBlockValidator\Validator;
 use Composer\Semver\Semver;
 use Machinateur\TwigBlockValidator\Event\Validator\ValidateCommentsErrorEvent;
 use Machinateur\TwigBlockValidator\Event\Validator\ValidateCommentsEvent;
-use Machinateur\TwigBlockValidator\Service\NamespacedPathnameBuilder;
 use Machinateur\TwigBlockValidator\Service\TwigBlockResolver;
 use Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment;
 use Machinateur\TwigBlockValidator\Twig\Extension\BlockVersionExtension;
@@ -58,14 +57,11 @@ use Twig\Error\SyntaxError;
  */
 class TwigBlockValidator
 {
-    private readonly NamespacedPathnameBuilder $namespacedPathnameBuilder;
-
     public function __construct(
         private readonly BlockValidatorEnvironment $twig,
         private readonly TwigBlockResolver         $blockResolver,
         private readonly EventDispatcherInterface  $dispatcher,
     ) {
-        $this->namespacedPathnameBuilder = new NamespacedPathnameBuilder($this->twig->getLoader());
     }
 
     /**
