@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// This file is used for the shopware-beaver CLI, which integrates with shopware.
+// This file is used for the shopware CLI, which integrates with shopware.
 
 return [
     Symfony\Bundle\FrameworkBundle\FrameworkBundle::class          => ['all' => true],

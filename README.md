@@ -1,7 +1,7 @@
-# Twig Block Version Validator for Shopware 6 (Beaver)
+# Twig Block Version Validator (for Shopware 6)
 
 When dealing with many plugins and twig blocks, it can get confusing quite fast.
- Let *beaver* help you gnaw away those twig blocks and validate if they're still up to date with their parents.
+ Let this tool help you gnaw away those twig blocks and validate if they're still up to date with their parents.
 
 This project is a pure PHP implementation and twig integration of the Shopware 6 IntelliJ plugin's twig template-hash feature.
 
@@ -15,7 +15,7 @@ To validate against the dev-dependency `shopware/storefront:^6.4` installed at `
  expecting version `6.7` in the comments in `tests/res/` (`__main__` as default namespace), run:
 
 ```
-$ bin/shopware-beaver twig:block:validate -t "@Storefront:vendor/shopware/storefront/Resources/views" -c "tests/res/" -r 6.7
+$ bin/shopware twig:block:validate -t "@Storefront:vendor/shopware/storefront/Resources/views" -c "tests/res/" -r 6.7
 
  ! [NOTE] Adding namespace "__main__" with paths:                                                                       
 
@@ -111,7 +111,7 @@ Options:
 
 There are a total of three different CLIs available:
 
-- `bin/shopware-beaver`:
+- `bin/shopware`:
   A shopware integrated CLI.
   - Runs a full shopware-aware CLI (in `dev` env), which supports all built-in twig extensions.
   - If used inside a project directly as a bundle, it supports any custom functions, blocks, etc.
