@@ -27,12 +27,20 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Twig;
 
-use Machinateur\TwigBlockValidator\Service\NamespacedPathnameBuilder;
-use Machinateur\TwigBlockValidator\Twig\Extension\BlockVersionExtension;
+use Machinateur\Twig\Extension\CommentExtension;
+use Machinateur\TwigBlockValidator\Event\TwigCollectBlocksEvent;
+use Machinateur\TwigBlockValidator\Event\TwigCollectCommentsEvent;
+use Machinateur\TwigBlockValidator\Event\TwigLoadFilesEvent;
+use Machinateur\TwigBlockValidator\Event\TwigLoadPathsErrorEvent;
+use Machinateur\TwigBlockValidator\Event\TwigLoadPathsEvent;
+use Machinateur\TwigBlockValidator\Event\TwigRegisterPathsErrorEvent;
+use Machinateur\TwigBlockValidator\Event\TwigRegisterPathsEvent;
+use Machinateur\TwigBlockValidator\Twig\Extension\BlockValidatorExtension;
 use Machinateur\TwigBlockValidator\Twig\Node\CommentCollectionInterface;
 use Machinateur\TwigBlockValidator\Twig\Node\TwigBlockStackInterface;
 use Machinateur\TwigBlockValidator\Twig\NodeVisitor\BlockNodeVisitor;
-use Machinateur\Twig\Extension\CommentExtension;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface as CacheItemInterface;
@@ -47,20 +55,23 @@ use Twig\Loader\FilesystemLoader;
 use Twig\TemplateWrapper;
 
 /**
+ * @phpstan-import-type _Comment            from CommentCollectionInterface
  * @phpstan-import-type _CommentCollection  from CommentCollectionInterface
  * @phpstan-import-type _Block              from TwigBlockStackInterface
+ *
+ * @phpstan-type _NamespacedPathMap         array<string, array<string>>
  */
 class BlockValidatorEnvironment extends Environment implements ResetInterface
 {
     private BlockNodeVisitor $nodeVisitor;
 
-    private NamespacedPathnameBuilder $namespacedPathnameBuilder;
+    public readonly NamespacedPathnameBuilder $namespacedPathnameBuilder;
 
     public function __construct(
-        Environment                     $platformTwig,
-        private readonly CacheInterface $blockCache,
-        private readonly CacheInterface $commentCache,
-        ?string                         $version = null,
+        Environment                               $platformTwig,
+        private readonly CacheInterface           $cache,
+        private readonly EventDispatcherInterface $dispatcher,
+        ?string                                   $version = null,
     ) {
         $loader = new FilesystemLoader();
 
@@ -73,7 +84,7 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
         $this->addExtension(new CommentExtension());
 
         // Add the parser extension, needed for block tracking.
-        BlockVersionExtension::setParser($this);
+        BlockValidatorExtension::setParser($this);
         // Use node visitor directly, instead of using the extension class, to extract the block collection.
         $this->addNodeVisitor(
             $this->nodeVisitor = new BlockNodeVisitor(defaultVersion: $version)
@@ -108,11 +119,24 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
         throw new \LogicException('The validator environment does not support rendering!');
     }
 
+    public function display($name, array $context = []): void
+    {
+        $this->render($name, $context);
+    }
+
     public function getLoader(): FilesystemLoader
     {
         $loader = parent::getLoader();
         \assert($loader instanceof FilesystemLoader);
         return $loader;
+    }
+
+    public function removeCache(string $name): void
+    {
+        $this->cache->delete($this->getCacheKey($name, 'blocks'));
+        $this->cache->delete($this->getCacheKey($name, 'comments'));
+
+        parent::removeCache($name);
     }
 
     /**
@@ -136,7 +160,43 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
     }
 
     /**
+     * Add the given paths for the given namespaces, without resetting the namespace paths of the loader.
+     *
+     * @param _NamespacedPathMap $scopePaths
+     */
+    public function registerPaths(array $scopePaths): void
+    {
+        /** @var list<LoaderError> $errors */
+        $errors = [];
+
+        // Register all paths with the loader.
+        foreach ($scopePaths as $namespace => $paths) {
+            $this->dispatcher->dispatch(
+                new TwigRegisterPathsEvent($namespace, $paths)
+            );
+
+            foreach ($paths as $path) {
+                try {
+                    $this->addPath($path, $namespace);
+                } catch (LoaderError $error) {
+                    $key          = $this->namespacedPathnameBuilder->buildNamespacedPathname($namespace, $path);
+                    $errors[$key] = $error;
+                }
+            }
+        }
+
+        if (0 < \count($errors)) {
+            $this->dispatcher->dispatch(
+                new TwigRegisterPathsErrorEvent($errors)
+            );
+        }
+    }
+
+
+    /**
      * @throws LoaderError  when the template cannot be loaded
+     *
+     * @deprecated will be removed in the future
      */
     public function loadFile(SplFileInfo $file, string $namespace = FilesystemLoader::MAIN_NAMESPACE): TemplateWrapper
     {
@@ -149,34 +209,157 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
         }
     }
 
+    /**
+     * Load the given paths for the given namespaces.
+     *
+     * @param _NamespacedPathMap $scopePaths
+     *
+     * @return \Generator<string, SplFileInfo>
+     */
+    protected function loadFiles(array $scopePaths): \Generator
+    {
+        foreach ($scopePaths as $namespace => $paths) {
+            $this->dispatcher->dispatch(
+                new TwigLoadPathsEvent($namespace, $paths)
+            );
+
+            $finder = new Finder();
+            $finder->in($paths)
+                ->files()
+                ->name('*.twig');
+
+            $this->dispatcher->dispatch(
+                $event = new TwigLoadFilesEvent($namespace, $paths, $finder)
+            );
+
+            /** @var list<LoaderError> $errors */
+            $errors = [];
+
+            $event->notify(TwigLoadFilesEvent::CALL_BEGIN);
+
+            // Now load all files.
+            foreach ($finder->getIterator() as $file) {
+                $template = $this->namespacedPathnameBuilder->buildNamespacedPathname($namespace, $file);
+
+                try {
+                    $this->load($template);
+
+                    $event->notify(TwigLoadFilesEvent::CALL_STEP, $file);
+                } catch (LoaderError $error) {
+                    $errors[] = $error;
+
+                    continue;
+                }
+
+                yield $template => $file;
+            }
+
+            $event->notify(TwigLoadFilesEvent::CALL_END);
+
+            if (0 < \count($errors)) {
+                $this->dispatcher->dispatch(
+                    new TwigLoadPathsErrorEvent($errors)
+                );
+            }
+        }
+    }
+
+    /**
+     * Load the given paths, optionally save all errors to the provided array.
+     *  Collect all blocks from these templates.
+     *
+     * @param _NamespacedPathMap $scopePaths
+     * @param list<TwigError>    $errors
+     *
+     * @return _Block[]
+     */
+    public function loadBlocks(array $scopePaths, array & $errors = []): array
+    {
+        $templates = [];
+        $blocks    = [];
+
+        // Get all comments and blocks.
+        foreach ($this->loadFiles($scopePaths) as $template => $file) {
+            /** @var SplFileInfo $file */
+
+            try {
+                $templates[] = $template;
+                $blocks[]    = $this->getBlocks($template);
+            } catch (TwigError $error) {
+                $errors[]   = $error;
+            }
+        }
+
+        /** @var _Block[]           $blocks */
+        $blocks   = \array_merge(...$blocks);
+
+        $this->dispatcher->dispatch(
+            new TwigCollectBlocksEvent($templates, $blocks)
+        );
+
+        return $blocks;
+    }
+
+    /**
+     * Load the given paths, optionally save all errors to the provided array.
+     *  Collect all blocks and comments from these templates.
+     *
+     * @param _NamespacedPathMap $scopePaths
+     * @param list<TwigError>    $errors
+     *
+     * @return _CommentCollection
+     */
+    public function loadComments(array $scopePaths, array & $errors = []): array
+    {
+        $templates = [];
+        $comments  = [];
+
+        // Get all comments and blocks.
+        foreach ($this->loadFiles($scopePaths) as $template => $file) {
+            /** @var SplFileInfo $file */
+
+            try {
+                $templates[] = $template;
+                $comments[]  = $this->getComments($template);
+            } catch (TwigError $error) {
+                $errors[]   = $error;
+            }
+        }
+
+        /** @var _CommentCollection $comments */
+        $comments = \array_merge(...$comments);
+
+        $this->dispatcher->dispatch(
+            new TwigCollectCommentsEvent($templates, $comments)
+        );
+
+        return $comments;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function load($name): TemplateWrapper
     {
         if ( ! \is_string($name)) {
             throw new \InvalidArgumentException('The name must be a string.');
         }
 
-        if (isset($this->templateCache[$name])) {
-            return $this->templateCache[$name];
-        }
-
         $template   = parent::load($name);
+
         $collection = $this->nodeVisitor->resetCollection();
         // Will not be called when already in cache.
-        $this->blockCache->get($this->getCacheKey($name, 'blocks'),
-                static function (CacheItemInterface $item) use ($collection): array {
-                $item->expiresAfter(new \DateInterval('PT10M'));
-
+        $this->cache->get($this->getCacheKey($name, 'blocks'),
+            static function (CacheItemInterface $item) use ($collection): array {
                 $blocks = $collection->getBlocks();
 
-                // Build a map by name.
+                // Build a map by name, per template.
                 return \array_combine(\array_column($blocks, 'block'), $blocks);
             }
         );
         // Will not be called when already in cache.
-        $this->commentCache->get($this->getCacheKey($name, 'comments'),
+        $this->cache->get($this->getCacheKey($name, 'comments'),
             static function (CacheItemInterface $item) use ($collection): array {
-                $item->expiresAfter(new \DateInterval('PT10M'));
-
                 return $collection->getComments();
             }
         );
@@ -219,7 +402,7 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
     public function getBlocks(string $name): array
     {
         /** @var CacheItemInterface $item */
-        $item = $this->blockCache->getItem($this->getCacheKey($name, 'blocks'));
+        $item = $this->cache->getItem($this->getCacheKey($name, 'blocks'));
 
         if ( ! $item->isHit()) {
             throw new RuntimeError(\sprintf('The template "%s" is not in block cache!', $name));
@@ -246,7 +429,7 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
     public function getComments(string $name): array
     {
         /** @var CacheItemInterface $item */
-        $item = $this->commentCache->getItem($this->getCacheKey($name, 'comments'));
+        $item = $this->cache->getItem($this->getCacheKey($name, 'comments'));
 
         if ( ! $item->isHit()) {
             throw new RuntimeError(\sprintf('The template "%s" is not in comment cache!', $name));

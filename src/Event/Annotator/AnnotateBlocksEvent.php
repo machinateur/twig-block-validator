@@ -25,16 +25,32 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\TwigBlockValidator\Event\Validator;
+namespace Machinateur\TwigBlockValidator\Event\Annotator;
 
-use Twig\Error\Error as TwigError;
+use Machinateur\TwigBlockValidator\Event\NotifiableInterface;
+use Machinateur\TwigBlockValidator\Event\NotifiableTrait;
+use Machinateur\TwigBlockValidator\Twig\Node\CommentCollectionInterface;
+use Machinateur\TwigBlockValidator\Twig\Node\TwigBlockStackInterface;
 
-readonly class TwigValidateCommentsErrorEvent
+/**
+ * @phpstan-import-type _Block            from TwigBlockStackInterface
+ * @phpstan-import-type _Comment          from CommentCollectionInterface
+ */
+class AnnotateBlocksEvent implements NotifiableInterface
 {
+    use NotifiableTrait;
+
+    public const CALL_BEGIN = 'begin';
+    public const CALL_END   = 'end';
+    public const CALL_STEP  = 'step';
+
     /**
-     * @param list<TwigError> $errors
+     * @param _Block[]                               $blocks
+     * @param array<string, array<string, _Comment>> $comments
      */
     public function __construct(
-        public array $errors,
+        public readonly array  $blocks,
+        public readonly array  $comments,
+        public readonly string $version,
     ) {}
 }

@@ -27,25 +27,25 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Command;
 
+use Machinateur\TwigBlockValidator\Annotator\TwigBlockAnnotator;
 use Machinateur\TwigBlockValidator\TwigBlockValidatorOutput;
-use Machinateur\TwigBlockValidator\Validator\TwigBlockValidator;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Twig\Loader\FilesystemLoader;
 
-class TwigBlockValidateCommand extends Command
+class TwigBlockAnnotateCommand extends Command
 {
     use ConsoleCommandTrait;
 
-    public const DEFAULT_NAME = 'twig:block:validate';
+    public const DEFAULT_NAME = 'twig:block:annotate';
 
     /**
      * @param string|null $name     The override command name. This is useful for adding it as composer script.
      */
     public function __construct(
-        private readonly TwigBlockValidator       $validator,
+        private readonly TwigBlockAnnotator       $annotator,
         private readonly TwigBlockValidatorOutput $output,
         ?string                                   $name = null,
     ) {
@@ -60,6 +60,7 @@ class TwigBlockValidateCommand extends Command
     protected function configure(): void
     {
         $this
+            ->addArgument('output-path', InputArgument::OPTIONAL, 'Where to write the annotated templates.')
             ->addOption('template', 't', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Twig template path to load')
             ->addOption('validate', 'c', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Twig template path to validate')
             ->addOption('use-version', 'r', InputOption::VALUE_OPTIONAL, 'The version number required')
@@ -71,13 +72,24 @@ class TwigBlockValidateCommand extends Command
         $this->output->init($input, $output);
 
         $templatePaths = (array)$input->getOption('template');
-        $validatePaths = (array)$input->getOption('validate');
+        $annotatePaths = (array)$input->getOption('validate');
         $version       = $input->getOption('use-version');
 
         $templatePaths = $this->resolveNamespaces($templatePaths);
-        $validatePaths = $this->resolveNamespaces($validatePaths);
+        $annotatePaths = $this->resolveNamespaces($annotatePaths);
 
-        $this->validator->validate($validatePaths, $templatePaths, $version);
+        if ($outputPath = $input->getArgument('output-path')) {
+            $this->annotator->setPath($outputPath);
+        }
+
+        if ( ! $this->output->getConsole()
+            ->confirm("To annotate the templates in-place can lead to permanent loss of data!\n Continue?" , false)
+        ) {
+            return Command::SUCCESS;
+        }
+
+        $this->annotator->annotate($annotatePaths, $templatePaths, $version);
+        $this->annotator->setPath(null);
 
         $this->output->reset();
 

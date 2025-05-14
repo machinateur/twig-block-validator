@@ -25,16 +25,21 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\TwigBlockValidator\Event\Validator;
+namespace Machinateur\TwigBlockValidator\Event;
 
-use Twig\Error\LoaderError;
+use Machinateur\TwigBlockValidator\Twig\Node\CommentCollectionInterface;
 
-readonly class TwigRegisterPathsErrorEvent
+/**
+ * @phpstan-import-type _CommentCollection  from CommentCollectionInterface
+ */
+readonly class TwigCollectCommentsEvent
 {
     /**
-     * @param list<LoaderError> $errors
+     * @param array<string>      $paths
+     * @param _CommentCollection $comments
      */
     public function __construct(
-        public array $errors,
+        public array $paths,
+        public array $comments,
     ) {}
 }

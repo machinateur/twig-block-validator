@@ -25,15 +25,16 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\TwigBlockValidator\Event\Validator;
+namespace Machinateur\TwigBlockValidator\Event\Annotator;
 
-readonly class TwigLoadPathsEvent
+use Twig\Error\Error as TwigError;
+
+readonly class AnnotateBlocksErrorEvent
 {
     /**
-     * @param array<string> $paths
+     * @param list<TwigError> $errors
      */
     public function __construct(
-        public string $namespace,
-        public array  $paths,
+        public array $errors,
     ) {}
 }

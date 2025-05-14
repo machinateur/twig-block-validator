@@ -4,7 +4,7 @@
 declare(strict_types=1);
 
 use Composer\InstalledVersions;
-use Machinateur\TwigBlockValidator\Command\TwigBlockValidateCommand;
+use Machinateur\TwigBlockValidator\Command\TwigBlockAnnotateCommand;
 use Machinateur\TwigBlockValidator\Twig\Extension\BlockValidatorExtension;
 use Machinateur\TwigBlockValidator\TwigBlockValidatorBundle;
 use Machinateur\TwigBlockValidator\TwigBlockValidatorKernel;
@@ -22,36 +22,26 @@ require_once __DIR__ . '/../vendor/autoload_runtime.php';
 return static function (array & $context) {
     \set_time_limit(0);
 
-    if (!\class_exists(Application::class)) {
-        throw new RuntimeException('You need to add "symfony/framework-bundle" as a Composer dependency.');
-    }
-
     $input = new ArgvInput();
     $env   = $input->getParameterOption(['--env', '-e'], $context['APP_ENV'] ?? 'prod', true);
     $debug = ($context['APP_DEBUG'] ?? ($env !== 'prod')) && !$input->hasParameterOption('--no-debug', true);
 
     $kernel      = new TwigBlockValidatorKernel($env, $debug);
+    $defaultName = TwigBlockAnnotateCommand::getDefaultName();
     $application = new Application($kernel);
+    $application->setName('Twig Block Validator');
     $application->setVersion(TwigBlockValidatorBundle::VERSION);
 
     $kernel->boot();
 
-    // Note: This causes an error when calling with `-t @Namespaced:path/to/the/templates`, as it mistakes the `:` for a command namespace.
-    //$application->setDefaultCommand($defaultName = TwigBlockValidateCommand::getDefaultName());
-
     if (null !== $version = InstalledVersions::getVersion('shopware/storefront')) {
-        $application->setName('Twig Block Validator (for Shopware 6)');
-        //$application->setVersion($version);
-
         BlockValidatorExtension::$preferredLabel = 'shopware';
 
-        $application->get(TwigBlockValidateCommand::getDefaultName())
+        $application->get($defaultName)
             ->getDefinition()
             ->getOption('use-version')
             ->setDefault($version);
-    } else {
-        $application->setName('Twig Block Validator');
     }
 
-    return $application->run();
+    return $application->get($defaultName);
 };

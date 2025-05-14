@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Twig\Node;
 
-use Machinateur\TwigBlockValidator\Twig\Extension\BlockVersionExtension;
+use Machinateur\TwigBlockValidator\Twig\Extension\BlockValidatorExtension;
 
 /**
  * An encapsulation of the {@see CommentCollectionInterface} implementation.
@@ -47,7 +47,7 @@ trait CommentCollectionTrait
     public function addComment(string $comment, ?string $defaultVersion = null): void
     {
         try {
-            $parsed = BlockVersionExtension::matchComment($comment);
+            $parsed = BlockValidatorExtension::matchComment($comment);
 
             // Remove the full match.
             \array_shift($parsed);

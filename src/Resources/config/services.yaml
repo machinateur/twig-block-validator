@@ -3,21 +3,42 @@ services:
   Machinateur\TwigBlockValidator\Command\TwigBlockValidateCommand:
     arguments:
       - '@Machinateur\TwigBlockValidator\Validator\TwigBlockValidator'
-      - '@Machinateur\TwigBlockValidator\Validator\TwigBlockValidatorOutput'
+      - '@Machinateur\TwigBlockValidator\TwigBlockValidatorOutput'
     tags:
       - 'console.command'
 
   Machinateur\TwigBlockValidator\Validator\TwigBlockValidator:
     arguments:
-      - '@Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment'
+      - '@twig_block_validator.twig'
+      - '@Machinateur\TwigBlockValidator\Service\TwigBlockResolver'
       - '@event_dispatcher'
 
-  Machinateur\TwigBlockValidator\Validator\TwigBlockValidatorOutput:
+  Machinateur\TwigBlockValidator\TwigBlockValidatorOutput:
     tags:
       - 'kernel.event_subscriber'
 
   Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment:
     arguments:
       - '@twig'
-      - '@twig_block_validator.block.cache'
-      - '@twig_block_validator.comment.cache'
+      - '@twig_block_validator.cache'
+      - '@event_dispatcher'
+
+  twig_block_validator.twig:
+    alias: 'Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment'
+
+  Machinateur\TwigBlockValidator\Command\TwigBlockAnnotateCommand:
+    arguments:
+      - '@Machinateur\TwigBlockValidator\Annotator\TwigBlockAnnotator'
+      - '@Machinateur\TwigBlockValidator\TwigBlockValidatorOutput'
+    tags:
+      - 'console.command'
+
+  Machinateur\TwigBlockValidator\Annotator\TwigBlockAnnotator:
+    arguments:
+      - '@twig_block_validator.twig'
+      - '@Machinateur\TwigBlockValidator\Service\TwigBlockResolver'
+      - '@event_dispatcher'
+
+  Machinateur\TwigBlockValidator\Service\TwigBlockResolver:
+    arguments:
+      - '@twig_block_validator.twig'

@@ -25,21 +25,24 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\TwigBlockValidator\Event\Validator;
+namespace Machinateur\TwigBlockValidator\Event;
 
-use Machinateur\TwigBlockValidator\Twig\Node\TwigBlockStackInterface;
+use Symfony\Component\Finder\Finder;
 
-/**
- * @phpstan-import-type _Block              from TwigBlockStackInterface
- */
-readonly class TwigCollectBlocksEvent
+class TwigLoadFilesEvent implements NotifiableInterface
 {
+    use NotifiableTrait;
+
+    public const CALL_BEGIN = 'begin';
+    public const CALL_END   = 'end';
+    public const CALL_STEP  = 'step';
+
     /**
      * @param array<string> $paths
-     * @param array<_Block> $blocks
      */
     public function __construct(
-        public array $paths,
-        public array $blocks,
+        public readonly string $namespace,
+        public readonly array  $paths,
+        public readonly Finder $finder,
     ) {}
 }

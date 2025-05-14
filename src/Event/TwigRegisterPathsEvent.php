@@ -25,7 +25,7 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\TwigBlockValidator\Event\Validator;
+namespace Machinateur\TwigBlockValidator\Event;
 
 readonly class TwigRegisterPathsEvent
 {
