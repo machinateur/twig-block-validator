@@ -25,14 +25,16 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\TwigBlockValidator\Service;
+namespace Machinateur\TwigBlockValidator\Twig;
 
 use Symfony\Component\Finder\SplFileInfo;
 use Twig\Error\LoaderError;
 use Twig\Loader\FilesystemLoader;
 
 /**
- * This class is not available via dependency injection, as i t requires a twig loader instance as constructor argument.
+ * This class is not available via dependency injection,
+ *  as it requires a twig loader instance as constructor argument,
+ *   which belongs to the respective {@see BlockValidatorEnvironment}.
  */
 class NamespacedPathnameBuilder
 {

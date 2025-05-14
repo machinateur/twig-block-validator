@@ -27,24 +27,14 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Event\Validator;
 
-use Machinateur\TwigBlockValidator\Event\NotifiableInterface;
-use Machinateur\TwigBlockValidator\Event\NotifiableTrait;
-use Symfony\Component\Finder\Finder;
+use Twig\Error\Error as TwigError;
 
-class TwigLoadFilesEvent implements NotifiableInterface
+readonly class ValidateCommentsErrorEvent
 {
-    use NotifiableTrait;
-
-    public const CALL_BEGIN = 'begin';
-    public const CALL_END   = 'end';
-    public const CALL_STEP  = 'step';
-
     /**
-     * @param array<string> $paths
+     * @param list<TwigError> $errors
      */
     public function __construct(
-        public readonly string $namespace,
-        public readonly array  $paths,
-        public readonly Finder $finder,
+        public array $errors,
     ) {}
 }

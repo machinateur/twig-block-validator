@@ -25,16 +25,19 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\TwigBlockValidator\Validator;
+namespace Machinateur\TwigBlockValidator;
 
-use Machinateur\TwigBlockValidator\Event\Validator\TwigLoadFilesEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigLoadPathsErrorEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigLoadPathsEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigRegisterPathsErrorEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigRegisterPathsEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigCollectBlocksEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigValidateCommentsErrorEvent;
-use Machinateur\TwigBlockValidator\Event\Validator\TwigValidateCommentsEvent;
+use Machinateur\TwigBlockValidator\Event\Annotator\AnnotateBlocksErrorEvent;
+use Machinateur\TwigBlockValidator\Event\Annotator\AnnotateBlocksEvent;
+use Machinateur\TwigBlockValidator\Event\TwigCollectBlocksEvent;
+use Machinateur\TwigBlockValidator\Event\TwigCollectCommentsEvent;
+use Machinateur\TwigBlockValidator\Event\TwigLoadFilesEvent;
+use Machinateur\TwigBlockValidator\Event\TwigLoadPathsErrorEvent;
+use Machinateur\TwigBlockValidator\Event\TwigLoadPathsEvent;
+use Machinateur\TwigBlockValidator\Event\TwigRegisterPathsErrorEvent;
+use Machinateur\TwigBlockValidator\Event\TwigRegisterPathsEvent;
+use Machinateur\TwigBlockValidator\Event\Validator\ValidateCommentsErrorEvent;
+use Machinateur\TwigBlockValidator\Event\Validator\ValidateCommentsEvent;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -43,6 +46,9 @@ use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Contracts\Service\ResetInterface;
 use Twig\Error\Error as TwigError;
 
+/**
+ * A subscriber that encapsulates the console output of certain operations through events.
+ */
 class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterface
 {
     /**
@@ -60,9 +66,13 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
             TwigLoadFilesEvent::class          => 'onTwigLoadFiles',
 
             TwigCollectBlocksEvent::class      => 'onTwigCollectBlocks',
+            TwigCollectCommentsEvent::class    => 'onTwigCollectComments',
 
-            TwigValidateCommentsEvent::class      => 'onTwigValidateComments',
-            TwigValidateCommentsErrorEvent::class => 'onTwigValidateCommentsError',
+            ValidateCommentsEvent::class       => 'onValidateComments',
+            ValidateCommentsErrorEvent::class  => 'onValidateCommentsError',
+
+            AnnotateBlocksEvent::class         => 'onAnnotateBlocks',
+            AnnotateBlocksErrorEvent::class    => 'onAnnotateBlocksError',
         ];
     }
 
@@ -181,16 +191,21 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
         $this->console?->note(\sprintf('Collected %d blocks across %d templates.', \count($event->blocks), \count($event->paths)));
     }
 
-    public function onTwigValidateComments(TwigValidateCommentsEvent $event): void
+    public function onTwigCollectComments(TwigCollectCommentsEvent $event): void
+    {
+        $this->console?->note(\sprintf('Found %d comments in %d templates.', \count($event->comments), \count($event->paths)));
+    }
+
+    public function onValidateComments(ValidateCommentsEvent $event): void
     {
         $defaultVersion = $event->version;
         $console        = $this->console;
         $table          = $this->console?->createTable();
 
-        $event->callback(TwigValidateCommentsEvent::CALL_BEGIN,
+        $event->callback(ValidateCommentsEvent::CALL_BEGIN,
             static fn () => $table?->setHeaders(['template', 'parent template', 'block', 'hash', 'version', 'mismatch'])
         );
-        $event->callback(TwigValidateCommentsEvent::CALL_STEP,
+        $event->callback(ValidateCommentsEvent::CALL_STEP,
             static function (array $comment) use ($console, $table, $defaultVersion) {
                 if (null === $table) {
                     return;
@@ -200,10 +215,10 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
                     ...$comment,
                     'block_lines' => \sprintf('%d-%d', ...$comment['block_lines']),
                     'hash' => !$comment['match']['hash']
-                        ? \sprintf("<fg=white;bg=red>%s</>\n<fg=black;bg=green>%s</>", $comment['hash'], $comment['source_hash'])
+                        ? \sprintf("<fg=white;bg=red>%s</>\n<fg=black;bg=green>%s</>", $comment['hash'], $comment['source_hash'] ?? '--')
                         : $comment['hash'],
                     'version' => !$comment['match']['version']
-                        ? \sprintf("<fg=white;bg=red>%s</>\n<fg=black;bg=green>%s</>", $comment['version'], $comment['source_version'])
+                        ? \sprintf("<fg=white;bg=red>%s</>\n<fg=black;bg=green>%s</>", $comment['version'], $comment['source_version'] ?? '--')
                         : $comment['version'],
                     'valid' => \sprintf('[%s]', $comment['valid'] ? ' ' : 'x'),
                 ];
@@ -225,18 +240,32 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
                 }
             }
         );
-        $event->callback(TwigValidateCommentsEvent::CALL_END,
+        $event->callback(ValidateCommentsEvent::CALL_END,
             static fn () => $table?->render()
         );
     }
 
-    public function onTwigValidateCommentsError(TwigValidateCommentsErrorEvent $event): void
+    public function onValidateCommentsError(ValidateCommentsErrorEvent $event): void
     {
         $this->console?->warning([
             'Twig errors!',
         ]);
 
         $this->listingTwigErrors($event->errors);
+    }
+
+    public function onAnnotateBlocks(AnnotateBlocksEvent $event): void
+    {
+        $defaultVersion = $event->version;
+        $console        = $this->console;
+        $table          = $this->console?->createTable();
+
+        // TODO
+    }
+
+    public function onAnnotateBlocksError(AnnotateBlocksErrorEvent $event): void
+    {
+        // TODO
     }
 
     /**
