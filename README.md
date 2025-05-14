@@ -222,22 +222,26 @@ Options:
 
 ### Which CLI to use
 
-There are a total of three different CLIs available:
+There are a total of four different CLIs available:
 
 - `bin/shopware`:
-  A shopware integrated CLI.
+  A shopware integrated console.
   - Runs a full shopware-aware CLI (in `dev` env), which supports all built-in twig extensions.
   - If used inside a project directly as a bundle, it supports any custom functions, blocks, etc.
 - `bin/console`:
-  A symfony CLI application.
+  A symfony console application.
   - Runs a symfony kernel with symfony framework and debug commands (in `dev` or `test`).
   - Only supports the twig extensions that are available in the symfony context.
 - `bin/twig-block-validate`:
+  A symfony command application.
   - Runs only the `twig:block:validate` command as standalone application.
   - Only supports the twig extensions that are available in the symfony context.
 - `bin/twig-block-annotate`:
+  A symfony command application.
   - Runs only the `twig:block:annotate` command as standalone application.
   - Only supports the twig extensions that are available in the symfony context.
+
+These can be copied to the `bin/` directory of your project (if not already present).
 
 ## Standalone
 
