@@ -1,6 +1,7 @@
 services:
 
   Machinateur\TwigBlockValidator\Command\TwigBlockValidateCommand:
+    public: true
     arguments:
       - '@Machinateur\TwigBlockValidator\Validator\TwigBlockValidator'
       - '@Machinateur\TwigBlockValidator\TwigBlockValidatorOutput'
@@ -27,6 +28,7 @@ services:
     alias: 'Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment'
 
   Machinateur\TwigBlockValidator\Command\TwigBlockAnnotateCommand:
+    public: true
     arguments:
       - '@Machinateur\TwigBlockValidator\Annotator\TwigBlockAnnotator'
       - '@Machinateur\TwigBlockValidator\TwigBlockValidatorOutput'

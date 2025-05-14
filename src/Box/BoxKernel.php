@@ -25,45 +25,21 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\TwigBlockValidator;
+namespace Machinateur\TwigBlockValidator\Box;
 
-use Composer\InstalledVersions;
-use Symfony\Bundle\DebugBundle\DebugBundle;
-use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
-use Symfony\Bundle\MonologBundle\MonologBundle;
-use Symfony\Bundle\TwigBundle\TwigBundle;
-use Symfony\Component\Config\Loader\LoaderInterface;
-use Symfony\Component\HttpKernel\Kernel;
+use Machinateur\TwigBlockValidator\TwigBlockValidatorKernel;
 
-class TwigBlockValidatorKernel extends Kernel
+class BoxKernel extends TwigBlockValidatorKernel
 {
-    public static function getShopwareVersion(): ?string
+    public function __construct(string $environment = 'prod', bool $debug = false)
     {
-        try {
-            return InstalledVersions::getVersion('shopware/storefront');
-        } catch (\OutOfBoundsException) {
-            return null;
-        }
+        parent::__construct($environment, $debug);
     }
 
-    /**
-     * @return \Generator<\Symfony\Component\HttpKernel\Bundle\Bundle>
-     */
-    public function registerBundles(): iterable
+    // TODO: Load the current project's kernel and use twig.
+
+    public function getProjectDir(): string
     {
-        yield new FrameworkBundle();
-        yield new TwigBundle();
-        // Needed for prettier console output.
-        yield new MonologBundle();
-
-        if (\in_array($this->getEnvironment(), ['dev', 'test'], true)) {
-            yield new DebugBundle();
-        }
-
-        yield new TwigBlockValidatorBundle();
-    }
-
-    public function registerContainerConfiguration(LoaderInterface $loader): void
-    {
+        return __DIR__.'/../..';
     }
 }

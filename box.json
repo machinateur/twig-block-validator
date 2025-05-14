@@ -1,0 +1,20 @@
+{
+  "main": "bin/box",
+  "directories": [
+    "config", "src", "vendor", "var"
+  ],
+  "finder": [
+    {
+      "name":    "*.php",
+      "exclude": ["Tests/", "tests/"],
+      "in":      "vendor/"
+    },
+    {
+      "name": "*.yaml",
+      "in":   "src/Resources/config"
+    }
+  ],
+  "compression": "BZ2",
+  "output": "build/twig-block-validator.phar",
+  "banner-file": "LICENSE"
+}
