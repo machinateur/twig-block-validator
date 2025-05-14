@@ -160,7 +160,7 @@ var/cache/twig-block-validator/views
 │               └── cancel-order-modal.html.twig
 ```
 
-## How to validate
+### How to validate
 
 The validation can be performed by calling the CLI command `twig:block:validate`.
  Here's it's synopsis:
@@ -187,7 +187,7 @@ Options:
   -v|vv|vvv, --verbose             Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
 ```
 
-## How to annotate
+### How to annotate
 
 The annotation can be performed by calling the CLI command `twig:block:annotate`.
  Here's it's synopsis:
@@ -220,7 +220,7 @@ Options:
 > Caution! Always back up your templates and use a VCS.
 >  A bug or user error can cause permanent loss of data!
 
-## Which CLI to use
+### Which CLI to use
 
 There are a total of three different CLIs available:
 
