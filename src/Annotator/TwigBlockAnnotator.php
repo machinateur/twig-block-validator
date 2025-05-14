@@ -39,6 +39,8 @@ use Twig\Error\Error as TwigError;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
+use Twig\Source;
+use Twig\Source as TwigSource;
 
 /**
  * @phpstan-import-type _Comment            from CommentCollectionInterface
@@ -57,11 +59,30 @@ use Twig\Error\SyntaxError;
  */
 class TwigBlockAnnotator
 {
+    private ?string $path = null;
+
     public function __construct(
         private readonly BlockValidatorEnvironment $twig,
         private readonly TwigBlockResolver         $blockResolver,
         private readonly EventDispatcherInterface  $dispatcher,
     ) {
+    }
+
+    public function setPath(?string $path): void
+    {
+        $this->path = $path;
+    }
+
+    protected function getPath(string $template): ?string
+    {
+        if (null === $this->path) {
+            return null;
+        }
+
+        [$ns, $path] = $this->twig->namespacedPathnameBuilder->parseNamespacedPathname($template);
+
+        return $this->path . '/' . $path;
+
     }
 
     public function annotate(array $scopePaths, array $templatePaths = [], ?string $version = null): void
@@ -131,18 +152,32 @@ class TwigBlockAnnotator
      * @throws LoaderError
      * @throws RuntimeError
      */
-    protected function processBlock(array & $block, ?string $defaultVersion, ?array $comment): bool
+    protected function processBlock(array & $block, ?string $defaultVersion, ?array $comment): void
     {
         $template       = $block['template'];
         $blockName      = $block['block'];
+
+        if ( ! isset($block['parent_template'])) {
+            // No parent block - nothing to do.
+            return;
+        }
 
         // Enrich the block, i.e. _AnnotatedBlock.
         $block['source_hash']    = $this->blockResolver->getSourceHash($template, $blockName);
         $block['source_version'] = $defaultVersion;
 
-        $this->annotateBlock($block, $created = (null === $comment));
+        // Get the source contents and full source code of the template.
+        $source = $this->twig->getLoader()
+            ->getSourceContext($template);
+        $source = new Source(
+            $source->getCode(),
+            $source->getName(),
+            $this->getPath($template) ?? $source->getPath(),
+        );
 
-        return $block['created'] = $created;
+        $this->annotateBlock($block, $source, $created = (null === $comment));
+
+        $block['created'] = $created;
     }
 
     /**
@@ -150,25 +185,27 @@ class TwigBlockAnnotator
      *
      * @internal
      */
-    public function annotateBlock(array $block, bool $created = false): void
+    public function annotateBlock(array $block, Source $sourceContext, bool $created = false): void
     {
         // Prepare required variables from the given block.
         $template                          = $block['template'];
         $blockName                         = $block['block'];
         [$blockLinesStart, $blockLinesEnd] = $block['block_lines'];
 
-        /** @var string      $sourceHash */
+        /** @var string|null $sourceHash */
         $sourceHash                        = $block['source_hash'];
         /** @var string|null $sourceVersion */
         $sourceVersion                     = $block['source_version'];
+
+        if (null === $sourceHash) {
+            return;
+        }
 
         // Prepare offset (arrays are zero-indexed, lines are not).
         --$blockLinesStart;
         unset($blockLinesEnd);
 
-        // Get the source contents and full source code of the template.
-        $sourceContext   = $this->twig->getLoader()
-            ->getSourceContext($template);
+        // Get full source code of the template.
         $sourceCode      = $sourceContext->getCode();
         // Splice in the portion of lines that are needed.
         $sourceCodeLines = \explode("\n", $sourceCode);
@@ -186,7 +223,7 @@ class TwigBlockAnnotator
         $comment     = BlockValidatorExtension::formatComment($sourceHash, $sourceVersion);
         $commentLine = $blockLinesStart - 1;
         $prevLine    = $sourceCodeLines[$commentLine];
-        if ($created) {
+        if ( ! $created) {
             // {# comment #}
             $prevLinePattern = \vsprintf('{%s(.*)%s}sx', $params);
             if (1 !== \preg_match($prevLinePattern, $prevLine, $prevLineMatch, flags: \PREG_OFFSET_CAPTURE)) {
@@ -208,18 +245,33 @@ class TwigBlockAnnotator
 
             // Add indentation and maintain tags (i.e. `{#`, `#}`), but usually, overwritten blocks are at "col=0" in child templates.
             $comment          = $prevLineMatch[0][0] . $commentTags[0] . $comment . $commentTags[1];
+            ++$commentLine;
         }
 
-        \array_splice($sourceCodeLines, $commentLine, (int)!$created, $comment);
+        \array_splice($sourceCodeLines, $commentLine, (int) ! $created, $comment);
 
         // Reduce to source-code again
         $sourceCode = \implode("\n", $sourceCodeLines);
 
-        // Write back to the template file's path.
-        dump($sourceCode); // TODO: Complete and test. Support writing to different path?
-        //\file_put_contents($sourceContext->getPath(), $sourceCode, \LOCK_EX);
+        $this->writeTemplate($sourceContext, $sourceCode);
 
         // Make sure to clear caches in the environment.
         $this->twig->removeCache($template);
+    }
+
+    /**
+     * Write the given source to the current context.
+     */
+    protected function writeTemplate(TwigSource $source, string $sourceCode): void
+    {
+        $pathname = $source->getPath();
+        $path     = \dirname($pathname);
+
+        if ( ! \file_exists($path)) {
+            \mkdir($path, 0755, true);
+        }
+
+        // Write back to the template file's path.
+        \file_put_contents($pathname, $sourceCode, \LOCK_EX);
     }
 }

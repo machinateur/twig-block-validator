@@ -32,7 +32,6 @@ use Machinateur\TwigBlockValidator\Event\Validator\ValidateCommentsErrorEvent;
 use Machinateur\TwigBlockValidator\Event\Validator\ValidateCommentsEvent;
 use Machinateur\TwigBlockValidator\Service\TwigBlockResolver;
 use Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment;
-use Machinateur\TwigBlockValidator\Twig\Extension\BlockValidatorExtension;
 use Machinateur\TwigBlockValidator\Twig\Node\CommentCollectionInterface;
 use Machinateur\TwigBlockValidator\Twig\Node\TwigBlockStackInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;

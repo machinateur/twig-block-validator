@@ -65,7 +65,7 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
 {
     private BlockNodeVisitor $nodeVisitor;
 
-    private NamespacedPathnameBuilder $namespacedPathnameBuilder;
+    public readonly NamespacedPathnameBuilder $namespacedPathnameBuilder;
 
     public function __construct(
         Environment                               $platformTwig,
