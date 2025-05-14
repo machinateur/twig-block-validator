@@ -1,13 +1,21 @@
 # Twig Block Validator (for Shopware 6)
 
-When dealing with many plugins and twig blocks, it can get confusing quite fast.
- Let this tool help you gnaw away those twig blocks and validate if they're still up to date with their parents.
+A twig block validator, inspired by the Shopware 6 IntelliJ plugin's twig block versioning. Pure PHP.
 
-It also provides a way to add and update the block version comment for your templates.
+## Inspiration
 
-This project is a pure PHP implementation and twig integration of the Shopware 6 IntelliJ plugin's twig template-hash feature.
+After visiting SCUC 2025 in Cologne, where it was mentioned and recommended multiple times,
+ I held the idea that making twig-block validation possible via CLI would be a great help
+  with CI for large shopware projects.
 
-> This project is still a proof-of-concept at the moment.
+When dealing with many plugins and templates, it can get confusing quite fast.
+ Let this tool help you with those twig blocks and validate if they're still up to date with their parent's content.
+
+It also provides a way to automatically add and update the block version comment on your templates.
+
+> This project is still a proof-of-concept. Beta version.
+>
+> It's missing some guardrails, so edge-cases might still lead to internal errors or bugs.
 
 ## Installation
 
@@ -111,6 +119,9 @@ $ bin/shopware twig:block:annotate -c @Storefront:vendor/shopware/storefront/Res
 
  ! [NOTE] Found 0 comments in 324 templates.                                                                            
 ```
+
+> **Note**: As of now, there is no overview of what comments/blocks were added/updated in the process.
+>  This will be improved in future versions, as proper events are already in place to facilitate console output.
 
 The result:
 
@@ -221,10 +232,10 @@ There are a total of three different CLIs available:
   A symfony CLI application.
   - Runs a symfony kernel with symfony framework and debug commands (in `dev` or `test`).
   - Only supports the twig extensions that are available in the symfony context.
-- `bin/twig-block-validate`
+- `bin/twig-block-validate`:
   - Runs only the `twig:block:validate` command as standalone application.
   - Only supports the twig extensions that are available in the symfony context.
-- `bin/twig-block-annotate`
+- `bin/twig-block-annotate`:
   - Runs only the `twig:block:annotate` command as standalone application.
   - Only supports the twig extensions that are available in the symfony context.
 
