@@ -245,7 +245,7 @@ These can be copied to the `bin/` directory of your project (if not already pres
 
 ## Standalone
 
-> Note: The phar is a planned feature.
+> Note: The phar is still experimental, and does not support integrated use with shopware projects (yet).
 
 The tool can be used as standalone, phar or source, for example in CI pipelines:
 
@@ -258,6 +258,35 @@ PHP is required. The source archive will need [composer](https://getcomposer.org
 
 Find the source archive and prebuilt phar attached to
  the [latest release](https://github.com/machinateur/twig-block-validator/releases).
+
+### Build the phar
+
+This instruction requires [box](https://github.com/box-project/box) to be installed globally.
+
+```bash
+# navigate to project
+cd twig-block-validator
+
+# set up env
+export APP_ENV=prod
+export APP_DEBUG=0
+
+# prepare cache
+bin/console cache:clear
+rm -rf var/cache/prod
+bin/console cache:warmup
+# check if everything is fine
+bin/box -V
+
+# remove old logs
+rm var/log/*.log || mkdir -p var/log
+
+# compile the phar
+box compile -vvv
+
+# run the phar
+./build/twig-block-validator.phar
+```
 
 ## License
 

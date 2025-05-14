@@ -1,0 +1,30 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Machinateur\TwigBlockValidator\Box\BoxKernel;
+use Machinateur\TwigBlockValidator\Command\TwigBlockAnnotateCommand;
+use Machinateur\TwigBlockValidator\Command\TwigBlockValidateCommand;
+use Machinateur\TwigBlockValidator\TwigBlockValidatorBundle;
+use Symfony\Component\Console\Application;
+
+$_SERVER['APP_RUNTIME_OPTIONS']['disable_dotenv'] = true;
+
+require_once __DIR__ . '/../vendor/autoload_runtime.php';
+
+return static function (array & $context) {
+    \set_time_limit(0);
+
+    $kernel      = new BoxKernel();
+    $kernel->boot();
+
+    $container   = $kernel->getContainer();
+    $application = new Application('Twig Block Validator', TwigBlockValidatorBundle::VERSION);
+    $application->addCommands([
+            $container->get(TwigBlockValidateCommand::class),
+            $container->get(TwigBlockAnnotateCommand::class),
+    ]);
+
+    return $application;
+};
