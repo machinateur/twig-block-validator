@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8135d6a0f5e26ffc0b09a808b3c2b889",
+    "content-hash": "57d6b31386ffaffd8c310a070ae50684",
     "packages": [
         {
             "name": "brick/math",
@@ -291,16 +291,16 @@
         },
         {
             "name": "composer/composer",
-            "version": "2.8.8",
+            "version": "2.8.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/composer.git",
-                "reference": "85ff84d6c5260ba21740a7c5c9a111890805d6e7"
+                "reference": "b4e6bff2db7ce756ddb77ecee958a0f41f42bd9d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/composer/zipball/85ff84d6c5260ba21740a7c5c9a111890805d6e7",
-                "reference": "85ff84d6c5260ba21740a7c5c9a111890805d6e7",
+                "url": "https://api.github.com/repos/composer/composer/zipball/b4e6bff2db7ce756ddb77ecee958a0f41f42bd9d",
+                "reference": "b4e6bff2db7ce756ddb77ecee958a0f41f42bd9d",
                 "shasum": ""
             },
             "require": {
@@ -385,7 +385,7 @@
                 "irc": "ircs://irc.libera.chat:6697/composer",
                 "issues": "https://github.com/composer/composer/issues",
                 "security": "https://github.com/composer/composer/security/policy",
-                "source": "https://github.com/composer/composer/tree/2.8.8"
+                "source": "https://github.com/composer/composer/tree/2.8.9"
             },
             "funding": [
                 {
@@ -401,7 +401,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-04-04T14:56:46+00:00"
+            "time": "2025-05-13T12:01:37+00:00"
         },
         {
             "name": "composer/metadata-minifier",
@@ -634,24 +634,24 @@
         },
         {
             "name": "composer/spdx-licenses",
-            "version": "1.5.8",
+            "version": "1.5.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/spdx-licenses.git",
-                "reference": "560bdcf8deb88ae5d611c80a2de8ea9d0358cc0a"
+                "reference": "edf364cefe8c43501e21e88110aac10b284c3c9f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/spdx-licenses/zipball/560bdcf8deb88ae5d611c80a2de8ea9d0358cc0a",
-                "reference": "560bdcf8deb88ae5d611c80a2de8ea9d0358cc0a",
+                "url": "https://api.github.com/repos/composer/spdx-licenses/zipball/edf364cefe8c43501e21e88110aac10b284c3c9f",
+                "reference": "edf364cefe8c43501e21e88110aac10b284c3c9f",
                 "shasum": ""
             },
             "require": {
                 "php": "^5.3.2 || ^7.0 || ^8.0"
             },
             "require-dev": {
-                "phpstan/phpstan": "^0.12.55",
-                "symfony/phpunit-bridge": "^4.2 || ^5"
+                "phpstan/phpstan": "^1.11",
+                "symfony/phpunit-bridge": "^3 || ^7"
             },
             "type": "library",
             "extra": {
@@ -694,7 +694,7 @@
             "support": {
                 "irc": "ircs://irc.libera.chat:6697/composer",
                 "issues": "https://github.com/composer/spdx-licenses/issues",
-                "source": "https://github.com/composer/spdx-licenses/tree/1.5.8"
+                "source": "https://github.com/composer/spdx-licenses/tree/1.5.9"
             },
             "funding": [
                 {
@@ -710,7 +710,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-11-20T07:44:33+00:00"
+            "time": "2025-05-12T21:07:07+00:00"
         },
         {
             "name": "composer/xdebug-handler",
@@ -4948,12 +4948,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/shopware/conflicts.git",
-                "reference": "dcf6bbe67eecdb1dd35cfed541506aebafb1cf9e"
+                "reference": "67cb84082c69acf1666c138965aef2058de22901"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/shopware/conflicts/zipball/dcf6bbe67eecdb1dd35cfed541506aebafb1cf9e",
-                "reference": "dcf6bbe67eecdb1dd35cfed541506aebafb1cf9e",
+                "url": "https://api.github.com/repos/shopware/conflicts/zipball/67cb84082c69acf1666c138965aef2058de22901",
+                "reference": "67cb84082c69acf1666c138965aef2058de22901",
                 "shasum": ""
             },
             "require": {
@@ -4977,20 +4977,20 @@
                 "issues": "https://github.com/shopware/conflicts/issues",
                 "source": "https://github.com/shopware/conflicts/tree/0.5.0"
             },
-            "time": "2025-05-02T13:55:41+00:00"
+            "time": "2025-05-07T14:05:09+00:00"
         },
         {
             "name": "shopware/core",
-            "version": "v6.6.10.3",
+            "version": "v6.6.10.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/shopware/core.git",
-                "reference": "078e6c7cc91e8e0c915a48fc1bc0d0e30459f1d7"
+                "reference": "56e477f8e132ca6ee740163b8c8c504719601a04"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/shopware/core/zipball/078e6c7cc91e8e0c915a48fc1bc0d0e30459f1d7",
-                "reference": "078e6c7cc91e8e0c915a48fc1bc0d0e30459f1d7",
+                "url": "https://api.github.com/repos/shopware/core/zipball/56e477f8e132ca6ee740163b8c8c504719601a04",
+                "reference": "56e477f8e132ca6ee740163b8c8c504719601a04",
                 "shasum": ""
             },
             "require": {
@@ -5099,7 +5099,7 @@
                 "zircote/swagger-php": "^4.9.2"
             },
             "replace": {
-                "paragonie/random_compat": "*",
+                "paragonie/random_compat": ">=2",
                 "symfony/polyfill-ctype": "*",
                 "symfony/polyfill-iconv": "*",
                 "symfony/polyfill-intl-grapheme": "*",
@@ -5169,10 +5169,10 @@
                 "docs": "https://developer.shopware.com",
                 "forum": "https://forum.shopware.com",
                 "issues": "https://github.com/shopware/shopware/issues",
-                "source": "https://github.com/shopware/core/tree/v6.6.10.3",
+                "source": "https://github.com/shopware/core/tree/v6.6.10.4",
                 "wiki": "https://developer.shopware.com"
             },
-            "time": "2025-03-31T07:08:30+00:00"
+            "time": "2025-04-29T08:09:25+00:00"
         },
         {
             "name": "smalot/pdfparser",
@@ -9749,16 +9749,16 @@
         },
         {
             "name": "tecnickcom/tcpdf",
-            "version": "6.9.3",
+            "version": "6.9.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/TCPDF.git",
-                "reference": "d0e8dd17f8a1df3c97b94b9af8356e88e811ed59"
+                "reference": "c838d7f7babb0d35763acfb9ecf78c3f45966f83"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/TCPDF/zipball/d0e8dd17f8a1df3c97b94b9af8356e88e811ed59",
-                "reference": "d0e8dd17f8a1df3c97b94b9af8356e88e811ed59",
+                "url": "https://api.github.com/repos/tecnickcom/TCPDF/zipball/c838d7f7babb0d35763acfb9ecf78c3f45966f83",
+                "reference": "c838d7f7babb0d35763acfb9ecf78c3f45966f83",
                 "shasum": ""
             },
             "require": {
@@ -9808,15 +9808,15 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/TCPDF/issues",
-                "source": "https://github.com/tecnickcom/TCPDF/tree/6.9.3"
+                "source": "https://github.com/tecnickcom/TCPDF/tree/6.9.4"
             },
             "funding": [
                 {
-                    "url": "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=GBP&business=paypal@tecnick.com&item_name=donation%20for%20tcpdf%20project",
+                    "url": "https://www.paypal.com/donate/?hosted_button_id=NZUEC5XS8MFBJ",
                     "type": "custom"
                 }
             ],
-            "time": "2025-04-20T15:52:50+00:00"
+            "time": "2025-05-13T11:34:35+00:00"
         },
         {
             "name": "twig/intl-extra",
@@ -12087,23 +12087,23 @@
         },
         {
             "name": "shopware/administration",
-            "version": "v6.6.10.3",
+            "version": "v6.6.10.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/shopware/administration.git",
-                "reference": "0d0bd564730515895e9eea3e222a1737dd8943cc"
+                "reference": "755504c3e3552216063db6dbf7fb5b1ba81805ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/shopware/administration/zipball/0d0bd564730515895e9eea3e222a1737dd8943cc",
-                "reference": "0d0bd564730515895e9eea3e222a1737dd8943cc",
+                "url": "https://api.github.com/repos/shopware/administration/zipball/755504c3e3552216063db6dbf7fb5b1ba81805ac",
+                "reference": "755504c3e3552216063db6dbf7fb5b1ba81805ac",
                 "shasum": ""
             },
             "require": {
                 "doctrine/dbal": "^3.9",
                 "pentatrion/vite-bundle": "^7.0",
                 "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
-                "shopware/core": "v6.6.10.3",
+                "shopware/core": "v6.6.10.4",
                 "symfony/framework-bundle": "~7.2.0",
                 "symfony/http-foundation": "~7.2.0",
                 "symfony/mime": "~7.2.0",
@@ -12131,23 +12131,23 @@
                 "docs": "https://developer.shopware.com",
                 "forum": "https://forum.shopware.com",
                 "issues": "https://github.com/shopware/shopware/issues",
-                "source": "https://github.com/shopware/administration/tree/v6.6.10.3",
+                "source": "https://github.com/shopware/administration/tree/v6.6.10.4",
                 "wiki": "https://developer.shopware.com"
             },
-            "time": "2025-04-08T07:55:37+00:00"
+            "time": "2025-05-06T08:29:13+00:00"
         },
         {
             "name": "shopware/storefront",
-            "version": "v6.6.10.3",
+            "version": "v6.6.10.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/shopware/storefront.git",
-                "reference": "1e1906d086f3e3490c0ffb0d7e10752ac684751d"
+                "reference": "4e872a42f6822b40a39f5be127f3f053c629d979"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/shopware/storefront/zipball/1e1906d086f3e3490c0ffb0d7e10752ac684751d",
-                "reference": "1e1906d086f3e3490c0ffb0d7e10752ac684751d",
+                "url": "https://api.github.com/repos/shopware/storefront/zipball/4e872a42f6822b40a39f5be127f3f053c629d979",
+                "reference": "4e872a42f6822b40a39f5be127f3f053c629d979",
                 "shasum": ""
             },
             "require": {
@@ -12157,7 +12157,7 @@
                 "padaliyajay/php-autoprefixer": "^1.4",
                 "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
                 "scssphp/scssphp": "v1.12.0",
-                "shopware/core": "v6.6.10.3",
+                "shopware/core": "v6.6.10.4",
                 "symfony/cache": "~7.2.0",
                 "symfony/cache-contracts": "~3.5.0",
                 "symfony/config": "~7.2.0",
@@ -12168,6 +12168,7 @@
                 "symfony/framework-bundle": "~7.2.0",
                 "symfony/http-foundation": "~7.2.0",
                 "symfony/http-kernel": "~7.2.0",
+                "symfony/messenger": "~7.2.0",
                 "symfony/mime": "~7.2.0",
                 "symfony/routing": "~7.2.0",
                 "symfony/security-core": "~7.2.0",
@@ -12206,10 +12207,10 @@
                 "docs": "https://developer.shopware.com",
                 "forum": "https://forum.shopware.com",
                 "issues": "https://github.com/shopware/shopware/issues",
-                "source": "https://github.com/shopware/storefront/tree/v6.6.10.3",
+                "source": "https://github.com/shopware/storefront/tree/v6.6.10.4",
                 "wiki": "https://developer.shopware.com"
             },
-            "time": "2025-04-08T07:55:07+00:00"
+            "time": "2025-05-06T08:28:53+00:00"
         },
         {
             "name": "symfony/flex",
