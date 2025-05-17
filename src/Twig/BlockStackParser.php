@@ -38,6 +38,9 @@ class BlockStackParser extends Parser
 {
     public function parse(TokenStream $stream, $test = null, bool $dropNeedle = false): ModuleNode
     {
+        // TODO: Investigate missing "content" block when annotating "tests/templates/twig-embed/page.html.twig".
+        // TODO: Investigate duplicated "top" block when annotating "tests/templates/twig-embed/page.html.twig".
+
         return parent::parse($stream, $test, $dropNeedle);
     }
 

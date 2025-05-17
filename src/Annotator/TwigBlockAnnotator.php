@@ -247,6 +247,7 @@ class TwigBlockAnnotator implements ResetInterface
             // No validation of the comment content itself, as we can be sure at this point it is an exiting annotation.
             $comment          = \substr_replace($prevLine, $comment, $commentOffset, \strlen($prevLineMatch[1][0]));
         } else {
+            // TODO: Match block's start line, as the previous line might have no indentation.
             $prevLinePattern  = \vsprintf('{^\s*}sx', $params);
             if (1 !== \preg_match($prevLinePattern, $prevLine, $prevLineMatch, flags: \PREG_OFFSET_CAPTURE)) {
                 throw new SyntaxError(\sprintf('The prev-line for block "%s" was not found but expected.', $blockName), $commentLine, $sourceContext);
