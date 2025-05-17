@@ -17,12 +17,15 @@ services:
   Machinateur\TwigBlockValidator\TwigBlockValidatorOutput:
     tags:
       - 'kernel.event_subscriber'
+      - { name: 'kernel.reset', method: 'reset' }
 
   Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment:
     arguments:
       - '@twig'
       - '@twig_block_validator.cache'
       - '@event_dispatcher'
+    tags:
+      - { name: 'kernel.reset', method: 'reset' }
 
   twig_block_validator.twig:
     alias: 'Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment'
@@ -40,6 +43,8 @@ services:
       - '@twig_block_validator.twig'
       - '@Machinateur\TwigBlockValidator\Service\TwigBlockResolver'
       - '@event_dispatcher'
+    tags:
+      - { name: 'kernel.reset', method: 'reset' }
 
   Machinateur\TwigBlockValidator\Service\TwigBlockResolver:
     arguments:
