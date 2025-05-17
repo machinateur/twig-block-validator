@@ -123,7 +123,7 @@ class TwigBlockAnnotator implements ResetInterface
             );
 
             $event->notify(AnnotateBlocksEvent::CALL_BEGIN);
-
+dump($blocks, $groupedComments); // <<< todo: missing $groupedComments[temlpate.html.twig][top] -> why?
             /** @var _Block[] $blocks */
             foreach ($blocks as & $block) {
                 $comment = $groupedComments[$block['template']][$block['block']] ?? null;
@@ -182,6 +182,7 @@ class TwigBlockAnnotator implements ResetInterface
         );
 
         $this->annotateBlock($block, $source, $created = (null === $comment));
+dump($comment);
 
         $block['created'] = $created;
     }
@@ -221,6 +222,7 @@ class TwigBlockAnnotator implements ResetInterface
         $this->offsets[$sourceName] ??= 0;
         // Add offset, if exists.
         $blockLinesStart += $this->offsets[$sourceName];
+dump($sourceName, $blockLinesStart, $created);
 
         $commentTags = $this->twig->getLexerOptions()['tag_comment'];
 
