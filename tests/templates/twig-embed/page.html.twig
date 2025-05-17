@@ -1,0 +1,13 @@
+{% extends "twig-embed/template.html.twig" %}
+
+{% block content %}
+    {% embed "twig-embed/content.html.twig" %}
+        {% block top %}
+            Some content for the top box
+        {% endblock %}
+
+        {% block bottom %}
+            Some content for the bottom box
+        {% endblock %}
+    {% endembed %}
+{% endblock %}
