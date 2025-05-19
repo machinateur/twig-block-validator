@@ -70,6 +70,9 @@ class BlockNodeVisitor implements NodeVisitorInterface
             }
 
             $this->collection->setTemplate($node->getTemplateName());
+
+            // Reset comments.
+            $this->comments = [];
         }
 
         if ($node instanceof CommentNode) {
@@ -100,9 +103,6 @@ class BlockNodeVisitor implements NodeVisitorInterface
 
             $this->collection->setTemplate(null);
             $this->collection->setParentTemplate(null);
-
-            // Reset comments.
-            $this->comments = [];
         }
 
         if ($node instanceof BlockNode) {
