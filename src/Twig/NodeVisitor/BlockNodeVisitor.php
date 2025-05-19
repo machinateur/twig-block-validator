@@ -57,8 +57,6 @@ class BlockNodeVisitor implements NodeVisitorInterface
     public function enterNode(Node $node, Environment $env): Node
     {
         if ($node instanceof ModuleNode) {
-            // TODO: Preserve stack context, if nestable (see Parser::parse()).
-
             // Only supports constant parent expressions.
             if ($node->hasNode('parent')
                 /** @var AbstractExpression $parent */
@@ -99,8 +97,6 @@ class BlockNodeVisitor implements NodeVisitorInterface
     public function leaveNode(Node $node, Environment $env): ?Node
     {
         if ($node instanceof ModuleNode) {
-            // TODO: Restore stack context, if nestable (see Parser::parse()).
-
             $this->collection->setTemplate(null);
             $this->collection->setParentTemplate(null);
         }
