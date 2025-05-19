@@ -5,12 +5,12 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
 ===================================================================
 diff --git a/vendor/shopware/core/Framework/Adapter/Twig/NamespaceHierarchy/BundleHierarchyBuilder.php b/vendor/shopware/core/Framework/Adapter/Twig/NamespaceHierarchy/BundleHierarchyBuilder.php
 --- a/vendor/shopware/core/Framework/Adapter/Twig/NamespaceHierarchy/BundleHierarchyBuilder.php
-+++ b/vendor/shopware/core/Framework/Adapter/Twig/NamespaceHierarchy/BundleHierarchyBuilder.php	(date 1746357602993)
-@@ -63,6 +63,7 @@
++++ b/vendor/shopware/core/Framework/Adapter/Twig/NamespaceHierarchy/BundleHierarchyBuilder.php	(date 1747474311181)
+@@ -64,6 +64,7 @@
       */
      private function getAppTemplateNamespaces(): array
      {
-+        return []; // This is an unsafe call to the database.
-         return $this->connection->fetchAllAssociativeIndexed(
-             'SELECT `app`.`name`, `app`.`version`, `app`.`template_load_priority`
-              FROM `app`
++        return [];
+         // @deprecated tag:v6.7.0 - remove if condition
+         if (EnvironmentHelper::getVariable('DISABLE_EXTENSIONS', false)) {
+             return [];

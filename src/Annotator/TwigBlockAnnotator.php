@@ -35,6 +35,7 @@ use Machinateur\TwigBlockValidator\Twig\Extension\BlockValidatorExtension;
 use Machinateur\TwigBlockValidator\Twig\Node\CommentCollectionInterface;
 use Machinateur\TwigBlockValidator\Twig\Node\TwigBlockStackInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Contracts\Service\ResetInterface;
 use Twig\Error\Error as TwigError;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
@@ -57,9 +58,14 @@ use Twig\Source as TwigSource;
  * @phpstan-import-type _NamespacedPathMap  from BlockValidatorEnvironment
  * @phpstan-import-type _MatchWithOffset    from TwigBlockResolver
  */
-class TwigBlockAnnotator
+class TwigBlockAnnotator implements ResetInterface
 {
-    private ?string $path = null;
+    protected ?string $path = null;
+
+    /**
+     * @var array<string, int>
+     */
+    private array     $offsets = [];
 
     public function __construct(
         private readonly BlockValidatorEnvironment $twig,
@@ -205,10 +211,16 @@ class TwigBlockAnnotator
         --$blockLinesStart;
         unset($blockLinesEnd);
 
+        $sourceName      = $sourceContext->getName();
         // Get full source code of the template.
         $sourceCode      = $sourceContext->getCode();
         // Splice in the portion of lines that are needed.
         $sourceCodeLines = \explode("\n", $sourceCode);
+
+        // Make sure offset record exists.
+        $this->offsets[$sourceName] ??= 0;
+        // Add offset, if exists.
+        $blockLinesStart += $this->offsets[$sourceName];
 
         $commentTags = $this->twig->getLexerOptions()['tag_comment'];
 
@@ -235,6 +247,7 @@ class TwigBlockAnnotator
             // No validation of the comment content itself, as we can be sure at this point it is an exiting annotation.
             $comment          = \substr_replace($prevLine, $comment, $commentOffset, \strlen($prevLineMatch[1][0]));
         } else {
+            // TODO: Match block's start line, as the previous line might have no indentation.
             $prevLinePattern  = \vsprintf('{^\s*}sx', $params);
             if (1 !== \preg_match($prevLinePattern, $prevLine, $prevLineMatch, flags: \PREG_OFFSET_CAPTURE)) {
                 throw new SyntaxError(\sprintf('The prev-line for block "%s" was not found but expected.', $blockName), $commentLine, $sourceContext);
@@ -246,6 +259,9 @@ class TwigBlockAnnotator
             // Add indentation and maintain tags (i.e. `{#`, `#}`), but usually, overwritten blocks are at "col=0" in child templates.
             $comment          = $prevLineMatch[0][0] . $commentTags[0] . $comment . $commentTags[1];
             ++$commentLine;
+
+            // Increment offset.
+            $this->offsets[$sourceName]++;
         }
 
         \array_splice($sourceCodeLines, $commentLine, (int) ! $created, $comment);
@@ -273,5 +289,14 @@ class TwigBlockAnnotator
 
         // Write back to the template file's path.
         \file_put_contents($pathname, $sourceCode, \LOCK_EX);
+    }
+
+    public function reset(): void
+    {
+        // Reset path.
+        $this->setPath(null);
+
+        // Reset offsets.
+        $this->offsets = [];
     }
 }

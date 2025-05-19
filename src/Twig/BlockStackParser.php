@@ -36,13 +36,8 @@ use Twig\TokenStream;
 
 class BlockStackParser extends Parser
 {
-    private ?string $currentBlock = null;
-
     public function parse(TokenStream $stream, $test = null, bool $dropNeedle = false): ModuleNode
     {
-        // Restart the metadata here.
-        $this->currentBlock = null;
-
         return parent::parse($stream, $test, $dropNeedle);
     }
 
@@ -53,15 +48,15 @@ class BlockStackParser extends Parser
     {
         parent::pushBlockStack($name);
 
-        $this->currentBlock = $this->peekBlockStack();
+        $currentBlock = $this->peekBlockStack();
 
-        if (null === $this->currentBlock) {
+        if (null === $currentBlock) {
             throw new \UnexpectedValueException('Cannot push block stack without current block!');
         }
 
         $token = $this->getCurrentToken();
         /** @var BodyNode  $body */
-        $body  = $this->getBlock($this->currentBlock);
+        $body  = $this->getBlock($currentBlock);
         /** @var BlockNode $block */
         $block = $body->getNode('0');
         $block->setAttribute('line_no_start', $token->getLine());
@@ -69,7 +64,9 @@ class BlockStackParser extends Parser
 
     public function popBlockStack(): void
     {
-        if (null === $this->currentBlock) {
+        $currentBlock = $this->peekBlockStack();
+
+        if (null === $currentBlock) {
             throw new \UnexpectedValueException('Cannot pop block stack without current block!');
         }
 
@@ -77,12 +74,10 @@ class BlockStackParser extends Parser
 
         $token = $this->getCurrentToken();
         /** @var BodyNode  $body */
-        $body  = $this->getBlock($this->currentBlock);
+        $body  = $this->getBlock($currentBlock);
         /** @var BlockNode $block */
         $block = $body->getNode('0');
         $block->setAttribute('line_no_end', $token->getLine());
-
-        $this->currentBlock = $this->peekBlockStack();
     }
 
     public function getBlock(string $name): Node

@@ -60,10 +60,11 @@ class TwigBlockAnnotateCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addArgument('output-path', InputArgument::OPTIONAL, 'Where to write the annotated templates.')
+            ->addArgument('output-path', InputArgument::OPTIONAL, 'Where to write the annotated templates')
             ->addOption('template', 't', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Twig template path to load')
             ->addOption('validate', 'c', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Twig template path to validate')
             ->addOption('use-version', 'r', InputOption::VALUE_OPTIONAL, 'The version number required')
+            ->addOption('yes', 'y', InputOption::VALUE_NONE, 'Silently approve annotating template in-place')
         ;
     }
 
@@ -83,7 +84,7 @@ class TwigBlockAnnotateCommand extends Command
         }
 
         if ( ! $this->output->getConsole()
-            ->confirm("To annotate the templates in-place can lead to permanent loss of data!\n Continue?" , false)
+            ->confirm("To annotate the templates in-place can lead to permanent loss of data!\n Continue?" , (bool)$input->getOption('yes'))
         ) {
             return Command::SUCCESS;
         }
