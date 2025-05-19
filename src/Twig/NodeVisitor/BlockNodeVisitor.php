@@ -42,7 +42,10 @@ use Twig\NodeVisitor\NodeVisitorInterface;
  */
 class BlockNodeVisitor implements NodeVisitorInterface
 {
-    private ?Node $previousNode = null;
+    /**
+     * @var array<CommentNode>
+     */
+    private array $comments = [];
 
     protected CommentCollectionNode $collection;
 
@@ -54,14 +57,6 @@ class BlockNodeVisitor implements NodeVisitorInterface
     public function enterNode(Node $node, Environment $env): Node
     {
         if ($node instanceof ModuleNode) {
-            $metaNodeExists = $node->getNode('class_end')
-                ->hasNode('sw_block_collection');
-
-            if ( ! $metaNodeExists) {
-                $node->getNode('class_end')
-                    ->setNode('sw_block_collection', $this->collection);
-            }
-
             // Only supports constant parent expressions.
             if ($node->hasNode('parent')
                 /** @var AbstractExpression $parent */
@@ -73,6 +68,14 @@ class BlockNodeVisitor implements NodeVisitorInterface
             }
 
             $this->collection->setTemplate($node->getTemplateName());
+
+            // Reset comments.
+            $this->comments = [];
+        }
+
+        if ($node instanceof CommentNode) {
+            // Save comments, as we encounter them.
+            $this->comments[] = $node;
         }
 
         if ($node instanceof BlockNode) {
@@ -83,13 +86,8 @@ class BlockNodeVisitor implements NodeVisitorInterface
                 (int)$node->getAttribute('line_no_end'),
             );
 
-            // Only use nodes that are not "exposed", and thus are marked as real comments, not usages of the tag.
-            //  The comment has to be located exactly oon the line before the block start.
-            //   Call `addComment()` only after entering the *next* node.
-            if ($this->previousNode instanceof CommentNode && ! $this->previousNode->exposed
-                && $this->previousNode->getTemplateLine() === $node->getTemplateLine() - 1)
-            {
-                $this->collection->addComment($this->previousNode->text, $this->defaultVersion);
+            if ($comment = $this->resolveComment($node)) {
+                $this->collection->addComment($comment->text, $this->defaultVersion);
             }
         }
 
@@ -105,10 +103,6 @@ class BlockNodeVisitor implements NodeVisitorInterface
 
         if ($node instanceof BlockNode) {
             $this->collection->popBlockStack();
-        }
-
-        if ($node instanceof CommentNode) {
-            $this->previousNode = $node;
         }
 
         return $node;
@@ -147,5 +141,24 @@ class BlockNodeVisitor implements NodeVisitorInterface
     public function setDefaultVersion(?string $defaultVersion): void
     {
         $this->defaultVersion = $defaultVersion;
+    }
+
+    protected function resolveComment(BlockNode $block): ?CommentNode
+    {
+        // Here, we rely on the comments from a `module.body` being visited prior to the `module.blocks` node.
+        foreach ($this->comments as $index => $comment) {
+            // The comment has to be located exactly oon the line before the block start.
+            if (1 !== $block->getTemplateLine() - $comment->getTemplateLine()) {
+                continue;
+            }
+
+
+            // Delete the comment from the list, as it was resolved.
+            unset($this->comments[$index]);
+            // There can only be one comment on the prev-line, so we break out right here.
+            return $comment;
+        }
+
+        return null;
     }
 }

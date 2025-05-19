@@ -260,12 +260,12 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
         $console        = $this->console;
         $table          = $this->console?->createTable();
 
-        // TODO
+        // TODO: Implement.
     }
 
     public function onAnnotateBlocksError(AnnotateBlocksErrorEvent $event): void
     {
-        // TODO
+        // TODO: Implement.
     }
 
     /**

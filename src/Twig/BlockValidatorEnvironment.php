@@ -284,7 +284,8 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
 
             try {
                 $templates[] = $template;
-                $blocks[]    = $this->getBlocks($template);
+                // Un-map the blocks, in order to avoid name collisions.
+                $blocks[]    = \array_values($this->getBlocks($template));
             } catch (TwigError $error) {
                 $errors[]   = $error;
             }
