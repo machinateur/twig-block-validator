@@ -1,7 +1,6 @@
 {
   "type": "library",
   "name": "machinateur/twig-block-validator",
-  "version": "0.1.0-beta",
   "description": "A twig implementation/integration of the Shopware 6 IntelliJ plugin's twig template-hash feature.",
   "keywords": ["twig", "extension", "php", "block-tag", "shopware"],
   "homepage": "https://github.com/machinateur/twig-block-hash",
