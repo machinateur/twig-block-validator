@@ -242,34 +242,23 @@ class TwigBlockAnnotator implements ResetInterface
 
         $comment     = BlockValidatorExtension::formatComment($sourceHash, $sourceVersion);
         $commentLine = $blockLinesStart - 1;
-        $prevLine    = $sourceCodeLines[$commentLine];
-        if ( ! $created) {
-            // {# comment #}
-            $prevLinePattern = \vsprintf('{%s(.*)%s}sx', $params);
-            if (1 !== \preg_match($prevLinePattern, $prevLine, $prevLineMatch, flags: \PREG_OFFSET_CAPTURE)) {
-                throw new SyntaxError(\sprintf('The prev-line for block "%s" was not found but expected.', $blockName), $commentLine, $sourceContext);
-            }
+        // Move cursor to block's start tag, to match its indentation.
+        $prevLine    = $sourceCodeLines[$blockLinesStart];
 
-            /** @var _MatchWithOffset $prevLineMatch */
-            $commentOffset    = $prevLineMatch[1][1];
-            // No validation of the comment content itself, as we can be sure at this point it is an exiting annotation.
-            $comment          = \substr_replace($prevLine, $comment, $commentOffset, \strlen($prevLineMatch[1][0]));
-        } else {
-            // Move cursor to block's start tag, to match its indentation.
-            $prevLine    = $sourceCodeLines[$blockLinesStart];
+        // Match block's start line, as the previous line might have no indentation.
+        $prevLinePattern  = \vsprintf('{^\s*}sx', $params);
+        if (1 !== \preg_match($prevLinePattern, $prevLine, $prevLineMatch, flags: \PREG_OFFSET_CAPTURE)) {
+            throw new SyntaxError(\sprintf('The prev-line for block "%s" was not found but expected.', $blockName), $commentLine, $sourceContext);
+        }
 
-            // Match block's start line, as the previous line might have no indentation.
-            $prevLinePattern  = \vsprintf('{^\s*}sx', $params);
-            if (1 !== \preg_match($prevLinePattern, $prevLine, $prevLineMatch, flags: \PREG_OFFSET_CAPTURE)) {
-                throw new SyntaxError(\sprintf('The prev-line for block "%s" was not found but expected.', $blockName), $commentLine, $sourceContext);
-            }
+        // The offset should be 0, as the pattern must start at the beginning of the line (string).
+        /** @var _MatchWithOffset $prevLineMatch */
+        \assert(0 === $prevLineMatch[0][1]);
 
-            // The offset should be 0, as the pattern must start at the beginning of the line (string).
-            /** @var _MatchWithOffset $prevLineMatch */
-            \assert(0 === $prevLineMatch[0][1]);
+        // Add indentation and maintain tags (i.e. `{#`, `#}`), but usually, overwritten blocks are at "col=0" in child templates (if not nested).
+        $comment          = $prevLineMatch[0][0] . $commentTags[0] . $comment . $commentTags[1];
 
-            // Add indentation and maintain tags (i.e. `{#`, `#}`), but usually, overwritten blocks are at "col=0" in child templates (if not nested).
-            $comment          = $prevLineMatch[0][0] . $commentTags[0] . $comment . $commentTags[1];
+        if ($created) {
             ++$commentLine;
 
             // Increment offset.
