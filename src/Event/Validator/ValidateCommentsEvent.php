@@ -47,7 +47,7 @@ class ValidateCommentsEvent implements NotifiableInterface
      * @param _CommentCollection $blocks
      */
     public function __construct(
-        public readonly array  $blocks,
-        public readonly string $version,
+        public readonly array   $blocks,
+        public readonly ?string $version,
     ) {}
 }
