@@ -269,17 +269,20 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
                     return;
                 }
 
+                // Exclude all blocks without source hash (i.e. no parent block), except when very verbose.
+                if ( ! $console->isVeryVerbose() && ! isset($block['source_hash'])) {
+                    return;
+                }
+
                 $row = [
                     ...$block,
                     'block_lines' => \sprintf('%d-%d', ...$block['block_lines']),
-                    'hash'        => $block['source_hash'],
-                    'version'     => $block['source_version'],
+                    'hash'        => $block['source_hash']    ?? '-',
+                    'version'     => $block['source_version'] ?? '-',
                 ];
                 unset($row['block_lines'], $row['source_hash'], $row['source_version'], $row['block_level'], $row['created']);
 
-                $row['created']   = isset($block['created'])
-                    ? \sprintf('[%s]', $block['created'] ? 'x' : ' ')
-                    : \sprintf("< <fg=white;bg=red>%s</>", 'err');
+                $row['created'] = \sprintf('[%s]', $block['created'] ? 'x' : ' ');
 
                 $table->addRow($row);
             }

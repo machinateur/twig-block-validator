@@ -40,7 +40,6 @@ use Twig\Error\Error as TwigError;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
-use Twig\Source;
 use Twig\Source as TwigSource;
 
 /**
@@ -161,21 +160,22 @@ class TwigBlockAnnotator implements ResetInterface
     protected function processBlock(array & $block, ?string $defaultVersion, ?array $comment): void
     {
         $created        = (null === $comment);
-
         $template       = $block['template'];
         $blockName      = $block['block'];
 
-        //if ( ! isset($block['parent_template'])) {
-        //    // No parent block - nothing to do.
-        //    return;
-        //}
-
-        // TODO: Also track diff to existing comment.
-
         // Enrich the block, i.e. _AnnotatedBlock.
-        $block['created']        = $created;
+        if ( ! isset($block['parent_template'])) {
+            $block['created']        = false;
+            $block['source_hash']    = null;
+            $block['source_version'] = $defaultVersion;
+
+            // No parent block - nothing to do.
+            return;
+        }
+
         $block['source_hash']    = $this->blockResolver->getSourceHash($template, $blockName);
         $block['source_version'] = $defaultVersion;
+        $block['created']        = $created && null !== $block['source_hash'];
 
         if (null === $block['source_hash']) {
             // No parent block was found, skip.
@@ -185,7 +185,7 @@ class TwigBlockAnnotator implements ResetInterface
         // Get the source contents and full source code of the template.
         $source = $this->twig->getLoader()
             ->getSourceContext($template);
-        $source = new Source(
+        $source = new TwigSource(
             $source->getCode(),
             $source->getName(),
             $this->getPath($template) ?? $source->getPath(),
@@ -199,7 +199,7 @@ class TwigBlockAnnotator implements ResetInterface
      *
      * @internal
      */
-    public function annotateBlock(array $block, Source $sourceContext, bool $created = false): void
+    public function annotateBlock(array $block, TwigSource $sourceContext, bool $created = false): void
     {
         // Prepare required variables from the given block.
         $template                          = $block['template'];
@@ -242,6 +242,7 @@ class TwigBlockAnnotator implements ResetInterface
 
         $comment     = BlockValidatorExtension::formatComment($sourceHash, $sourceVersion);
         $commentLine = $blockLinesStart - 1;
+        $prevLine    = $sourceCodeLines[$commentLine];
         // Move cursor to block's start tag, to match its indentation.
         $prevLine    = $sourceCodeLines[$blockLinesStart];
 
