@@ -84,13 +84,14 @@ class TwigBlockResolver
             }
 
             if ($template === $block['parent_template']) {
-                // Infinite loop detected.
+                // Infinite loop detected, self-reference.
                 break;
             }
 
             $template    = $block['parent_template'];
 
             if (\in_array($template, $templates, true)) {
+                // Infinite loop detected, alternating through parents.
                 throw new LoaderError(\sprintf('Recursion error resolving "%s" ("%s")', $template, \implode('", "', $templates)));
             }
 
