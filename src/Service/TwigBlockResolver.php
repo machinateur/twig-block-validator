@@ -163,6 +163,15 @@ class TwigBlockResolver
         $firstLine = & $sourceCodeLines[0];
         $lastLine  = & $sourceCodeLines[$blockLineCount - 1];
 
+        if ( ! $firstLine) {
+            // TODO: Check why the line ever becomes null with some templates.
+            throw new SyntaxError(\sprintf('The first line is null in "%s:%s" line %d.', $template, $blockName, $blockLinesStart));
+        }
+        if ( ! $lastLine) {
+            // TODO: Check why the line ever becomes null with some templates.
+            throw new SyntaxError(\sprintf('The first line is null in "%s:%s" line %d.', $template, $blockName, $blockLinesEnd));
+        }
+
         $blockTags = $this->twig->getLexerOptions()['tag_block'];
 
         // Define the parameters to use for regex inception.
