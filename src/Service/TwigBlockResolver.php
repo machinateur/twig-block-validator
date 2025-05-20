@@ -75,7 +75,9 @@ class TwigBlockResolver
      */
     public function resolveParentBlock(string $template, string $blockName): ?array
     {
-        $templates = [];
+        $originalTemplate = $template;
+        $templates        = [];
+
         do {
             $block = $this->resolveBlock($template, $blockName);
 
@@ -98,6 +100,11 @@ class TwigBlockResolver
             $templates[] = $template;
         } while (null !== $block);
 
+        if ($block && ($block['template'] === $originalTemplate) && $block['block'] === $blockName) {
+            // Cannot return the same template as parent, as was given for resolution.
+            return null;
+        }
+
         return $block;
     }
 
@@ -112,11 +119,8 @@ class TwigBlockResolver
     {
         // Resolve the template block in hierarchy.
         //  In case of `sw_extends` this also works fine, because the top-most block is resolved (i.e. `@Storefront`).
-        try {
-            $parentBlock = $this->resolveParentBlock($template, $blockName);
-        } catch (LoaderError) {
-            $parentBlock = null;
-        }
+        $parentBlock = $this->resolveParentBlock($template, $blockName);
+
         if (null === $parentBlock) {
             return null;
         }
