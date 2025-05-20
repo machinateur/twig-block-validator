@@ -160,17 +160,25 @@ class TwigBlockAnnotator implements ResetInterface
      */
     protected function processBlock(array & $block, ?string $defaultVersion, ?array $comment): void
     {
+        $created          = (null === $comment);
+        $block['created'] = $created;
+
         $template       = $block['template'];
         $blockName      = $block['block'];
 
-        if ( ! isset($block['parent_template'])) {
-            // No parent block - nothing to do.
-            return;
-        }
+        //if ( ! isset($block['parent_template'])) {
+        //    // No parent block - nothing to do.
+        //    return;
+        //}
 
         // Enrich the block, i.e. _AnnotatedBlock.
         $block['source_hash']    = $this->blockResolver->getSourceHash($template, $blockName);
         $block['source_version'] = $defaultVersion;
+
+        if (null === $block['source_hash']) {
+            // No parent block was found, skip.
+            return;
+        }
 
         // Get the source contents and full source code of the template.
         $source = $this->twig->getLoader()
@@ -181,9 +189,7 @@ class TwigBlockAnnotator implements ResetInterface
             $this->getPath($template) ?? $source->getPath(),
         );
 
-        $this->annotateBlock($block, $source, $created = (null === $comment));
-
-        $block['created'] = $created;
+        $this->annotateBlock($block, $source, $created);
     }
 
     /**

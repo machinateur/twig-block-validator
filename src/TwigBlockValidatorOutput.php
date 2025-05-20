@@ -214,13 +214,13 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
                 $row = [
                     ...$comment,
                     'block_lines' => \sprintf('%d-%d', ...$comment['block_lines']),
-                    'hash' => !$comment['match']['hash']
+                    'hash'        => !$comment['match']['hash']
                         ? \sprintf("<fg=white;bg=red>%s</>\n<fg=black;bg=green>%s</>", $comment['hash'], $comment['source_hash'] ?? '--')
                         : $comment['hash'],
-                    'version' => !$comment['match']['version']
+                    'version'     => !$comment['match']['version']
                         ? \sprintf("<fg=white;bg=red>%s</>\n<fg=black;bg=green>%s</>", $comment['version'], $comment['source_version'] ?? '--')
                         : $comment['version'],
-                    'valid' => \sprintf('[%s]', $comment['valid'] ? ' ' : 'x'),
+                    'valid'       => \sprintf('[%s]', $comment['valid'] ? ' ' : 'x'),
                 ];
                 unset($row['block_lines'], $row['source_hash'], $row['source_version'], $row['match']);
 
@@ -260,12 +260,42 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
         $console        = $this->console;
         $table          = $this->console?->createTable();
 
-        // TODO: Implement.
+        $event->callback(AnnotateBlocksEvent::CALL_BEGIN,
+            static fn () => $table?->setHeaders(['template', 'parent template', 'block', 'hash', 'version', 'created'])
+        );
+        $event->callback(AnnotateBlocksEvent::CALL_STEP,
+            static function (array $block, ?array $comment) use ($console, $table, $defaultVersion) {
+                if (null === $table) {
+                    return;
+                }
+
+                $row = [
+                    ...$block,
+                    'block_lines' => \sprintf('%d-%d', ...$block['block_lines']),
+                    'hash'        => $block['source_hash'],
+                    'version'     => $block['source_version'],
+                ];
+                unset($row['block_lines'], $row['source_hash'], $row['source_version'], $row['block_level'], $row['created']);
+
+                $row['created']   = isset($block['created'])
+                    ? \sprintf('[%s]', $block['created'] ? 'x' : ' ')
+                    : \sprintf("< <fg=white;bg=red>%s</>", 'err');
+
+                $table->addRow($row);
+            }
+        );
+        $event->callback(AnnotateBlocksEvent::CALL_END,
+            static fn () => $table?->render()
+        );
     }
 
     public function onAnnotateBlocksError(AnnotateBlocksErrorEvent $event): void
     {
-        // TODO: Implement.
+        $this->console?->warning([
+            'Twig errors!',
+        ]);
+
+        $this->listingTwigErrors($event->errors);
     }
 
     /**
