@@ -52,6 +52,7 @@ use Twig\Error\RuntimeError;
 use Twig\Extension\CoreExtension;
 use Twig\Lexer;
 use Twig\Loader\FilesystemLoader;
+use Twig\Template;
 use Twig\TemplateWrapper;
 
 /**
@@ -342,8 +343,17 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
      */
     public function load($name): TemplateWrapper
     {
-        if ( ! \is_string($name)) {
-            throw new \InvalidArgumentException('The name must be a string.');
+        if ($name instanceof Template) {
+            \trigger_deprecation('twig/twig', '3.9', 'Passing a "%s" instance to "%s" is deprecated.', self::class, __METHOD__);
+        }
+
+        // In case it's loaded (but likely not in cache).
+        if ($name instanceof TemplateWrapper || $name instanceof Template) {
+            $name = $name->getSourceContext()
+                ->getName();
+        } elseif ( ! \is_string($name)) {
+            dump($name);
+            throw new \InvalidArgumentException('The name must be a string or "\Twig\TemplateWrapper".');
         }
 
         $template   = parent::load($name);

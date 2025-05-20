@@ -33,6 +33,8 @@ use Machinateur\TwigBlockValidator\Twig\Node\TwigBlockStackInterface;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
+use Twig\Template;
+use Twig\TemplateWrapper;
 
 /**
  * @phpstan-type _MatchWithOffset           array<int, array{0:string,1:int}>
@@ -65,22 +67,27 @@ class TwigBlockResolver
     }
 
     /**
-     * Resolve a given template and block name combination to a block struct of the top-most ancestor block (or self).
+     * Resolve a given template and block name combination to a block struct of the furthest direct ancestor block.
+     *
+     * Notice that this is not the same as the origin-block,
+     *  because a `template.html.twig` -> `intermediate_1.html.twig` -> `intermediate_2.html.twig` -> `origin.html.twig`
+     *   structure, where `intermediate_2.html.twig` does not contain the block (i.e. extends it),
+     *    will resolve to `intermediate_1.html.twig`.
      *
      * @return _Block|null
      *
      * @throws LoaderError      when the block cannot be resolved or the template does not exist
      * @throws RuntimeError     when the generated code is erroneous
      * @throws SyntaxError      when there is a syntax error, like missing tags
+     *
+     * @deprecated No longer used. Use {@see TwigBlockResolver::resolveOriginBlock()} instead.
      */
     public function resolveParentBlock(string $template, string $blockName): ?array
     {
         $originalTemplate = $template;
-        $templates        = [];
+        $templates        = [$originalTemplate];
 
         do {
-            // TODO: This logic is flawed, as it will stop resolving the origin-block when an intermediate parent is hit,
-            //  that does not contain the respective block. To solve this, use `$this->twig->load($template)->unwrap()->getParent()`.
             $block = $this->resolveBlock($template, $blockName);
 
             if ( ! isset($block['parent_template'])) {
@@ -111,6 +118,58 @@ class TwigBlockResolver
     }
 
     /**
+     * Resolve a given template and block name combination to a block struct of the top-most ancestor block.
+     *
+     * @return _Block|null
+     *
+     * @throws LoaderError      when the block cannot be resolved or the template does not exist
+     * @throws RuntimeError     when the generated code is erroneous
+     * @throws SyntaxError      when there is a syntax error, like missing tags
+     */
+    public function resolveOriginBlock(string $template, string $blockName): ?array
+    {
+        $originalTemplate = $template;
+        $templates        = [$originalTemplate];
+        $originBlock      = null;
+
+        do {
+            $wrapper = $this->twig->load($template);
+            $blocks  = $this->twig->getBlocks($template);
+
+            if (isset($blocks[$blockName])) {
+                $originBlock = $blocks[$blockName];
+            }
+
+            // Set to parent (false if no parent).
+            $template = $wrapper->unwrap()
+                ->getParent([]);
+
+            // In case it's loaded (but likely not in cache).
+            if ($template instanceof TemplateWrapper || $template instanceof Template) {
+                $template = $template->getSourceContext()
+                    ->getName();
+            }
+
+            // Could still be `false`.
+            if (\is_string($template)) {
+                if (\in_array($template, $templates, true)) {
+                    // Infinite loop detected, alternating through parents.
+                    throw new LoaderError(\sprintf('Recursion error resolving "%s" ("%s")', $template, \implode('", "', $templates)));
+                }
+
+                $templates[] = $template;
+            }
+        } while (false !== $template);
+
+        if ($originBlock && ($originBlock['template'] === $originalTemplate) && $originBlock['block'] === $blockName) {
+            // Cannot return the same template as parent, as was given for resolution.
+            return null;
+        }
+
+        return $originBlock;
+    }
+
+    /**
      * Generate the source hash of the given block's ancestor (origin block).
      *
      * @throws LoaderError      when the template does not exist
@@ -121,7 +180,7 @@ class TwigBlockResolver
     {
         // Resolve the template block in hierarchy.
         //  In case of `sw_extends` this also works fine, because the top-most block is resolved (i.e. `@Storefront`).
-        $parentBlock = $this->resolveParentBlock($template, $blockName);
+        $parentBlock = $this->resolveOriginBlock($template, $blockName);
 
         if (null === $parentBlock) {
             return null;
@@ -158,21 +217,20 @@ class TwigBlockResolver
         $sourceContext   = $this->twig->getLoader()
             ->getSourceContext($template);
         $sourceCode      = $sourceContext->getCode();
-        // Slice the portion of lines that are needed.
-        $sourceCodeLines = \array_slice(\explode("\n", $sourceCode), $blockLinesStart, $blockLineCount);
+        $sourceCodeLines = \explode("\n", $sourceCode);
+
+        // Handle special case, where the block is "inline".
+        if ($blockLinesStart === $blockLinesEnd || 0 === $blockLineCount) {
+            $sourceCodeLines = [$sourceCodeLines[$blockLinesStart]];
+            $blockLineCount  = \count($sourceCodeLines);
+        } else {
+            // Slice the portion of lines that are needed.
+            $sourceCodeLines = \array_slice($sourceCodeLines, $blockLinesStart, $blockLineCount);
+        }
 
         // Extract first and last line by reference from the block's source code lines array.
         $firstLine = & $sourceCodeLines[0];
         $lastLine  = & $sourceCodeLines[$blockLineCount - 1];
-
-        if ( ! $firstLine) {
-            // TODO: Check why the line ever becomes null with some templates.
-            throw new SyntaxError(\sprintf('The first line is null in "%s:%s" line %d.', $template, $blockName, $blockLinesStart));
-        }
-        if ( ! $lastLine) {
-            // TODO: Check why the line ever becomes null with some templates.
-            throw new SyntaxError(\sprintf('The first line is null in "%s:%s" line %d.', $template, $blockName, $blockLinesEnd));
-        }
 
         $blockTags = $this->twig->getLexerOptions()['tag_block'];
 
@@ -191,18 +249,23 @@ class TwigBlockResolver
         if (1 !== \preg_match($firstLinePattern, $firstLine, $firstLineMatch, flags: \PREG_OFFSET_CAPTURE)) {
             throw new SyntaxError(\sprintf('The start tag for block "%s" was not found.', $blockName), $blockLinesStart, $sourceContext);
         }
+        /** @var _MatchWithOffset $firstLineMatch */
 
         // {% endblock (name)? %}
         $lastLinePattern  = \vsprintf('{%s\s*endblock(?:\s+%s)?\s*%s}sx', $params);
         if (1 !== \preg_match($lastLinePattern, $lastLine, $lastLineMatch, flags: \PREG_OFFSET_CAPTURE)) {
             throw new SyntaxError(\sprintf('The end tag for block "%s" was not found.', $blockName), $blockLinesStart + $blockLineCount, $sourceContext);
         }
-
-        // Assign new first and last line to offset substring.
-        /** @var _MatchWithOffset $firstLineMatch */
-        $firstLine = \substr($firstLine, $firstLineMatch[0][1]);
         /** @var _MatchWithOffset $lastLineMatch */
-        $lastLine  = \substr($lastLine, $lastLineMatch[0][1]);
+
+        if (1 === $blockLineCount) {
+            // If there is only one line, first and last line refer to the same line. Only update that.
+            $sourceCodeLines[0] = \substr($sourceCodeLines[0], $firstLineMatch[0][1], $lastLineMatch[0][1]);
+        } else {
+            // Assign new first and last line to offset substring.
+            $firstLine = \substr($firstLine, $firstLineMatch[0][1]);
+            $lastLine  = \substr($lastLine, $lastLineMatch[0][1]);
+        }
 
         // Return the combined source code lines array as string. Newline is normalized to "\n" (twig default).
         return \implode("\n", $sourceCodeLines);
