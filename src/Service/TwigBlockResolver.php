@@ -49,7 +49,7 @@ class TwigBlockResolver
     /**
      * Resolve a given template and block name combination to a block struct.
      *
-     * @return _Block
+     * @return _Block|null
      *
      * @throws LoaderError      when the block cannot be resolved or the template does not exist
      * @throws RuntimeError     when the generated code is erroneous
@@ -67,7 +67,7 @@ class TwigBlockResolver
     /**
      * Resolve a given template and block name combination to a block struct of the top-most ancestor block (or self).
      *
-     * @return _Block
+     * @return _Block|null
      *
      * @throws LoaderError      when the block cannot be resolved or the template does not exist
      * @throws RuntimeError     when the generated code is erroneous
@@ -75,6 +75,7 @@ class TwigBlockResolver
      */
     public function resolveParentBlock(string $template, string $blockName): ?array
     {
+        $templates = [];
         do {
             $block = $this->resolveBlock($template, $blockName);
 
@@ -82,7 +83,18 @@ class TwigBlockResolver
                 break;
             }
 
-            $template = $block['parent_template'];
+            if ($template === $block['parent_template']) {
+                // Infinite loop detected.
+                break;
+            }
+
+            $template    = $block['parent_template'];
+
+            if (\in_array($template, $templates, true)) {
+                throw new LoaderError(\sprintf('Recursion error resolving "%s" ("%s")', $template, \implode('", "', $templates)));
+            }
+
+            $templates[] = $template;
         } while (null !== $block);
 
         return $block;
@@ -92,7 +104,7 @@ class TwigBlockResolver
      * Generate the source hash of the given block's ancestor (origin block).
      *
      * @throws LoaderError      when the template does not exist
-     * @throws RuntimeError     when the generated code is erroneous
+     * @throws RuntimeError     when the generated code is erroneous or recursion is detected
      * @throws SyntaxError      when the block start or end tag cannot be found
      */
     public function getSourceHash(string $template, string $blockName): ?string
