@@ -49,8 +49,8 @@ class AnnotateBlocksEvent implements NotifiableInterface
      * @param array<string, array<string, _Comment>> $comments
      */
     public function __construct(
-        public readonly array  $blocks,
-        public readonly array  $comments,
-        public readonly string $version,
+        public readonly array   $blocks,
+        public readonly array   $comments,
+        public readonly ?string $version,
     ) {}
 }
