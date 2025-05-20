@@ -79,7 +79,8 @@ class TwigBlockResolver
         $templates        = [];
 
         do {
-            // TODO: This logic is flawed, as it will stop resolving the origin-block when an intermediate parent is hit, that does not contain the respecitve block.
+            // TODO: This logic is flawed, as it will stop resolving the origin-block when an intermediate parent is hit,
+            //  that does not contain the respective block. To solve this, use `$this->twig->load($template)->unwrap()->getParent()`.
             $block = $this->resolveBlock($template, $blockName);
 
             if ( ! isset($block['parent_template'])) {
