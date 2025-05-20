@@ -170,6 +170,8 @@ class TwigBlockAnnotator implements ResetInterface
         //    return;
         //}
 
+        // TODO: Also track diff to existing comment.
+
         // Enrich the block, i.e. _AnnotatedBlock.
         $block['created']        = $created;
         $block['source_hash']    = $this->blockResolver->getSourceHash($template, $blockName);
