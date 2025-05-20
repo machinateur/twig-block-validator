@@ -160,8 +160,7 @@ class TwigBlockAnnotator implements ResetInterface
      */
     protected function processBlock(array & $block, ?string $defaultVersion, ?array $comment): void
     {
-        $created          = (null === $comment);
-        $block['created'] = $created;
+        $created        = (null === $comment);
 
         $template       = $block['template'];
         $blockName      = $block['block'];
@@ -172,6 +171,7 @@ class TwigBlockAnnotator implements ResetInterface
         //}
 
         // Enrich the block, i.e. _AnnotatedBlock.
+        $block['created']        = $created;
         $block['source_hash']    = $this->blockResolver->getSourceHash($template, $blockName);
         $block['source_version'] = $defaultVersion;
 
