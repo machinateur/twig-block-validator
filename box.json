@@ -12,9 +12,20 @@
     {
       "name": "*.yaml",
       "in":   "src/Resources/config"
+    },
+    {
+      "name": "*",
+      "in":   ["var/cache/prod", "var/log"]
     }
   ],
-  "compression": "BZ2",
+  "compression": "GZ",
   "output": "build/twig-block-validator.phar",
-  "banner-file": "LICENSE"
+  "banner-file": "LICENSE",
+  "git-version": "box_release_build",
+  "compactors": [
+    "KevinGH\\Box\\Compactor\\Json",
+    "KevinGH\\Box\\Compactor\\Php",
+    "KevinGH\\Box\\Compactor\\PhpScoper"
+  ],
+  "php-scoper": "scoper.inc.php"
 }

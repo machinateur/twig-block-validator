@@ -17,9 +17,7 @@
   "require-dev": {
     "cweagans/composer-patches": "^1.7",
     "phpunit/phpunit": "^9.5",
-    "shopware/administration": "^6.4",
-    "shopware/core": "^6.4",
-    "shopware/storefront": "^6.4",
+    "shopware/storefront": "^6.6",
     "symfony/flex": "^2.5"
   },
   "require": {
@@ -34,6 +32,7 @@
     "symfony/finder": "^7.2",
     "symfony/framework-bundle": "^7.2",
     "symfony/monolog-bundle": "^3.10",
+    "symfony/runtime": "^7.2",
     "symfony/twig-bundle": "^7.2",
     "symfony/yaml": "^7.2",
     "twig/twig": "^3.15"
@@ -64,5 +63,8 @@
   },
   "suggest": {
     "humbug/box": "*"
+  },
+  "replace": {
+    "shopware/core": "*"
   }
 }

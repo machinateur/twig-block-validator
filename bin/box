@@ -6,9 +6,12 @@ declare(strict_types=1);
 use Machinateur\TwigBlockValidator\Box\BoxKernel;
 use Machinateur\TwigBlockValidator\Command\TwigBlockAnnotateCommand;
 use Machinateur\TwigBlockValidator\Command\TwigBlockValidateCommand;
-use Machinateur\TwigBlockValidator\TwigBlockValidatorBundle;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Runtime\SymfonyRuntime;
 
+// Set up default runtime, to mitigate `humbug/php-scoper` not picking up the namespaces from strings.
+$_SERVER['APP_RUNTIME']                           = SymfonyRuntime::class;
+// Disable .env support, since this will run inside the `phar` archive.
 $_SERVER['APP_RUNTIME_OPTIONS']['disable_dotenv'] = true;
 
 require_once __DIR__ . '/../vendor/autoload_runtime.php';
@@ -20,7 +23,10 @@ return static function (array & $context) {
     $kernel->boot();
 
     $container   = $kernel->getContainer();
-    $application = new Application('Twig Block Validator', TwigBlockValidatorBundle::VERSION);
+    /**
+     * @see https://github.com/box-project/box/blob/main/doc/configuration.md#pretty-git-tag-placeholder-git-version
+     */
+    $application = new Application('Twig Block Validator', '@box_release_build@');
     $application->addCommands([
             $container->get(TwigBlockValidateCommand::class),
             $container->get(TwigBlockAnnotateCommand::class),
