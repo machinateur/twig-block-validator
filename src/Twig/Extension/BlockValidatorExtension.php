@@ -27,7 +27,6 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Twig\Extension;
 
-use Composer\Semver\Semver;
 use Machinateur\TwigBlockValidator\Twig\BlockStackParser;
 use Machinateur\TwigBlockValidator\Twig\NodeVisitor\BlockNodeVisitor;
 use Twig\Environment;
@@ -128,9 +127,13 @@ class BlockValidatorExtension extends AbstractExtension
         return \hash_file(self::ALGO, $file);
     }
 
+    /**
+     * TODO: Remove.
+     *
+     * @deprecated Will be removed.
+     */
     public function getNodeVisitors(): array
     {
-        // TODO: Remove or keep. This extension should be used and added to the environment internally. But the visitor cannot be retrieved at the moment.
         return [
             new BlockNodeVisitor(),
         ];

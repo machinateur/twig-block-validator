@@ -3,6 +3,9 @@
   "directories": [
     "config", "src", "vendor", "var"
   ],
+  "files": [
+    "templates/.gitignore"
+  ],
   "finder": [
     {
       "name":    "*.php",
@@ -12,9 +15,20 @@
     {
       "name": "*.yaml",
       "in":   "src/Resources/config"
+    },
+    {
+      "name": "*",
+      "in":   [".twig-block-validator", "var/log"]
     }
   ],
-  "compression": "BZ2",
+  "compression": "GZ",
   "output": "build/twig-block-validator.phar",
-  "banner-file": "LICENSE"
+  "banner-file": "LICENSE",
+  "git-version": "box_release_build",
+  "compactors": [
+    "KevinGH\\Box\\Compactor\\Json",
+    "KevinGH\\Box\\Compactor\\Php",
+    "KevinGH\\Box\\Compactor\\PhpScoper"
+  ],
+  "php-scoper": "scoper.inc.php"
 }

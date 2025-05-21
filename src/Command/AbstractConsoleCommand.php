@@ -28,51 +28,51 @@ declare(strict_types=1);
 namespace Machinateur\TwigBlockValidator\Command;
 
 use Machinateur\TwigBlockValidator\TwigBlockValidatorOutput;
-use Machinateur\TwigBlockValidator\Validator\TwigBlockValidator;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Input\InputOption;
 
-class TwigBlockValidateCommand extends AbstractConsoleCommand
+abstract class AbstractConsoleCommand extends Command
 {
-    final public const DEFAULT_NAME = 'twig:block:validate';
+    use ConsoleCommandTrait;
+
+    /**
+     * @var string
+     */
+    public const DEFAULT_NAME = null;
+
+    private ?string $version = null;
 
     /**
      * @param string|null $name     The override command name. This is useful for adding it as composer script.
      */
     public function __construct(
-        private readonly TwigBlockValidator $validator,
-        TwigBlockValidatorOutput            $output,
-        ?string                             $name = null,
+        protected readonly TwigBlockValidatorOutput $output,
+        ?string                                     $name = null,
     ) {
-        parent::__construct($output, $name);
+        parent::__construct($name);
+    }
+
+    public static function getDefaultName(): ?string
+    {
+        return static::DEFAULT_NAME ?? parent::getDefaultName();
     }
 
     protected function configure(): void
     {
-        parent::configure();
-
         $this
-            ->setDescription('Validate block versions in twig templates')
-            //->setHelp()
+            ->addOption('template', 't', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Twig template path to load')
+            ->addOption('validate', 'c', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Twig template path to validate')
+            ->addOption('use-version', 'r', InputOption::VALUE_OPTIONAL, 'The version number required', $this->getVersion())
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    public function getVersion(): ?string
     {
-        $this->output->init($input, $output);
+        return $this->version;
+    }
 
-        $templatePaths = (array)$input->getOption('template');
-        $validatePaths = (array)$input->getOption('validate');
-        $version       = $input->getOption('use-version');
-
-        $templatePaths = $this->resolveNamespaces($templatePaths);
-        $validatePaths = $this->resolveNamespaces($validatePaths);
-
-        $this->validator->validate($validatePaths, $templatePaths, $version);
-
-        $this->output->reset();
-
-        return Command::SUCCESS;
+    public function setVersion(?string $version): void
+    {
+        $this->version = $version;
     }
 }

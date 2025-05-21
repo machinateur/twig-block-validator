@@ -4,7 +4,6 @@
 declare(strict_types=1);
 
 use Machinateur\TwigBlockValidator\Command\TwigBlockValidateCommand;
-use Machinateur\TwigBlockValidator\Twig\Extension\BlockValidatorExtension;
 use Machinateur\TwigBlockValidator\TwigBlockValidatorBundle;
 use Machinateur\TwigBlockValidator\TwigBlockValidatorKernel;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
@@ -32,15 +31,6 @@ return static function (array & $context) {
     $application->setVersion(TwigBlockValidatorBundle::VERSION);
 
     $kernel->boot();
-
-    if (null !== $version = TwigBlockValidatorKernel::getShopwareVersion()) {
-        BlockValidatorExtension::$preferredLabel = 'shopware';
-
-        $application->get($defaultName)
-            ->getDefinition()
-            ->getOption('use-version')
-            ->setDefault($version);
-    }
 
     return $application->get($defaultName);
 };
