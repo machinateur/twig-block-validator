@@ -27,7 +27,6 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Twig\Extension;
 
-use Composer\Semver\Semver;
 use Machinateur\TwigBlockValidator\Twig\BlockStackParser;
 use Machinateur\TwigBlockValidator\Twig\NodeVisitor\BlockNodeVisitor;
 use Twig\Environment;
