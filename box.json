@@ -3,6 +3,9 @@
   "directories": [
     "config", "src", "vendor", "var"
   ],
+  "files": [
+    "templates/.gitignore"
+  ],
   "finder": [
     {
       "name":    "*.php",
@@ -15,7 +18,7 @@
     },
     {
       "name": "*",
-      "in":   ["var/cache/prod", "var/log"]
+      "in":   [".twig-block-validator", "var/log"]
     }
   ],
   "compression": "GZ",

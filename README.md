@@ -285,7 +285,8 @@ Find the source archive and prebuilt phar attached to
 
 ### Build the phar
 
-This instruction requires [box](https://github.com/box-project/box) to be installed globally.
+This instruction requires [box](https://github.com/box-project/box)
+ and [php-scoper](https://github.com/humbug/php-scoper) to be installed globally.
 
 ```bash
 # navigate to project
@@ -295,6 +296,15 @@ cd twig-block-validator
 export APP_ENV=prod
 export APP_DEBUG=0
 export COMPOSER_NO_DEV=1
+
+composer install --no-dev --prefer-dist
+
+# isolate application
+rm -rf build/ 
+php-scoper add-prefix
+composer dump-autoload --working-dir build/ --classmap-authoritative
+
+
 
 # TODO: Use `php-scoper` to isolate sources before container compilation; use `var/box/` directory for build steps.
 

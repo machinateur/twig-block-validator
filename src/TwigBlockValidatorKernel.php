@@ -41,6 +41,8 @@ use Symfony\Component\HttpKernel\Kernel;
 
 class TwigBlockValidatorKernel extends Kernel
 {
+    final public const BUNDLE_VERSION = TwigBlockValidatorBundle::VERSION;
+
     public static function getShopwareVersion(): ?string
     {
         try {
