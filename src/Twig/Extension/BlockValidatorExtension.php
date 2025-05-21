@@ -127,9 +127,13 @@ class BlockValidatorExtension extends AbstractExtension
         return \hash_file(self::ALGO, $file);
     }
 
+    /**
+     * TODO: Remove.
+     *
+     * @deprecated Will be removed.
+     */
     public function getNodeVisitors(): array
     {
-        // TODO: Remove or keep. This extension should be used and added to the environment internally. But the visitor cannot be retrieved at the moment.
         return [
             new BlockNodeVisitor(),
         ];
