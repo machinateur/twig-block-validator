@@ -296,6 +296,8 @@ export APP_ENV=prod
 export APP_DEBUG=0
 export COMPOSER_NO_DEV=1
 
+# TODO: Use `php-scoper` to isolate sources before container compilation; use `var/box/` directory for build steps.
+
 # prepare cache
 bin/console cache:clear
 rm -rf var/cache/prod
