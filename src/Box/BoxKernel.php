@@ -32,17 +32,24 @@ use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpKernel\KernelInterface;
 
 class BoxKernel extends TwigBlockValidatorKernel
 {
+    protected readonly string  $workdir;
     protected ?KernelInterface $kernel = null;
 
-    public function __construct(string $environment = 'prod', bool $debug = false)
+    public function __construct(string $environment = 'prod', bool $debug = false, ?string $workdir = null)
     {
         parent::__construct($environment, $debug);
 
-        $this->kernel = $this->getKernel();
+        if (null !== $workdir && ! \is_dir($workdir)) {
+            throw new \InvalidArgumentException(\sprintf('The workdir "%s" does not exist', $workdir));
+        }
+
+        $this->workdir = $workdir ?? \getcwd();
+        $this->kernel  = $this->getKernel();
     }
 
     public function getProjectDir(): string
@@ -52,7 +59,7 @@ class BoxKernel extends TwigBlockValidatorKernel
 
     public function getCacheDir(): string
     {
-        return \getcwd().'/.twig-block-validator';
+        return $this->workdir.'/.twig-block-validator';
     }
 
     public function getLogDir(): string
@@ -77,60 +84,51 @@ class BoxKernel extends TwigBlockValidatorKernel
         return $class;
     }
 
-    public function getKernel(): ?KernelInterface
+    public function getKernel(): KernelInterface
     {
         if ($this->kernel) {
             return $this->kernel;
         }
 
-        $kernel      = null;
-        $projectRoot = \getcwd();
+        // Resolve and boot the application kernel.
+        $kernel = $this->createKernel([
+            'environment' => 'test',
+            'debug'       => $this->debug,
+        ]);
+        $kernel->boot();
 
-        if ($projectRoot && \is_file($projectRoot.'/bin/console')) {
-            $application = include $projectRoot.'/bin/console';
-
-            // The `Application` class from `symfony/framework-bundle` cannot be used directly, as it will be scoped inside the `phar` archive,
-            //  so the check would always fail if used for comparison of outside sources.
-            if ($application instanceof \Closure) {
-                $context     = [
-                    'APP_ENV'   => 'dev',
-                    'APP_DEBUG' => true,
-                ];
-                $application = $application($context);
-
-                // TODO: Refactor this. Also, I'm not yet sure if it will ever work to pull the `twig` service from the application.
-            }
-
-            /** @var \Symfony\Bundle\FrameworkBundle\Console\Application $application */
-            if (\is_object($application) && \method_exists($application, 'getKernel')) {
-                $kernel = $application->getKernel();
-            }
-
-            // TODO: Include the autoloader, then yield the bundles maybe?
-        }
-
-        if (null === $kernel) {
-            \trigger_error(\sprintf('Failed to load application kernel from "%s" root directory!', $projectRoot), \E_USER_WARNING);
-        }
-
-        return $this->kernel = $kernel ?? null;
+        return $this->kernel = $kernel;
     }
 
     public function boot(): void
     {
-        parent::boot();
+        $this->kernel ??= $this->getKernel();
+        $this->kernel?->boot();
 
-        // Resolve and boot the application kernel.
-        $this->getKernel()
-            ?->boot();
+        parent::boot();
+    }
+
+    public function reboot(?string $warmupDir): void
+    {
+        parent::reboot($warmupDir);
+
+        if ( ! $this->kernel) {
+            return;
+        }
+
+        $this->kernel->reboot($warmupDir);
     }
 
     public function shutdown(): void
     {
         parent::shutdown();
 
+        if ( ! $this->kernel) {
+            return;
+        }
+
         // Shut down the application kernel.
-        $this->kernel?->shutdown();
+        $this->kernel->shutdown();
         $this->kernel = null;
     }
 
@@ -138,6 +136,7 @@ class BoxKernel extends TwigBlockValidatorKernel
     {
         parent::build($container);
 
+        dump('sdj');
         if ( ! $this->kernel) {
             return;
         }
@@ -154,9 +153,12 @@ class BoxKernel extends TwigBlockValidatorKernel
         try {
             // Copy over twig service from application kernel.
             $container->set('twig',
+                // Get twig, even though it's private, by leveraging the built-in test container.
                 $this->kernel?->getContainer()
-                    ->get('twig')
+                    ->get('test.service_container')
+                    ->get('twig') // <<< todo: does not exist? `"You have requested a non-existent service "twig"."`
             );
+
         } catch (\Throwable $e) {
             \trigger_error('Failed to copy platform twig. ' . $e->getMessage(), \E_USER_WARNING);
         }
@@ -170,5 +172,45 @@ class BoxKernel extends TwigBlockValidatorKernel
     public static function isPhar(): bool
     {
         return '' !== \Phar::running(false);
+    }
+
+    /**
+     * @throws \RuntimeException
+     * @throws \LogicException
+     */
+    protected function getKernelClass(): string
+    {
+        $_SERVER['_ISOLATED_APP_ENV'] = $_ENV['_ISOLATED_APP_ENV'] = 'test';
+        (new Dotenv())
+            ->load($this->workdir.'/.env.test');
+
+        if (!isset($_SERVER['KERNEL_CLASS']) && !isset($_ENV['KERNEL_CLASS'])) {
+            throw new \LogicException(\sprintf('You must set the KERNEL_CLASS environment variable to the fully-qualified class name of your Kernel in phpunit.xml / phpunit.xml.dist or override the "%1$s::createKernel()" or "%1$s::getKernelClass()" method.', static::class));
+        }
+
+        if (!class_exists($class = $_ENV['KERNEL_CLASS'] ?? $_SERVER['KERNEL_CLASS'])) {
+            throw new \RuntimeException(\sprintf('Class "%s" doesn\'t exist or cannot be autoloaded. Check that the KERNEL_CLASS value in phpunit.xml matches the fully-qualified class name of your Kernel or override the "%s::createKernel()" method.', $class, static::class));
+        }
+
+        return $class;
+    }
+
+    /**
+     * Creates a Kernel.
+     *
+     * Available options:
+     *
+     *  * environment
+     *  * debug
+     */
+    protected function createKernel(array $options = []): KernelInterface
+    {
+        static $class;
+        $class ??= static::getKernelClass();
+
+        $env   = $options['environment'] ?? $_ENV['APP_ENV']   ?? $_SERVER['APP_ENV']   ?? 'test';
+        $debug = $options['debug']       ?? $_ENV['APP_DEBUG'] ?? $_SERVER['APP_DEBUG'] ?? true;
+
+        return new $class($env, (bool)$debug);
     }
 }

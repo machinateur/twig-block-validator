@@ -11,3 +11,8 @@
 !/build/.gitignore
 
 /.twig-block-validator/
+
+###> phpunit/phpunit ###
+/phpunit.xml
+.phpunit.result.cache
+###< phpunit/phpunit ###

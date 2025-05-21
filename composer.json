@@ -26,6 +26,7 @@
     "symfony/console": "^7.2 | ^6.4 | ^5.4",
     "symfony/debug-bundle": "^7.2 | ^6.4 | ^5.4",
     "symfony/dependency-injection": "^7.2 | ^6.4 | ^5.4",
+    "symfony/dotenv": "^7.2",
     "symfony/event-dispatcher": "^7.2 | ^6.4 | ^5.4",
     "symfony/finder": "^7.2 | ^6.4 | ^5.4",
     "symfony/flex": "^2",
