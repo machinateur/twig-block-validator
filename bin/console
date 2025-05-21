@@ -3,9 +3,6 @@
 
 declare(strict_types=1);
 
-use Machinateur\TwigBlockValidator\Command\TwigBlockValidateCommand;
-use Machinateur\TwigBlockValidator\Twig\Extension\BlockValidatorExtension;
-use Machinateur\TwigBlockValidator\TwigBlockValidatorBundle;
 use Machinateur\TwigBlockValidator\TwigBlockValidatorKernel;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -31,22 +28,11 @@ return static function (array & $context) {
 
     $kernel      = new TwigBlockValidatorKernel($env, $debug);
     $application = new Application($kernel);
-    $application->setVersion(TwigBlockValidatorBundle::VERSION);
 
     $kernel->boot();
 
-    // Note: This causes an error when calling with `-t @Namespaced:path/to/the/templates`, as it mistakes the `:` for a command namespace.
-    //$application->setDefaultCommand($defaultName = TwigBlockValidateCommand::getDefaultName());
-
-    if (null !== $version = TwigBlockValidatorKernel::getShopwareVersion()) {
+    if (TwigBlockValidatorKernel::getShopwareVersion()) {
         $application->setName('Twig Block Validator (for Shopware 6)');
-
-        BlockValidatorExtension::$preferredLabel = 'shopware';
-
-        $application->get(TwigBlockValidateCommand::getDefaultName())
-            ->getDefinition()
-            ->getOption('use-version')
-            ->setDefault($version);
     } else {
         $application->setName('Twig Block Validator');
     }

@@ -35,35 +35,26 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class TwigBlockAnnotateCommand extends Command
+class TwigBlockAnnotateCommand extends AbstractConsoleCommand
 {
-    use ConsoleCommandTrait;
+    final public const DEFAULT_NAME = 'twig:block:annotate';
 
-    public const DEFAULT_NAME = 'twig:block:annotate';
-
-    /**
-     * @param string|null $name     The override command name. This is useful for adding it as composer script.
-     */
     public function __construct(
-        private readonly TwigBlockAnnotator       $annotator,
-        private readonly TwigBlockValidatorOutput $output,
-        ?string                                   $name = null,
+        private readonly TwigBlockAnnotator $annotator,
+        TwigBlockValidatorOutput            $output,
+        ?string                             $name = null,
     ) {
-        parent::__construct($name);
-    }
-
-    public static function getDefaultName(): ?string
-    {
-        return self::DEFAULT_NAME;
+        parent::__construct($output, $name);
     }
 
     protected function configure(): void
     {
+        parent::configure();
+
         $this
-            ->addArgument('output-path', InputArgument::OPTIONAL, 'Where to write the annotated templates')
-            ->addOption('template', 't', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Twig template path to load')
-            ->addOption('validate', 'c', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Twig template path to validate')
-            ->addOption('use-version', 'r', InputOption::VALUE_OPTIONAL, 'The version number required')
+            ->setDescription('Annotate block versions in twig templates')
+            //->setHelp()
+            ->addArgument('output-path', InputArgument::OPTIONAL, 'Where to write the annotated templates (optional)')
             ->addOption('yes', 'y', InputOption::VALUE_NONE, 'Silently approve annotating template in-place')
         ;
     }
