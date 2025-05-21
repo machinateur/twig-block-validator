@@ -33,9 +33,11 @@ return static function (array & $context) {
 
     if (TwigBlockValidatorKernel::getShopwareVersion()) {
         $application->setName('Twig Block Validator (for Shopware 6)');
+        $application->setVersion(TwigBlockValidatorKernel::BUNDLE_VERSION);
     } else {
         $application->setName('Twig Block Validator');
+        $application->setVersion(TwigBlockValidatorKernel::BUNDLE_VERSION);
     }
 
-    return $application->run();
+    return $application;
 };
