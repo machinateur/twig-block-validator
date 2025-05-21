@@ -38,7 +38,7 @@ use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
 class TwigBlockValidatorBundle extends AbstractBundle
 {
-    final public    const VERSION     = 'beta';
+    final public    const VERSION     = '0.1.0-beta';
 
     final protected const CONFIG_EXTS = '.{yaml,yml}';
 
