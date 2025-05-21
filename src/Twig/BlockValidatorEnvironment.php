@@ -84,8 +84,6 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
         CommentExtension::setLexer($this);
         $this->addExtension(new CommentExtension());
 
-        // Add the parser extension, needed for block tracking.
-        BlockValidatorExtension::setParser($this);
         // Use node visitor directly, instead of using the extension class, to extract the block collection.
         $this->addNodeVisitor(
             $this->nodeVisitor = new BlockNodeVisitor(defaultVersion: $version)
@@ -111,6 +109,9 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
             $coreExtensionInternal->setDateFormat(...$coreExtensionGlobal->getDateFormat());
             $coreExtensionInternal->setNumberFormat(...$coreExtensionGlobal->getNumberFormat());
         }
+
+        // Add the parser extension, needed for block tracking.
+        BlockValidatorExtension::setParser($this);
 
         $this->namespacedPathnameBuilder = new NamespacedPathnameBuilder($loader);
     }
