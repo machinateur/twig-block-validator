@@ -1,3 +1,2 @@
-when@test:
-  framework:
+framework:
     test: true
