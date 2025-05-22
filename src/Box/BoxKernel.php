@@ -28,10 +28,7 @@ declare(strict_types=1);
 namespace Machinateur\TwigBlockValidator\Box;
 
 use Machinateur\TwigBlockValidator\TwigBlockValidatorKernel;
-use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
-use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpKernel\KernelInterface;
 
@@ -136,7 +133,6 @@ class BoxKernel extends TwigBlockValidatorKernel
     {
         parent::build($container);
 
-        dump('sdj');
         if ( ! $this->kernel) {
             return;
         }
@@ -147,7 +143,7 @@ class BoxKernel extends TwigBlockValidatorKernel
                     ->getParameter('twig.default_path')
             );
         } catch (\Throwable $e) {
-            \trigger_error('Failed to set platform default twig path. ' . $e->getMessage(), \E_USER_WARNING);
+            throw new \UnexpectedValueException('Failed to set platform default twig path. ' . $e->getMessage(), previous: $e);
         }
 
         try {
@@ -156,11 +152,10 @@ class BoxKernel extends TwigBlockValidatorKernel
                 // Get twig, even though it's private, by leveraging the built-in test container.
                 $this->kernel?->getContainer()
                     ->get('test.service_container')
-                    ->get('twig') // <<< todo: does not exist? `"You have requested a non-existent service "twig"."`
+                    ->get('twig')
             );
-
         } catch (\Throwable $e) {
-            \trigger_error('Failed to copy platform twig. ' . $e->getMessage(), \E_USER_WARNING);
+            throw new \UnexpectedValueException('Failed to copy platform twig. ' . $e->getMessage(), previous: $e);
         }
     }
 
@@ -180,9 +175,11 @@ class BoxKernel extends TwigBlockValidatorKernel
      */
     protected function getKernelClass(): string
     {
-        $_SERVER['_ISOLATED_APP_ENV'] = $_ENV['_ISOLATED_APP_ENV'] = 'test';
+        // There is no way to override the ISOLATED_APP_ENV.
+        unset($_SERVER['ISOLATED_APP_ENV'], $_ENV['ISOLATED_APP_ENV']);
+        $_SERVER['ISOLATED_APP_ENV'] = $_ENV['ISOLATED_APP_ENV'] = 'test';
         (new Dotenv())
-            ->load($this->workdir.'/.env.test');
+            ->loadEnv($this->workdir.'/.env.test', 'ISOLATED_APP_ENV', 'test');
 
         if (!isset($_SERVER['KERNEL_CLASS']) && !isset($_ENV['KERNEL_CLASS'])) {
             throw new \LogicException(\sprintf('You must set the KERNEL_CLASS environment variable to the fully-qualified class name of your Kernel in phpunit.xml / phpunit.xml.dist or override the "%1$s::createKernel()" or "%1$s::getKernelClass()" method.', static::class));
