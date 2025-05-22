@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace Machinateur\TwigBlockValidator\Twig;
 
 use Machinateur\Twig\Extension\CommentExtension;
+use Machinateur\TwigBlockValidator\Box\BoxKernel;
 use Machinateur\TwigBlockValidator\Event\TwigCollectBlocksEvent;
 use Machinateur\TwigBlockValidator\Event\TwigCollectCommentsEvent;
 use Machinateur\TwigBlockValidator\Event\TwigLoadFilesEvent;
@@ -94,16 +95,21 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
 
         // https://github.com/shopware/shopware/blob/6.6.x/src/Core/Framework/Adapter/Twig/StringTemplateRenderer.php
         foreach ($platformTwig->getExtensions() as $extension) {
-            if ($this->hasExtension($extension::class)) {
+            if ($this->hasExtension('Isolated\\'.$extension::class)) {
                 continue;
             }
             $this->addExtension($extension);
         }
-        if ($this->hasExtension(CoreExtension::class) && $platformTwig->hasExtension(CoreExtension::class)) {
+
+        // Concatenate to avoid being picked up by the isolation, if inside the phar (i.e. in isolation prefix mode).
+        /** @var class-string<CoreExtension> $class */
+        $extensionClass = BoxKernel::isPhar() ? '\\Twig'.'\\CoreExtension' : CoreExtension::class;
+
+        if ($this->hasExtension(CoreExtension::class) && $platformTwig->hasExtension($extensionClass)) {
             /** @var CoreExtension $coreExtensionInternal */
             $coreExtensionInternal = $this->getExtension(CoreExtension::class);
             /** @var CoreExtension $coreExtensionGlobal */
-            $coreExtensionGlobal = $platformTwig->getExtension(CoreExtension::class);
+            $coreExtensionGlobal = $platformTwig->getExtension($extensionClass);
 
             $coreExtensionInternal->setTimezone($coreExtensionGlobal->getTimezone());
             $coreExtensionInternal->setDateFormat(...$coreExtensionGlobal->getDateFormat());
