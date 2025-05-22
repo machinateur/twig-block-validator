@@ -325,6 +325,13 @@ php -d memory_limit=1G "$(which box)" compile -vvv
 ./build/twig-block-validator.phar
 ```
 
+Note on `replace` for `shopware/core` in this package:
+
+This is needed to avoid installing the `core` as dev-dependency, which seems to be caused in turn by its own `replace` declarations,
+ which are required by other dependencies.
+
+I tried several workarounds, and this one worked. We'll see if it works for real-world usage.
+
 ## License
 
 It's MIT.
