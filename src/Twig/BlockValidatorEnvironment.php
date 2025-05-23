@@ -95,7 +95,7 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
 
         // https://github.com/shopware/shopware/blob/6.6.x/src/Core/Framework/Adapter/Twig/StringTemplateRenderer.php
         foreach ($platformTwig->getExtensions() as $extension) {
-            if ($this->hasExtension('Isolated\\'.$extension::class)) {
+            if ($this->hasExtension(BoxKernel::isPhar() ? 'Isolated\\'.$extension::class : $extension::class)) {
                 continue;
             }
             $this->addExtension($extension);
