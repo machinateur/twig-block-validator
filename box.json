@@ -1,7 +1,7 @@
 {
   "main": "bin/box",
   "directories": [
-    "config", "src", "vendor", "var"
+    "config", "src", "vendor", "var/log", ".twig-block-validator"
   ],
   "files": [
     "templates/.gitignore"
@@ -15,10 +15,6 @@
     {
       "name": "*.yaml",
       "in":   "src/Resources/config"
-    },
-    {
-      "name": "*",
-      "in":   [".twig-block-validator", "var/log"]
     }
   ],
   "compression": "GZ",
