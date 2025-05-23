@@ -1,0 +1,76 @@
+{
+  "license": "proprietary",
+  "type": "project",
+  "require": {
+    "composer-runtime-api": "^2.0",
+    "shopware/administration": "*",
+    "shopware/core": "v6.6.10.4",
+    "shopware/elasticsearch": "*",
+    "shopware/storefront": "*",
+    "symfony/flex": "~2"
+  },
+  "repositories": [
+    {
+      "type": "path",
+      "url": "custom/plugins/*",
+      "options": {
+        "symlink": true
+      }
+    },
+    {
+      "type": "path",
+      "url": "custom/plugins/*/packages/*",
+      "options": {
+        "symlink": true
+      }
+    },
+    {
+      "type": "path",
+      "url": "custom/static-plugins/*",
+      "options": {
+        "symlink": true
+      }
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true,
+  "config": {
+    "allow-plugins": {
+      "cweagans/composer-patches": true,
+      "symfony/flex": true,
+      "symfony/runtime": true
+    },
+    "optimize-autoloader": true,
+    "sort-packages": true
+  },
+  "scripts": {
+    "auto-scripts": {
+      "assets:install": "symfony-cmd"
+    },
+    "post-install-cmd": [
+      "@auto-scripts"
+    ],
+    "post-update-cmd": [
+      "@auto-scripts"
+    ]
+  },
+  "extra": {
+    "symfony": {
+      "allow-contrib": true,
+      "endpoint": [
+        "https://raw.githubusercontent.com/shopware/recipes/flex/main/index.json",
+        "flex://defaults"
+      ]
+    },
+    "patches-file": "patches.json"
+  },
+  "require-dev": {
+    "cweagans/composer-patches": "^1.7",
+    "machinateur/twig-block-validator": "dev-main"
+  }
+}

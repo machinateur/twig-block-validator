@@ -1,0 +1,75 @@
+
+services:
+  shop:
+    image: dockware/dev:6.6.10.4
+    environment:
+      - PHP_VERSION=8.2
+      - NODE_VERSION=16
+    volumes:
+      - './.env.test:/var/www/html/.env.test'
+      - './composer.json:/var/www/html/composer.json'
+      - './patches:/var/www/html/patches'
+      - './patches.json:/var/www/html/patches.json'
+      - "db-data:/var/lib/mysql"
+      - "shop-data:/var/www/html"
+    ports:
+      - "127.0.0.1:22:22"     # SSH
+      - "127.0.0.1:80:80"     # HTTP
+      - "127.0.0.1:443:443"   # HTTPS
+      - "127.0.0.1:1025:1025" # Mailcatcher
+      - "127.0.0.1:3306:3306" # MySQL database
+
+###> shopware/core ###
+#  database:
+#    image: mariadb:11.4
+#    environment:
+#      MARIADB_DATABASE: shopware
+#      MARIADB_ROOT_PASSWORD: root
+#      MARIADB_USER: shopware
+#      MARIADB_PASSWORD: shopware
+#    volumes:
+#      - db-data:/var/lib/mysql:rw
+#    ports:
+#      - "127.0.0.1:3306:3306"
+#    healthcheck:
+#      test: [ "CMD", "mariadb-admin" ,"ping", "-h", "localhost", "-proot" ]
+#      start_period: 10s
+#      start_interval: 3s
+#      interval: 5s
+#      timeout: 1s
+#      retries: 10
+###< shopware/core ###
+
+###> shopware/elasticsearch ###
+#  opensearch:
+#    image: opensearchproject/opensearch:2
+#    volumes:
+#      - opensearch-data:/usr/share/opensearch/data
+#    environment:
+#      discovery.type: single-node
+#      plugins.security.disabled: 'true'
+#    ports:
+#      - "127.0.0.1:9200:9200"
+###< shopware/elasticsearch ###
+
+###> symfony/mailer ###
+#  mailer:
+#    image: axllent/mailpit
+#    ports:
+#      - "1025"
+#      - "8025"
+#    environment:
+#      MP_SMTP_AUTH_ACCEPT_ANY: 1
+#      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+###< symfony/mailer ###
+
+volumes:
+###> shopware/core ###
+  db-data:
+###< shopware/core ###
+
+  shop-data:
+
+###> shopware/elasticsearch ###
+#  opensearch-data:
+###< shopware/elasticsearch ###
