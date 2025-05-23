@@ -16,7 +16,6 @@
   "require-dev": {
     "cweagans/composer-patches": "^1.7",
     "phpunit/phpunit": "^9.5",
-    "shopware/storefront": "^6.6",
     "symfony/browser-kit": "^7.2 | ^6.4 | ^5.4",
     "symfony/css-selector": "^7.2 | ^6.4 | ^5.4",
     "symfony/phpunit-bridge": "^7.2 | ^6.4 | ^5.4"
@@ -73,8 +72,5 @@
   "suggest": {
     "humbug/box": "*",
     "humbug/php-scoper": "*"
-  },
-  "replace": {
-    "shopware/core": "*"
   }
 }
