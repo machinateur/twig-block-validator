@@ -46,6 +46,9 @@ class TwigBlockValidatorKernel extends Kernel
     public static function getShopwareVersion(): ?string
     {
         try {
+            // TODO: Override in BoxKernel, in order to avoid loading the internal `InstalledVersions` class at all
+            //  (maybe even exclude it entirely from the build?).
+            //   And maybe there's another way to determine this, if running BoxKernel inside a phar.
             return InstalledVersions::getVersion('shopware/storefront');
         } catch (\OutOfBoundsException) {
             return null;

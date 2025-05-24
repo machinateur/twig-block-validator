@@ -81,7 +81,10 @@ class BoxKernel extends TwigBlockValidatorKernel
         return $class;
     }
 
-    public function getKernel(): KernelInterface
+    /**
+     * Get or create a kernel from the current workdir.
+     */
+    public function getKernel(): ?KernelInterface
     {
         if ($this->kernel) {
             return $this->kernel;
@@ -92,7 +95,7 @@ class BoxKernel extends TwigBlockValidatorKernel
             'environment' => 'test',
             'debug'       => $this->debug,
         ]);
-        $kernel->boot();
+        $kernel?->boot();
 
         return $this->kernel = $kernel;
     }
@@ -100,7 +103,6 @@ class BoxKernel extends TwigBlockValidatorKernel
     public function boot(): void
     {
         $this->kernel ??= $this->getKernel();
-        $this->kernel?->boot();
 
         parent::boot();
     }
@@ -175,17 +177,24 @@ class BoxKernel extends TwigBlockValidatorKernel
      */
     protected function getKernelClass(): string
     {
-        // There is no way to override the ISOLATED_APP_ENV.
-        unset($_SERVER['ISOLATED_APP_ENV'], $_ENV['ISOLATED_APP_ENV']);
-        $_SERVER['ISOLATED_APP_ENV'] = $_ENV['ISOLATED_APP_ENV'] = 'test';
-        (new Dotenv())
-            ->loadEnv($this->workdir.'/.env.test', 'ISOLATED_APP_ENV', 'test');
+        $dotenvFile = $this->workdir.'/.env.test';
+
+        if (\is_file($dotenvFile) && \is_readable($dotenvFile)) {
+            // There is no way to override the ISOLATED_APP_ENV.
+            unset($_SERVER['ISOLATED_APP_ENV'], $_ENV['ISOLATED_APP_ENV']);
+            $_SERVER['ISOLATED_APP_ENV'] = $_ENV['ISOLATED_APP_ENV'] = 'test';
+            (new Dotenv())
+                ->loadEnv($dotenvFile, 'ISOLATED_APP_ENV', 'test');
+        }
 
         if (!isset($_SERVER['KERNEL_CLASS']) && !isset($_ENV['KERNEL_CLASS'])) {
+            // TODO: Update error message.
             throw new \LogicException(\sprintf('You must set the KERNEL_CLASS environment variable to the fully-qualified class name of your Kernel in phpunit.xml / phpunit.xml.dist or override the "%1$s::createKernel()" or "%1$s::getKernelClass()" method.', static::class));
         }
 
-        if (!class_exists($class = $_ENV['KERNEL_CLASS'] ?? $_SERVER['KERNEL_CLASS'])) {
+        // TODO: Add autoloader?
+        if (!\class_exists($class = $_ENV['KERNEL_CLASS'] ?? $_SERVER['KERNEL_CLASS'])) {
+            // TODO: Update error message.
             throw new \RuntimeException(\sprintf('Class "%s" doesn\'t exist or cannot be autoloaded. Check that the KERNEL_CLASS value in phpunit.xml matches the fully-qualified class name of your Kernel or override the "%s::createKernel()" method.', $class, static::class));
         }
 
@@ -193,17 +202,22 @@ class BoxKernel extends TwigBlockValidatorKernel
     }
 
     /**
-     * Creates a Kernel.
+     * Creates the kernel from the current workdir (`\getcwd()`), if required conditions apply.
      *
      * Available options:
-     *
-     *  * environment
-     *  * debug
+     * - environment
+     * - debug
      */
-    protected function createKernel(array $options = []): KernelInterface
+    protected function createKernel(array $options = []): ?KernelInterface
     {
         static $class;
-        $class ??= static::getKernelClass();
+
+        try {
+            $class ??= static::getKernelClass();
+        } catch (\LogicException) {
+            // No `.env.test` file found or `KERNEL_CLASS` not defined in ENV.
+            return null;
+        }
 
         $env   = $options['environment'] ?? $_ENV['APP_ENV']   ?? $_SERVER['APP_ENV']   ?? 'test';
         $debug = $options['debug']       ?? $_ENV['APP_DEBUG'] ?? $_SERVER['APP_DEBUG'] ?? true;

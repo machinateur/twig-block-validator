@@ -1,7 +1,7 @@
 {
   "main": "bin/box",
   "directories": [
-    "config", "src", "vendor", "var/log", ".twig-block-validator"
+    "config", "src", "vendor", "var/log"
   ],
   "files": [
     "templates/.gitignore"
