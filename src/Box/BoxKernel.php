@@ -34,8 +34,8 @@ use Symfony\Component\HttpKernel\KernelInterface;
 
 class BoxKernel extends TwigBlockValidatorKernel
 {
-    protected readonly string  $workdir;
-    protected ?KernelInterface $kernel = null;
+    protected readonly string           $workdir;
+    protected static   ?KernelInterface $kernel = null;
 
     public function __construct(string $environment = 'prod', bool $debug = false, ?string $workdir = null)
     {
@@ -46,7 +46,9 @@ class BoxKernel extends TwigBlockValidatorKernel
         }
 
         $this->workdir = $workdir ?? \getcwd();
-        $this->kernel  = $this->getKernel();
+
+        // Initialize the kernel directly, as it is needed for the `build()` step of our own container.
+        $this->getKernel();
     }
 
     public function getProjectDir(): string
@@ -83,26 +85,27 @@ class BoxKernel extends TwigBlockValidatorKernel
 
     /**
      * Get or create a kernel from the current workdir.
+     *  The returned kernel instance is already booted.
      */
     public function getKernel(): ?KernelInterface
     {
-        if ($this->kernel) {
-            return $this->kernel;
+        if (static::$kernel) {
+            return static::$kernel;
         }
 
         // Resolve and boot the application kernel.
-        $kernel = $this->createKernel([
+        $kernel = $this->createKernel($this->workdir, [
             'environment' => 'test',
             'debug'       => $this->debug,
         ]);
         $kernel?->boot();
 
-        return $this->kernel = $kernel;
+        return static::$kernel = $kernel;
     }
 
     public function boot(): void
     {
-        $this->kernel ??= $this->getKernel();
+        $this->getKernel();
 
         parent::boot();
     }
@@ -111,37 +114,37 @@ class BoxKernel extends TwigBlockValidatorKernel
     {
         parent::reboot($warmupDir);
 
-        if ( ! $this->kernel) {
+        if ( ! static::$kernel) {
             return;
         }
 
-        $this->kernel->reboot($warmupDir);
+        static::$kernel->reboot($warmupDir);
     }
 
     public function shutdown(): void
     {
         parent::shutdown();
 
-        if ( ! $this->kernel) {
+        if ( ! static::$kernel) {
             return;
         }
 
         // Shut down the application kernel.
-        $this->kernel->shutdown();
-        $this->kernel = null;
+        static::$kernel->shutdown();
+        static::$kernel = null;
     }
 
     protected function build(ContainerBuilder $container): void
     {
         parent::build($container);
 
-        if ( ! $this->kernel) {
+        if ( ! static::$kernel) {
             return;
         }
 
         try {
             $container->setParameter('twig.default_path',
-                $this->kernel?->getContainer()
+                static::$kernel->getContainer()
                     ->getParameter('twig.default_path')
             );
         } catch (\Throwable $e) {
@@ -152,7 +155,7 @@ class BoxKernel extends TwigBlockValidatorKernel
             // Copy over twig service from application kernel.
             $container->set('twig',
                 // Get twig, even though it's private, by leveraging the built-in test container.
-                $this->kernel?->getContainer()
+                static::$kernel->getContainer()
                     ->get('test.service_container')
                     ->get('twig')
             );
@@ -166,36 +169,54 @@ class BoxKernel extends TwigBlockValidatorKernel
      *
      * @see https://github.com/box-project/box/blob/main/doc/faq.md#detecting-that-you-are-inside-a-phar
      */
-    public static function isPhar(): bool
+    final public static function isPhar(): bool
     {
         return '' !== \Phar::running(false);
     }
 
     /**
-     * @throws \RuntimeException
-     * @throws \LogicException
+     * When running inside the phar file, determine this for the application kernel,
+     *  instead of checking internal versions from `\Composer\InstalledVersions`, which stays un-prefixed.
      */
-    protected function getKernelClass(): string
+    public static function getShopwareVersion(): ?string
     {
-        $dotenvFile = $this->workdir.'/.env.test';
-
-        if (\is_file($dotenvFile) && \is_readable($dotenvFile)) {
-            // There is no way to override the ISOLATED_APP_ENV.
-            unset($_SERVER['ISOLATED_APP_ENV'], $_ENV['ISOLATED_APP_ENV']);
-            $_SERVER['ISOLATED_APP_ENV'] = $_ENV['ISOLATED_APP_ENV'] = 'test';
-            (new Dotenv())
-                ->loadEnv($dotenvFile, 'ISOLATED_APP_ENV', 'test');
+        if (self::isPhar()) {
+            // TODO: Resolve static vs instance conflict, it would make sense to set the kernel globally,
+            //  since this class will only be instantiated once during lifecycle. Also, handle the "param not found" error.
+            return static::$kernel?->getContainer()
+                ->getParameter('kernel.shopware_version');
         }
+
+        return parent::getShopwareVersion();
+    }
+
+    /**
+     * Resolve the `KERNEL_CLASS` env-var for the given workdir (using {@see Dotenv}, if present).
+     *
+     * @throws \RuntimeException    When the `KERNEL_CLASS` does not exist
+     */
+    protected static function getKernelClass(string $workdir): string
+    {
+        $dotenvFile = $workdir.'/.env.test';
+
+        if ( ! \is_file($dotenvFile) || ! \is_readable($dotenvFile)) {
+            throw new \RuntimeException(\sprintf('Cannot load "%s" as it does not exist or is not readable. Skipping.', $dotenvFile));
+        }
+
+        // There is no way to override the `ISOLATED_APP_ENV`.
+        unset($_SERVER['ISOLATED_APP_ENV'], $_ENV['ISOLATED_APP_ENV']);
+        $_SERVER['ISOLATED_APP_ENV'] = $_ENV['ISOLATED_APP_ENV'] = 'test';
+        (new Dotenv())
+            ->loadEnv($dotenvFile, 'ISOLATED_APP_ENV', 'test');
 
         if (!isset($_SERVER['KERNEL_CLASS']) && !isset($_ENV['KERNEL_CLASS'])) {
-            // TODO: Update error message.
-            throw new \LogicException(\sprintf('You must set the KERNEL_CLASS environment variable to the fully-qualified class name of your Kernel in phpunit.xml / phpunit.xml.dist or override the "%1$s::createKernel()" or "%1$s::getKernelClass()" method.', static::class));
+            throw new \RuntimeException(\sprintf('You must set the "KERNEL_CLASS" environment variable to the fully-qualified class name of your application\'s Kernel in "%s" or environment.', $dotenvFile));
         }
 
-        // TODO: Add autoloader?
+        // TODO: Add (external) application's autoloader? Probably required for this to work with an external class.
+        //  Would it further be possible to add the new autoloader to the internal one?
         if (!\class_exists($class = $_ENV['KERNEL_CLASS'] ?? $_SERVER['KERNEL_CLASS'])) {
-            // TODO: Update error message.
-            throw new \RuntimeException(\sprintf('Class "%s" doesn\'t exist or cannot be autoloaded. Check that the KERNEL_CLASS value in phpunit.xml matches the fully-qualified class name of your Kernel or override the "%s::createKernel()" method.', $class, static::class));
+            throw new \RuntimeException(\sprintf('Class "%s" doesn\'t exist or cannot be autoloaded. Check that the "KERNEL_CLASS" value in "%s" matches the fully-qualified class name of your application\'s Kernel.', $class, $dotenvFile));
         }
 
         return $class;
@@ -203,19 +224,20 @@ class BoxKernel extends TwigBlockValidatorKernel
 
     /**
      * Creates the kernel from the current workdir (`\getcwd()`), if required conditions apply.
+     *  Returns silently, if no instantiation is possible.
      *
      * Available options:
      * - environment
      * - debug
      */
-    protected function createKernel(array $options = []): ?KernelInterface
+    protected static function createKernel(string $workdir, array $options = []): ?KernelInterface
     {
         static $class;
 
         try {
-            $class ??= static::getKernelClass();
-        } catch (\LogicException) {
-            // No `.env.test` file found or `KERNEL_CLASS` not defined in ENV.
+            $class ??= static::getKernelClass($workdir);
+        } catch (\RuntimeException) {
+            // No `.env.test` file found or `KERNEL_CLASS` not defined in current environment (or external dotenv file).
             return null;
         }
 
