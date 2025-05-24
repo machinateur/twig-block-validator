@@ -27,4 +27,5 @@
 docker compose up -d
 docker compose exec shop bash -c 'sudo composer self-update'
 docker compose exec shop composer update --lock
-docker compose exec shop composer require machinateur/twig-block-validator@dev
+docker compose exec shop composer install
+docker compose exec shop composer require machinateur/twig-block-validator:dev-box-kernel

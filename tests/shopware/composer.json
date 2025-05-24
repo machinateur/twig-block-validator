@@ -70,7 +70,6 @@
     "patches-file": "patches.json"
   },
   "require-dev": {
-    "cweagans/composer-patches": "^1.7",
-    "machinateur/twig-block-validator": "dev-main"
+    "cweagans/composer-patches": "^1.7"
   }
 }
