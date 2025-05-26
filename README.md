@@ -297,26 +297,13 @@ export APP_ENV=prod
 export APP_DEBUG=0
 export COMPOSER_NO_DEV=1
 
+# install dependencies
 composer install --no-dev --prefer-dist
 
-# isolate application
-rm -rf build/ 
-php-scoper add-prefix
-composer dump-autoload --working-dir build/ --classmap-authoritative
-
-
-
-# TODO: Use `php-scoper` to isolate sources before container compilation; use `var/box/` directory for build steps.
-
-# prepare cache
-bin/console cache:clear
-rm -rf var/cache/prod
-bin/console cache:warm
 # check if everything is fine
 bin/box -V
-
-# remove old logs
-rm var/log/*.log || mkdir -p var/log
+# clear cache
+rm -rf .twig-block-validator
 
 # compile the phar
 php -d memory_limit=1G "$(which box)" compile -vvv
@@ -324,13 +311,6 @@ php -d memory_limit=1G "$(which box)" compile -vvv
 # run the phar
 ./build/twig-block-validator.phar
 ```
-
-Note on `replace` for `shopware/core` in this package:
-
-This is needed to avoid installing the `core` as dev-dependency, which seems to be caused in turn by its own `replace` declarations,
- which are required by other dependencies.
-
-I tried several workarounds, and this one worked. We'll see if it works for real-world usage.
 
 ## License
 

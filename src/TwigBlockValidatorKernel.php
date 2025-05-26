@@ -43,11 +43,13 @@ class TwigBlockValidatorKernel extends Kernel
 {
     final public const BUNDLE_VERSION = TwigBlockValidatorBundle::VERSION;
 
-    public static function getShopwareVersion(): ?string
+    protected static function getShopwareVersion(): ?string
     {
         try {
-            // Caution: If this method is used from outside of this class (or from within using `self`),
-            //  it can lead to unexpected results, as the `\Composer\InstalledVersions` class is excluded from isolation.
+            // TODO: Override in BoxKernel, in order to avoid loading the internal `InstalledVersions` class at all
+            //  (maybe even exclude it entirely from the build?).
+            //   And maybe there's another way to determine this, if running BoxKernel inside a phar.
+            // See https://github.com/humbug/php-scoper/issues/678.
             return InstalledVersions::getVersion('shopware/storefront');
         } catch (\OutOfBoundsException) {
             return null;

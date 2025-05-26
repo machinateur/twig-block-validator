@@ -51,6 +51,8 @@ use Twig\Extension\AbstractExtension;
  * This extension depends on `machinateur/twig-comment-lexer` for processing twig comments.
  *  So make sure to also install the lexer correctly for the environment.
  *
+ * This extension does not expose any filters or other capabilities.
+ *
  * @see BlockNodeVisitor
  */
 class BlockValidatorExtension extends AbstractExtension
@@ -125,17 +127,5 @@ class BlockValidatorExtension extends AbstractExtension
     public static function hashFile(string $file): string
     {
         return \hash_file(self::ALGO, $file);
-    }
-
-    /**
-     * TODO: Remove.
-     *
-     * @deprecated Will be removed.
-     */
-    public function getNodeVisitors(): array
-    {
-        return [
-            new BlockNodeVisitor(),
-        ];
     }
 }

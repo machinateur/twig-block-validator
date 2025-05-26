@@ -1,7 +1,7 @@
 {
   "main": "bin/box",
   "directories": [
-    "config", "src", "vendor", "var/log"
+    "config", "src", "vendor"
   ],
   "files": [
     "templates/.gitignore"
@@ -18,7 +18,7 @@
     }
   ],
   "compression": "GZ",
-  "output": "build/twig-block-validator.phar",
+  "output":      "build/twig-block-validator.phar",
   "banner-file": "LICENSE",
   "git-version": "box_release_build",
   "compactors": [
@@ -26,5 +26,5 @@
     "KevinGH\\Box\\Compactor\\Php",
     "KevinGH\\Box\\Compactor\\PhpScoper"
   ],
-  "php-scoper": "scoper.inc.php"
+  "php-scoper":  "scoper.inc.php"
 }

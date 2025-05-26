@@ -4,19 +4,29 @@
 declare(strict_types=1);
 
 use Machinateur\TwigBlockValidator\Box\BoxKernel;
+use Machinateur\TwigBlockValidator\Box\BoxKernelFactory;
 use Machinateur\TwigBlockValidator\Command\TwigBlockAnnotateCommand;
 use Machinateur\TwigBlockValidator\Command\TwigBlockValidateCommand;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Runtime\SymfonyRuntime;
+
+$workdir    = \getcwd();
+if (\is_file($workdir.'/vendor/autoload.php')) {
+    $autoloader = require_once $workdir.'/vendor/autoload.php';
+}
+unset($autoloader);
+
+if ('' !== \Phar::running(false)) {
+    $autoloader = require_once __DIR__.'/../vendor/autoload.php';
+}
+unset($autoloader);
 
 // Set up default runtime, to mitigate `humbug/php-scoper` not picking up the namespaces from strings in `vendor/autoload.php`.
 $_SERVER['APP_RUNTIME']                           = SymfonyRuntime::class;
 // Disable .env support, since this will run inside the `phar` archive.
 $_SERVER['APP_RUNTIME_OPTIONS']['disable_dotenv'] = true;
 
-require_once __DIR__ . '/../vendor/autoload_runtime.php';
-
-return static function (array & $context) {
+$app = static function (array & $context) use ($workdir): Application {
     \set_time_limit(0);
 
     $kernel      = new BoxKernel();
@@ -28,9 +38,26 @@ return static function (array & $context) {
      */
     $application = new Application('Twig Block Validator', BoxKernel::isPhar() ? '@box_release_build@' : BoxKernel::BUNDLE_VERSION);
     $application->addCommands([
-            $container->get(TwigBlockValidateCommand::class),
-            $container->get(TwigBlockAnnotateCommand::class),
+        $container->get(TwigBlockValidateCommand::class),
+        $container->get(TwigBlockAnnotateCommand::class),
     ]);
 
     return $application;
 };
+
+$runtime = $_SERVER['APP_RUNTIME'] ?? $_ENV['APP_RUNTIME'] ?? 'Symfony\\Component\\Runtime\\SymfonyRuntime';
+$runtime = new $runtime(($_SERVER['APP_RUNTIME_OPTIONS'] ?? $_ENV['APP_RUNTIME_OPTIONS'] ?? []) + [
+        'project_dir' => dirname(__DIR__, 1),
+    ]);
+
+[$app, $args] = $runtime
+    ->getResolver($app)
+    ->resolve();
+
+$app = $app(...$args);
+
+exit(
+    $runtime
+        ->getRunner($app)
+        ->run()
+);

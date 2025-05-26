@@ -34,10 +34,13 @@ use Symfony\Component\HttpKernel\KernelInterface;
 
 class BoxKernel extends TwigBlockValidatorKernel
 {
-    protected readonly string           $workdir;
-    protected static   ?KernelInterface $kernel = null;
+    private readonly string    $workdir;
 
-    public function __construct(string $environment = 'prod', bool $debug = false, ?string $workdir = null)
+    protected ?KernelInterface $kernel = null;
+
+    protected static ?string $shopwareVersion = null;
+
+    public function __construct(?string $workdir = null, string $environment = 'prod', bool $debug = false)
     {
         parent::__construct($environment, $debug);
 
@@ -46,9 +49,15 @@ class BoxKernel extends TwigBlockValidatorKernel
         }
 
         $this->workdir = $workdir ?? \getcwd();
-
         // Initialize the kernel directly, as it is needed for the `build()` step of our own container.
-        $this->getKernel();
+
+        $this->getKernel()
+            ?->boot();
+    }
+
+    public function getWorkdir(): string
+    {
+        return $this->workdir;
     }
 
     public function getProjectDir(): string
@@ -58,7 +67,7 @@ class BoxKernel extends TwigBlockValidatorKernel
 
     public function getCacheDir(): string
     {
-        return $this->workdir.'/.twig-block-validator';
+        return $this->getWorkdir().'/.twig-block-validator';
     }
 
     public function getLogDir(): string
@@ -71,7 +80,7 @@ class BoxKernel extends TwigBlockValidatorKernel
      */
     protected function getContainerClass(): string
     {
-        // Make sure the parent class is used here, since otherwise the cache cannot be warmed properly before `phar` compilation.
+        // Make sure the parent class is used here still.
         $class = parent::class;
         $class = \str_contains($class, "@anonymous\0") ? \get_parent_class($class).\str_replace('.', '_', ContainerBuilder::hash($class)) : $class;
         $class = \str_replace('\\', '_', $class).\ucfirst($this->environment).($this->debug ? 'Debug' : '').'Container';
@@ -84,28 +93,28 @@ class BoxKernel extends TwigBlockValidatorKernel
     }
 
     /**
-     * Get or create a kernel from the current workdir.
-     *  The returned kernel instance is already booted.
+     * Factory method.
+     *
+     * Internally creates the external kernel in `test` environment and `debug` set to `true`.
      */
     public function getKernel(): ?KernelInterface
     {
-        if (static::$kernel) {
-            return static::$kernel;
+        if ($this->kernel) {
+            return $this->kernel;
         }
 
-        // Resolve and boot the application kernel.
-        $kernel = $this->createKernel($this->workdir, [
+        $kernel = BoxKernel::isPhar() ? $this->createKernel($this->workdir, [
             'environment' => 'test',
-            'debug'       => $this->debug,
-        ]);
-        $kernel?->boot();
+            'debug'       => true,
+        ]) : null;
 
-        return static::$kernel = $kernel;
+        return $this->kernel = $kernel;
     }
 
     public function boot(): void
     {
-        $this->getKernel();
+        $this->getKernel()
+            ?->boot();
 
         parent::boot();
     }
@@ -113,40 +122,36 @@ class BoxKernel extends TwigBlockValidatorKernel
     public function reboot(?string $warmupDir): void
     {
         parent::reboot($warmupDir);
-
-        if ( ! static::$kernel) {
-            return;
-        }
-
-        static::$kernel->reboot($warmupDir);
     }
 
     public function shutdown(): void
     {
         parent::shutdown();
 
-        if ( ! static::$kernel) {
-            return;
-        }
-
-        // Shut down the application kernel.
-        static::$kernel->shutdown();
-        static::$kernel = null;
+        $this->kernel?->shutdown();
+        $this->kernel = null;
     }
 
     protected function build(ContainerBuilder $container): void
     {
         parent::build($container);
 
-        if ( ! static::$kernel) {
+        if ( ! $this->kernel) {
             return;
         }
 
         try {
-            $container->setParameter('twig.default_path',
-                static::$kernel->getContainer()
-                    ->getParameter('twig.default_path')
-            );
+            static::$shopwareVersion = $this->kernel?->getContainer()
+                ->getParameter('kernel.shopware_version');
+        } catch (\Throwable $e) {
+            // no-op
+        }
+
+        try {
+            $twigDefaultPath = $this->kernel->getContainer()
+                ->getParameter('twig.default_path');
+
+            $container->setParameter('twig.default_path', $twigDefaultPath);
         } catch (\Throwable $e) {
             throw new \UnexpectedValueException('Failed to set platform default twig path. ' . $e->getMessage(), previous: $e);
         }
@@ -155,7 +160,7 @@ class BoxKernel extends TwigBlockValidatorKernel
             // Copy over twig service from application kernel.
             $container->set('twig',
                 // Get twig, even though it's private, by leveraging the built-in test container.
-                static::$kernel->getContainer()
+                $this->kernel?->getContainer()
                     ->get('test.service_container')
                     ->get('twig')
             );
@@ -178,17 +183,11 @@ class BoxKernel extends TwigBlockValidatorKernel
      * When running inside the phar file, determine this for the application kernel,
      *  instead of checking internal versions from `\Composer\InstalledVersions`, which stays un-prefixed.
      */
-    public static function getShopwareVersion(): ?string
+    protected static function getShopwareVersion(): ?string
     {
-        if (self::isPhar()) {
-            // TODO: Resolve static vs instance conflict, it would make sense to set the kernel globally,
-            //  since this class will only be instantiated once during lifecycle. Also, handle the "param not found" error.
-            return static::$kernel?->getContainer()
-                ->getParameter('kernel.shopware_version');
-        }
-
-        return parent::getShopwareVersion();
+        return self::$shopwareVersion;
     }
+
 
     /**
      * Resolve the `KERNEL_CLASS` env-var for the given workdir (using {@see Dotenv}, if present).
@@ -224,20 +223,20 @@ class BoxKernel extends TwigBlockValidatorKernel
 
     /**
      * Creates the kernel from the current workdir (`\getcwd()`), if required conditions apply.
-     *  Returns silently, if no instantiation is possible.
+     *  Returns `null` silently, if no instantiation is possible.
      *
      * Available options:
      * - environment
      * - debug
      */
-    protected static function createKernel(string $workdir, array $options = []): ?KernelInterface
+    protected function createKernel(string $workdir, array $options = []): ?KernelInterface
     {
         static $class;
 
         try {
             $class ??= static::getKernelClass($workdir);
         } catch (\RuntimeException) {
-            // No `.env.test` file found or `KERNEL_CLASS` not defined in current environment (or external dotenv file).
+            // No `.env.test` file found or `KERNEL_CLASS` not defined in ENV.
             return null;
         }
 
