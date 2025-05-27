@@ -21,7 +21,7 @@ services:
 
   Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment:
     arguments:
-      - '@twig'
+      - '@platform.twig'
       - '@twig_block_validator.cache'
       - '@event_dispatcher'
     tags:
@@ -49,3 +49,6 @@ services:
   Machinateur\TwigBlockValidator\Service\TwigBlockResolver:
     arguments:
       - '@twig_block_validator.twig'
+
+  platform.twig:
+    synthetic: true

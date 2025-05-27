@@ -4,22 +4,22 @@
 declare(strict_types=1);
 
 use Machinateur\TwigBlockValidator\Box\BoxKernel;
-use Machinateur\TwigBlockValidator\Box\BoxKernelFactory;
 use Machinateur\TwigBlockValidator\Command\TwigBlockAnnotateCommand;
 use Machinateur\TwigBlockValidator\Command\TwigBlockValidateCommand;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Runtime\SymfonyRuntime;
 
-$workdir    = \getcwd();
-if (\is_file($workdir.'/vendor/autoload.php')) {
-    $autoloader = require_once $workdir.'/vendor/autoload.php';
-}
-unset($autoloader);
+// If we're in a phar context first.
+$_phar_running = \Phar::running(false);
+$workdir       = \getcwd();
 
-if ('' !== \Phar::running(false)) {
-    $autoloader = require_once __DIR__.'/../vendor/autoload.php';
+if ($_phar_running && \is_file($workdir.'/vendor/autoload.php')) {
+    // TODO: Check other preconditions of symfony projects.
+    $_classLoader = require_once $workdir.'/vendor/autoload.php';
 }
-unset($autoloader);
+
+// TODO: Catch error when including autoloader with same class-name.
+require_once __DIR__.'/../vendor/autoload.php';
 
 // Set up default runtime, to mitigate `humbug/php-scoper` not picking up the namespaces from strings in `vendor/autoload.php`.
 $_SERVER['APP_RUNTIME']                           = SymfonyRuntime::class;
@@ -35,19 +35,23 @@ $app = static function (array & $context) use ($workdir): Application {
     $container   = $kernel->getContainer();
     /**
      * @see https://github.com/box-project/box/blob/main/doc/configuration.md#pretty-git-tag-placeholder-git-version
+     *
+     * @noinspection PhpClassConstantAccessedViaChildClassInspection
      */
     $application = new Application('Twig Block Validator', BoxKernel::isPhar() ? '@box_release_build@' : BoxKernel::BUNDLE_VERSION);
+    // TODO: Change names of these commands.
     $application->addCommands([
-        $container->get(TwigBlockValidateCommand::class),
-        $container->get(TwigBlockAnnotateCommand::class),
+        $container->get(TwigBlockValidateCommand::class), // validate
+        $container->get(TwigBlockAnnotateCommand::class), // annotate
     ]);
 
     return $application;
 };
 
+// Copied runtime code in order to maintain application flow (do not include `SCRIPT_FILENAME` recursively).
 $runtime = $_SERVER['APP_RUNTIME'] ?? $_ENV['APP_RUNTIME'] ?? 'Symfony\\Component\\Runtime\\SymfonyRuntime';
 $runtime = new $runtime(($_SERVER['APP_RUNTIME_OPTIONS'] ?? $_ENV['APP_RUNTIME_OPTIONS'] ?? []) + [
-        'project_dir' => dirname(__DIR__, 1),
+        'project_dir' => \dirname(__DIR__, 1),
     ]);
 
 [$app, $args] = $runtime

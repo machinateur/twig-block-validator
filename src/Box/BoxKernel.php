@@ -27,16 +27,21 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Box;
 
+use Composer\Autoload\ClassLoader;
 use Machinateur\TwigBlockValidator\TwigBlockValidatorKernel;
+use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpKernel\KernelInterface;
 
-class BoxKernel extends TwigBlockValidatorKernel
+class BoxKernel extends TwigBlockValidatorKernel implements CompilerPassInterface
 {
     private readonly string    $workdir;
 
-    protected ?KernelInterface $kernel = null;
+    /**
+     * @var KernelInterface|null
+     */
+    protected ?object $kernel = null;
 
     protected static ?string $shopwareVersion = null;
 
@@ -96,8 +101,10 @@ class BoxKernel extends TwigBlockValidatorKernel
      * Factory method.
      *
      * Internally creates the external kernel in `test` environment and `debug` set to `true`.
+     *
+     * @return KernelInterface|null
      */
-    public function getKernel(): ?KernelInterface
+    public function getKernel(): ?object
     {
         if ($this->kernel) {
             return $this->kernel;
@@ -134,12 +141,7 @@ class BoxKernel extends TwigBlockValidatorKernel
 
     protected function build(ContainerBuilder $container): void
     {
-        parent::build($container);
-
-        if ( ! $this->kernel) {
-            return;
-        }
-
+        // This needs to go first, as the parent calls `getShopwareVersion()`.
         try {
             static::$shopwareVersion = $this->kernel?->getContainer()
                 ->getParameter('kernel.shopware_version');
@@ -147,18 +149,33 @@ class BoxKernel extends TwigBlockValidatorKernel
             // no-op
         }
 
-        try {
-            $twigDefaultPath = $this->kernel->getContainer()
-                ->getParameter('twig.default_path');
+        parent::build($container);
+    }
 
-            $container->setParameter('twig.default_path', $twigDefaultPath);
-        } catch (\Throwable $e) {
-            throw new \UnexpectedValueException('Failed to set platform default twig path. ' . $e->getMessage(), previous: $e);
+    public function process(ContainerBuilder $container): void
+    {
+        if ( ! $this->kernel) {
+            $container->findDefinition('twig')
+                ->setPublic(true);
+
+            return;
+        }
+    }
+
+    protected function initializeContainer(): void
+    {
+        parent::initializeContainer();
+
+        if ( ! $this->kernel) {
+            // Fallback to own twig instance.
+            $this->container->set('platform.twig', $this->container->get('twig'));
+
+            return;
         }
 
         try {
             // Copy over twig service from application kernel.
-            $container->set('twig',
+            $this->container->set('platform.twig',
                 // Get twig, even though it's private, by leveraging the built-in test container.
                 $this->kernel?->getContainer()
                     ->get('test.service_container')
@@ -228,8 +245,12 @@ class BoxKernel extends TwigBlockValidatorKernel
      * Available options:
      * - environment
      * - debug
+     *
+     * The return type is not explicit, because it will fail after namespace isolation (i.e. prefixing).
+     *
+     * @return KernelInterface|null
      */
-    protected function createKernel(string $workdir, array $options = []): ?KernelInterface
+    protected function createKernel(string $workdir, array $options = []): ?object
     {
         static $class;
 
@@ -243,6 +264,23 @@ class BoxKernel extends TwigBlockValidatorKernel
         $env   = $options['environment'] ?? $_ENV['APP_ENV']   ?? $_SERVER['APP_ENV']   ?? 'test';
         $debug = $options['debug']       ?? $_ENV['APP_DEBUG'] ?? $_SERVER['APP_DEBUG'] ?? true;
 
-        return new $class($env, (bool)$debug);
+        // Shopware integration using factory and class-loader.
+        global $_classLoader;
+        if (isset($_classLoader) && $class === 'Shopware\\Core\\'.'Kernel') {
+            \assert($_classLoader instanceof ClassLoader);
+            // TODO: Find a way to integrate with shopware, i.e.
+            //  see https://github.com/shopware/shopware/blob/6.6.x/src/Core/Framework/Adapter/Kernel/KernelFactory.php.
+
+            // Use concatenation to escape isolation.
+            $factory = 'Shopware\\Core\\'.'Framework\\Adapter\\Kernel\\KernelFactory';
+            \assert(\method_exists($factory, 'create'));
+            return $factory::create(
+                environment:  $env,
+                debug:        $debug,
+                classLoader:  $_classLoader,
+            );
+        }
+
+        return new $class($env, $debug);
     }
 }
