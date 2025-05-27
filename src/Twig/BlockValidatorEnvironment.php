@@ -69,13 +69,21 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
 
     public readonly NamespacedPathnameBuilder $namespacedPathnameBuilder;
 
+    /**
+     * @param Environment $platformTwig
+     */
     public function __construct(
-        Environment                               $platformTwig,
+        object                                    $platformTwig,
         private readonly CacheInterface           $cache,
         private readonly EventDispatcherInterface $dispatcher,
         ?string                                   $version = null,
     ) {
         $loader = new FilesystemLoader();
+
+        // TODO: Continue to test. I currently expect further errors regarding types (below for extensions and their type checks).
+        //  It might be necessary to exclude the twig namespace entirely or patch the internal twig to no longer validate types.
+        //  i.e.
+        //  > #message: "Isolated\Twig\Environment::addExtension(): Argument #1 ($extension) must be of type Isolated\Twig\Extension\ExtensionInterface, Symfony\Bridge\Twig\Extension\ProfilerExtension given, called in phar:///var/www/html/twig-block-validator.phar/src/Twig/BlockValidatorEnvironment.php on line 60"
 
         parent::__construct($loader, [
             'debug' => $platformTwig->isDebug(),
@@ -93,11 +101,17 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
         // No cache, because that would hinder lexing on load, and thus needed to properly collect comments.
         $this->setCache(false);
 
+        // TODO: Add event to print console feedback.
+\var_dump($platformTwig::class);
         // https://github.com/shopware/shopware/blob/6.6.x/src/Core/Framework/Adapter/Twig/StringTemplateRenderer.php
         foreach ($platformTwig->getExtensions() as $extension) {
-            if ($this->hasExtension(BoxKernel::isPhar() ? 'Isolated\\'.$extension::class : $extension::class)) {
+            $extensionClass = BoxKernel::isPhar() ? 'Isolated\\'.$extension::class : $extension::class;
+
+\var_dump('Check '.$extension::class);
+            if ($this->hasExtension($extension::class) || $this->hasExtension($extensionClass)) {
                 continue;
             }
+\var_dump('Add   '.$extension::class);
             $this->addExtension($extension);
         }
 
