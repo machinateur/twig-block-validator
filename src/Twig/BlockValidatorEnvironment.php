@@ -82,8 +82,8 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
 
         // TODO: Continue to test. I currently expect further errors regarding types (below for extensions and their type checks).
         //  It might be necessary to exclude the twig namespace entirely or patch the internal twig to no longer validate types.
-        //  i.e.
-        //  > #message: "Isolated\Twig\Environment::addExtension(): Argument #1 ($extension) must be of type Isolated\Twig\Extension\ExtensionInterface, Symfony\Bridge\Twig\Extension\ProfilerExtension given, called in phar:///var/www/html/twig-block-validator.phar/src/Twig/BlockValidatorEnvironment.php on line 60"
+        //   This would probably work, as long as \Composer\InstalledVersions is used to check the installed version, because that one is the taken from the external autoloader, and we need at least a certain (compatible) twig version.
+        //  i.e. "Isolated\Twig\Environment::addExtension(): Argument #1 ($extension) must be of type Isolated\Twig\Extension\ExtensionInterface, Symfony\Bridge\Twig\Extension\ProfilerExtension given, called in phar:///var/www/html/twig-block-validator.phar/src/Twig/BlockValidatorEnvironment.php on line 60"
 
         parent::__construct($loader, [
             'debug' => $platformTwig->isDebug(),
