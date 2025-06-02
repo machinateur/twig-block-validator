@@ -28,7 +28,6 @@ declare(strict_types=1);
 namespace Machinateur\TwigBlockValidator\Twig;
 
 use Machinateur\Twig\Extension\CommentExtension;
-use Machinateur\TwigBlockValidator\Box\BoxKernel;
 use Machinateur\TwigBlockValidator\Event\TwigCollectBlocksEvent;
 use Machinateur\TwigBlockValidator\Event\TwigCollectCommentsEvent;
 use Machinateur\TwigBlockValidator\Event\TwigLoadFilesEvent;
@@ -51,6 +50,7 @@ use Twig\Error\Error as TwigError;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Extension\CoreExtension;
+use Twig\Extension\ExtensionInterface;
 use Twig\Lexer;
 use Twig\Loader\FilesystemLoader;
 use Twig\Template;
@@ -73,10 +73,10 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
      * @param Environment $platformTwig
      */
     public function __construct(
-        object                                    $platformTwig,
-        private readonly CacheInterface           $cache,
-        private readonly EventDispatcherInterface $dispatcher,
-        ?string                                   $version = null,
+        object                                      $platformTwig,
+        protected readonly CacheInterface           $cache,
+        protected readonly EventDispatcherInterface $dispatcher,
+        ?string                                     $version = null,
     ) {
         $loader = new FilesystemLoader();
 
@@ -102,38 +102,40 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
         $this->setCache(false);
 
         // TODO: Add event to print console feedback.
-\var_dump($platformTwig::class);
-        // https://github.com/shopware/shopware/blob/6.6.x/src/Core/Framework/Adapter/Twig/StringTemplateRenderer.php
-        foreach ($platformTwig->getExtensions() as $extension) {
-            $extensionClass = BoxKernel::isPhar() ? 'Isolated\\'.$extension::class : $extension::class;
 
-\var_dump('Check '.$extension::class);
-            if ($this->hasExtension($extension::class) || $this->hasExtension($extensionClass)) {
-                continue;
-            }
-\var_dump('Add   '.$extension::class);
-            $this->addExtension($extension);
-        }
-
-        // Concatenate to avoid being picked up by the isolation, if inside the phar (i.e. in isolation prefix mode).
-        /** @var class-string<CoreExtension> $class */
-        $extensionClass = BoxKernel::isPhar() ? '\\Twig'.'\\CoreExtension' : CoreExtension::class;
-
-        if ($this->hasExtension(CoreExtension::class) && $platformTwig->hasExtension($extensionClass)) {
-            /** @var CoreExtension $coreExtensionInternal */
-            $coreExtensionInternal = $this->getExtension(CoreExtension::class);
-            /** @var CoreExtension $coreExtensionGlobal */
-            $coreExtensionGlobal = $platformTwig->getExtension($extensionClass);
-
-            $coreExtensionInternal->setTimezone($coreExtensionGlobal->getTimezone());
-            $coreExtensionInternal->setDateFormat(...$coreExtensionGlobal->getDateFormat());
-            $coreExtensionInternal->setNumberFormat(...$coreExtensionGlobal->getNumberFormat());
-        }
+        $this->initExtensions($platformTwig);
 
         // Add the parser extension, needed for block tracking.
         BlockValidatorExtension::setParser($this);
 
         $this->namespacedPathnameBuilder = new NamespacedPathnameBuilder($loader);
+    }
+
+    /**
+     * @param Environment $platformTwig
+     */
+    protected function initExtensions(object $platformTwig): void
+    {
+        // https://github.com/shopware/shopware/blob/6.6.x/src/Core/Framework/Adapter/Twig/StringTemplateRenderer.php
+        foreach ($platformTwig->getExtensions() as $extension) {
+
+            if ($this->hasExtension($extension::class)) {
+                continue;
+            }
+
+            $this->addExtension($extension);
+        }
+
+        if ($this->hasExtension(CoreExtension::class)) {
+            /** @var CoreExtension $coreExtensionInternal */
+            $coreExtensionInternal = $this->getExtension(CoreExtension::class);
+            /** @var CoreExtension $coreExtensionGlobal */
+            $coreExtensionGlobal = $platformTwig->getExtension(CoreExtension::class);
+
+            $coreExtensionInternal->setTimezone($coreExtensionGlobal->getTimezone());
+            $coreExtensionInternal->setDateFormat(...$coreExtensionGlobal->getDateFormat());
+            $coreExtensionInternal->setNumberFormat(...$coreExtensionGlobal->getNumberFormat());
+        }
     }
 
     public function render($name, array $context = []): string
@@ -181,6 +183,7 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
         }
     }
 
+
     /**
      * Add the given paths for the given namespaces, without resetting the namespace paths of the loader.
      *
@@ -213,7 +216,6 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
             );
         }
     }
-
 
     /**
      * @throws LoaderError  when the template cannot be loaded

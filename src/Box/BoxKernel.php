@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace Machinateur\TwigBlockValidator\Box;
 
 use Composer\Autoload\ClassLoader;
+use Machinateur\TwigBlockValidator\Box\Twig\BlockValidatorEnvironment;
 use Machinateur\TwigBlockValidator\TwigBlockValidatorKernel;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -147,6 +148,12 @@ class BoxKernel extends TwigBlockValidatorKernel implements CompilerPassInterfac
                 ->getParameter('kernel.shopware_version');
         } catch (\Throwable $e) {
             // no-op
+        }
+
+        if (static::isPhar()) {
+            // Replace twig environment class, if running inside the phar.
+            $container->findDefinition('twig_block_validator.twig')
+                ->setClass(BlockValidatorEnvironment::class);
         }
 
         parent::build($container);
