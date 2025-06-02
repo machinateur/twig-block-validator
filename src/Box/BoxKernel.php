@@ -35,6 +35,9 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpKernel\KernelInterface;
 
+/**
+ * Special kernel for use with executable phar archive version. The name comes from the tool used to compile it.
+ */
 class BoxKernel extends TwigBlockValidatorKernel implements CompilerPassInterface
 {
     private readonly string    $workdir;

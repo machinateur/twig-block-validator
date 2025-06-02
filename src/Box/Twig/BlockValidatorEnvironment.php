@@ -29,25 +29,24 @@ namespace Machinateur\TwigBlockValidator\Box\Twig;
 
 use Composer\Autoload\ClassLoader;
 use Laminas\Code;
-use Machinateur\TwigBlockValidator\Box\BoxKernel;
 use Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment as BaseBlockValidatorEnvironment;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Contracts\Cache\CacheInterface;
-use Symfony\Contracts\Cache\ItemInterface as CacheItemInterface;
 use Twig\Environment;
 use Twig\Extension\CoreExtension;
 use Twig\Extension\ExtensionInterface;
 
 /**
- * Special implementation to allow external interoperability of extensions.
- *  Only used when running inside the phar file.
+ * Special implementation to allow external interoperability of extensions when running inside the executable phar archive.
  */
 class BlockValidatorEnvironment extends BaseBlockValidatorEnvironment
 {
-
     public function __construct(object $platformTwig, CacheInterface $cache, EventDispatcherInterface $dispatcher, ?string $version = null)
     {
         parent::__construct($platformTwig, $cache, $dispatcher, $version);
+
+        // TODO: Add cache-dir as argument, also in BoxKernel::build().
+        //$this->cacheDir = \sprintf('%s/');
     }
 
     /**
@@ -122,6 +121,8 @@ class BlockValidatorEnvironment extends BaseBlockValidatorEnvironment
 
         $proxyCode  = $proxyFile->generate();
         //\file_put_contents();
+        // TODO: Write file if not exists and content hash is unchanged.
+        //  Use \mkdir() to make sue it can be written.
 
         // Add new namespace to autoloader, if first call.
         /** @var ClassLoader $_classLoader */
