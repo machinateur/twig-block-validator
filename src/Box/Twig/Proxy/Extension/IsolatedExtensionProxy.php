@@ -25,30 +25,51 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\TwigBlockValidator\Box\Twig\Extension;
+namespace Machinateur\TwigBlockValidator\Box\Twig\Proxy\Extension;
 
+use Laminas\Code;
+use Machinateur\TwigBlockValidator\Box\ProxyManager\ProxyGeneratorStrategyInterface;
+use Machinateur\TwigBlockValidator\Box\ProxyManager\ProxyManager;
+use Machinateur\TwigBlockValidator\Box\Twig\Proxy\ExpressionParser\IsolatedExpressionParserProxy;
+use Machinateur\TwigBlockValidator\Box\Twig\Proxy\IsolatedTwigFilterProxy;
+use Machinateur\TwigBlockValidator\Box\Twig\Proxy\IsolatedTwigFunctionProxy;
+use Machinateur\TwigBlockValidator\Box\Twig\Proxy\IsolatedTwigTestProxy;
+use Machinateur\TwigBlockValidator\Box\Twig\Proxy\NodeVisitor\IsolatedNodeVisitorProxy;
+use Machinateur\TwigBlockValidator\Box\Twig\Proxy\TokenParser\IsolatedTokenParserProxy;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\ExtensionInterface;
+use Twig\Extension\LastModifiedExtensionInterface;
 
 /**
- * Wrapper class for {@see AbstractExtension} or {@see ExtensionInterface} used to mitigate type-conflicts.
- *
- * TODO: Wrap extension specifics.
+ * Wrapper class for {@see AbstractExtension} or {@see ExtensionInterface} used to mitigate type-conflicts
+ *  when running from inside the executable phar archive.
  *
  * @property ExtensionInterface $extension
  */
-class AnonymousExtension extends AbstractExtension
+final class IsolatedExtensionProxy implements ExtensionInterface, LastModifiedExtensionInterface, ProxyGeneratorStrategyInterface
 {
     public function __construct(
-        public readonly object $extension,
+        public  readonly object       $object,
+        private readonly ProxyManager $proxyManager,
     ) {}
+
+    /**
+     * @param ExtensionInterface $object
+     */
+    public static function generate(object $object, Code\Generator\ClassGenerator $proxyClass, Code\Generator\FileGenerator $proxyFile): void
+    {
+        // Remove the method, if it does not exist in the object.
+        if ( ! \method_exists($object, 'getExpressionParsers')) {
+            $proxyClass->removeMethod('getExpressionParsers');
+        }
+    }
 
     public function getTokenParsers()
     {
         $tokenParsers = [];
 
         foreach ($this->extension->getTokenParsers() as $value) {
-            $tokenParsers[] = $value;
+            $tokenParsers[] = $this->proxyManager->createProxy(IsolatedTokenParserProxy::class, $value);
         }
 
         return $tokenParsers;
@@ -59,7 +80,7 @@ class AnonymousExtension extends AbstractExtension
         $nodeVisitors = [];
 
         foreach ($this->extension->getNodeVisitors() as $value) {
-            $nodeVisitors[] = $value;
+            $nodeVisitors[] = $this->proxyManager->createProxy(IsolatedNodeVisitorProxy::class, $value);
         }
 
         return $nodeVisitors;
@@ -70,7 +91,7 @@ class AnonymousExtension extends AbstractExtension
         $filters = [];
 
         foreach ($this->extension->getFilters() as $value) {
-            $filters[] = $value;
+            $filters[] = $this->proxyManager->createProxy(IsolatedTwigFilterProxy::class, $value);
         }
 
         return $filters;
@@ -81,7 +102,7 @@ class AnonymousExtension extends AbstractExtension
         $tests = [];
 
         foreach ($this->extension->getTests() as $value) {
-            $tests[] = $value;
+            $tests[] = $this->proxyManager->createProxy(IsolatedTwigTestProxy::class, $value);
         }
 
         return $tests;
@@ -92,7 +113,7 @@ class AnonymousExtension extends AbstractExtension
         $functions = [];
 
         foreach ($this->extension->getFunctions() as $value) {
-            $functions[] = $value;
+            $functions[] = $this->proxyManager->createProxy(IsolatedTwigFunctionProxy::class, $value);
         }
 
         return $functions;
@@ -103,6 +124,7 @@ class AnonymousExtension extends AbstractExtension
         $operators = [];
 
         foreach ($this->extension->getOperators() as $value) {
+            // TODO account for any wrongly-typed array elements.
             $operators[] = $value;
         }
 
@@ -119,7 +141,7 @@ class AnonymousExtension extends AbstractExtension
         }
 
         foreach ($this->extension->getExpressionParsers() as $value) {
-            $expressionParsers[] = $value;
+            $expressionParsers[] = $this->proxyManager->createProxy(IsolatedExpressionParserProxy::class, $value);
         }
 
         return $expressionParsers;

@@ -27,11 +27,9 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Box\Twig;
 
-use Composer\Autoload\ClassLoader;
-use Laminas\Code;
-use Machinateur\TwigBlockValidator\Box\Twig\Extension\AnonymousExtension;
+use Machinateur\TwigBlockValidator\Box\ProxyManager\ProxyManager;
+use Machinateur\TwigBlockValidator\Box\Twig\Proxy\Extension\IsolatedExtensionProxy;
 use Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment;
-use Machinateur\TwigBlockValidator\Twig\Extension\BlockValidatorExtension;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Twig\Environment;
@@ -43,17 +41,13 @@ use Twig\Extension\ExtensionInterface;
  */
 class IsolatedTwigValidatorEnvironment extends BlockValidatorEnvironment
 {
-    private readonly string $workdir;
-
     public function __construct(
-        string                   $workdir,
-        object                   $platformTwig,
-        CacheInterface           $cache,
-        EventDispatcherInterface $dispatcher,
-        ?string                  $version = null,
+        private readonly ProxyManager $proxyManager,
+        object                        $platformTwig,
+        CacheInterface                $cache,
+        EventDispatcherInterface      $dispatcher,
+        ?string                       $version = null,
     ) {
-        $this->workdir = $workdir.'/Twig/Extension/Proxy';
-
         parent::__construct($platformTwig, $cache, $dispatcher, $version);
     }
 
@@ -62,14 +56,7 @@ class IsolatedTwigValidatorEnvironment extends BlockValidatorEnvironment
      */
     protected function initExtensions(object $platformTwig): void
     {
-        if ( ! \file_exists($this->workdir)) {
-            \mkdir($this->workdir, recursive: true);
-        }
-
-        // Add new namespace to autoloader.
-        /** @var ClassLoader $_classLoader */
-        global $_classLoader;
-        $_classLoader->addPsr4(__NAMESPACE__.'\\Extension\\Proxy\\', [ $this->workdir ], true);
+        $this->proxyManager->initClassLoader();
 
         // https://github.com/shopware/shopware/blob/6.6.x/src/Core/Framework/Adapter/Twig/StringTemplateRenderer.php
         foreach ($platformTwig->getExtensions() as $extension) {
@@ -86,8 +73,10 @@ class IsolatedTwigValidatorEnvironment extends BlockValidatorEnvironment
 
             // Here we check for the prefixed extension base class, as well as the unprefixed interface.
             if ( ! $extension instanceof ExtensionInterface && \is_subclass_of($extension, 'Twig\\Extension\\'.'ExtensionInterface')) {
+
+                //  We need different classnames, because twig internally uses the class name to detect duplicated extensions.
+                $extension = $this->proxyManager->createProxy(IsolatedExtensionProxy::class, $extension);
                 // Then decorate the extension class.
-                $extension = $this->getAnonymouseExtension($extension);
             }
 
             $this->addExtension($extension);
@@ -107,53 +96,5 @@ class IsolatedTwigValidatorEnvironment extends BlockValidatorEnvironment
             $coreExtensionInternal->setDateFormat(...$coreExtensionGlobal->getDateFormat());
             $coreExtensionInternal->setNumberFormat(...$coreExtensionGlobal->getNumberFormat());
         }
-    }
-
-    /**
-     * @param ExtensionInterface $extension
-     */
-    public function getAnonymouseExtension(object $extension): ExtensionInterface
-    {
-        $proxyClassName = $extension::class.'Proxy';
-        $proxyClassName = \substr($proxyClassName, \strrpos($proxyClassName, '\\') + 1);
-        $proxyFileName  = $this->workdir.'/'.$proxyClassName.'.php';
-
-        $proxyClass = Code\Generator\ClassGenerator::fromReflection(
-            // Copy the `AnonymousExtension` as base class. We need different classnames,
-            //  because twig internally uses the class name to detect duplicated extensions.
-            new Code\Reflection\ClassReflection(AnonymousExtension::class)
-        );
-        $proxyClass
-            ->setName($proxyClassName)
-            ->setNamespaceName($proxyClass->getNamespaceName().'\\Proxy')
-        ;
-        if ( ! \method_exists($extension, 'getExpressionParsers')) {
-            $proxyClass->removeMethod('getExpressionParsers');
-        }
-
-        $proxyFile  = (new Code\Generator\FileGenerator)
-            ->setDocBlock(
-                new Code\Generator\DocBlockGenerator(\sprintf('Adapter for {@see %s}.', $extension::class))
-            )
-            ->setClass($proxyClass)
-        ;
-
-        $proxyCode  = $proxyFile->generate();
-        if ( ! \file_exists($proxyFileName)
-            || BlockValidatorExtension::hashFile($proxyFileName) !== BlockValidatorExtension::hash($proxyCode)
-        ) {
-            \file_put_contents($proxyFileName, $proxyCode, LOCK_EX);
-        }
-
-        // Load `\Isolated\Machinateur\TwigBlockValidator\Box\Twig\Extension\Proxy\$class` using the class loader (composer autoload).
-        $className = $proxyClass->getNamespaceName().'\\'.$proxyClassName;
-        if ( ! \class_exists($className, autoload: true)) {
-            throw new \LogicException(\sprintf('The class "%s" does not exist (file "%s").', $className, $proxyFileName));
-        }
-
-        // The namespace path is added to the autoloader.
-        $instance = new $className($extension);
-        \assert($instance instanceof ExtensionInterface);
-        return $instance;
     }
 }
