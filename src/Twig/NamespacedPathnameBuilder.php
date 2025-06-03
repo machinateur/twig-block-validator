@@ -34,7 +34,7 @@ use Twig\Loader\FilesystemLoader;
 /**
  * This class is not available via dependency injection,
  *  as it requires a twig loader instance as constructor argument,
- *   which belongs to the respective {@see BlockValidatorEnvironment}.
+ *   which belongs to the respective {@see IsolatedTwigValidatorEnvironment}.
  */
 class NamespacedPathnameBuilder
 {

@@ -80,11 +80,6 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
     ) {
         $loader = new FilesystemLoader();
 
-        // TODO: Continue to test. I currently expect further errors regarding types (below for extensions and their type checks).
-        //  It might be necessary to exclude the twig namespace entirely or patch the internal twig to no longer validate types.
-        //   This would probably work, as long as \Composer\InstalledVersions is used to check the installed version, because that one is the taken from the external autoloader, and we need at least a certain (compatible) twig version.
-        //  i.e. "Isolated\Twig\Environment::addExtension(): Argument #1 ($extension) must be of type Isolated\Twig\Extension\ExtensionInterface, Symfony\Bridge\Twig\Extension\ProfilerExtension given, called in phar:///var/www/html/twig-block-validator.phar/src/Twig/BlockValidatorEnvironment.php on line 60"
-
         parent::__construct($loader, [
             'debug' => $platformTwig->isDebug(),
         ]);
@@ -103,6 +98,9 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
 
         // TODO: Add event to print console feedback.
 
+        // TODO: The current blocker is the instanceof-checks in addExtension(), but there are likely more places,
+        //  where the contents of the extension set might be passed around, so it needs to account for interface conformity.
+        //   It's likely this can only be achieved using some trickery again, similar to the extension proxies, certainly some effort.
         $this->initExtensions($platformTwig);
 
         // Add the parser extension, needed for block tracking.
@@ -421,7 +419,7 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
 
     /**
      *
-     * This method **must** be called after {@see BlockValidatorEnvironment::load()} for any given template.
+     * This method **must** be called after {@see IsolatedTwigValidatorEnvironment::load()} for any given template.
      *
      * ```
      * $twig->load($template);
@@ -448,17 +446,17 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
     /**
      * Get all comments from the cache.
      *
-     * This method **must** be called after {@see BlockValidatorEnvironment::load()} for any given template.
+     * This method **must** be called after {@see IsolatedTwigValidatorEnvironment::load()} for any given template.
      *
      * ```
      * $twig->load($template);
      * $comments = $twig->getComments($template);
      * ```
      *
-     * @throws RuntimeError when the comments of the template are not cached
-     * @throws LoaderError  when the template does not exist
-     *
      * @return _CommentCollection
+     *@throws LoaderError  when the template does not exist
+     *
+     * @throws RuntimeError when the comments of the template are not cached
      */
     public function getComments(string $name): array
     {

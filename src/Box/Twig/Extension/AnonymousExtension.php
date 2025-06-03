@@ -39,7 +39,7 @@ use Twig\Extension\ExtensionInterface;
  */
 class AnonymousExtension extends AbstractExtension
 {
-    protected function __construct(
+    public function __construct(
         public readonly object $extension,
     ) {}
 
@@ -112,6 +112,11 @@ class AnonymousExtension extends AbstractExtension
     public function getExpressionParsers(): array
     {
         $expressionParsers = [];
+
+        // Usually this method is removed when generating the proxy class.
+        if ( ! \method_exists($this->extension, 'getExpressionParsers')) {
+            return $expressionParsers;
+        }
 
         foreach ($this->extension->getExpressionParsers() as $value) {
             $expressionParsers[] = $value;

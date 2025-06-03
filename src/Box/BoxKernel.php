@@ -28,10 +28,12 @@ declare(strict_types=1);
 namespace Machinateur\TwigBlockValidator\Box;
 
 use Composer\Autoload\ClassLoader;
-use Machinateur\TwigBlockValidator\Box\Twig\BlockValidatorEnvironment;
+use Machinateur\TwigBlockValidator\Box\Twig\IsolatedTwigValidatorEnvironment;
+use Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment;
 use Machinateur\TwigBlockValidator\TwigBlockValidatorKernel;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Parameter;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpKernel\KernelInterface;
 
@@ -153,13 +155,21 @@ class BoxKernel extends TwigBlockValidatorKernel implements CompilerPassInterfac
             // no-op
         }
 
-        if (static::isPhar()) {
-            // Replace twig environment class, if running inside the phar.
-            $container->findDefinition('twig_block_validator.twig')
-                ->setClass(BlockValidatorEnvironment::class);
-        }
-
         parent::build($container);
+
+        if (static::isPhar()) {
+            $definition = $container->findDefinition(BlockValidatorEnvironment::class);
+
+            // Replace twig environment class, if running inside the phar.
+            $definition->setClass(IsolatedTwigValidatorEnvironment::class);
+
+            // Prepend cache dir as base for proxy workdir.
+            $arguments  = $definition->getArguments();
+            \array_unshift($arguments, new Parameter('kernel.cache_dir'));
+            $definition->setArguments($arguments);
+
+            $container->setDefinition('twig_block_validator.twig', $definition);
+        }
     }
 
     public function process(ContainerBuilder $container): void

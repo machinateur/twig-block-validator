@@ -66,7 +66,6 @@ class TwigBlockValidatorBundle extends AbstractBundle
     {
         $locator    = new FileLocator('Resources/config');
         $resolver   = new LoaderResolver([
-            // Somehow glob won't work here. TODO: Use load(..., type=glob) instead.
             new YamlFileLoader($container, $locator),
         ]);
         $configDir    = $this->getPath() . '/Resources/config';
