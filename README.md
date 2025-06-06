@@ -230,6 +230,14 @@ These can be copied to the `bin/` directory of your project (if not already pres
 
 I've put in a small docker-compose setup, at `tests/shopware/` which may be used to test against a real shopware instance.
 
+```bash
+cd tests/shopware/
+
+bash ./init.sh
+
+docker compose exec -it shop bash
+```
+
 ## Standalone
 
 > Note: The phar is still experimental, and does not support integrated use with shopware projects (yet).
