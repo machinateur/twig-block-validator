@@ -28,18 +28,25 @@ declare(strict_types=1);
 namespace Machinateur\TwigBlockValidator;
 
 use Composer\InstalledVersions;
+use Machinateur\TwigBlockValidator\Command\TwigBlockAnnotateCommand;
+use Machinateur\TwigBlockValidator\Command\TwigBlockValidateCommand;
+use Machinateur\TwigBlockValidator\Twig\Extension\BlockValidatorExtension;
 use Symfony\Bundle\DebugBundle\DebugBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\MonologBundle\MonologBundle;
 use Symfony\Bundle\TwigBundle\TwigBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Kernel;
 
 class TwigBlockValidatorKernel extends Kernel
 {
+    final public const BUNDLE_VERSION = TwigBlockValidatorBundle::VERSION;
+
     public static function getShopwareVersion(): ?string
     {
         try {
+            // See https://github.com/humbug/php-scoper/issues/678.
             return InstalledVersions::getVersion('shopware/storefront');
         } catch (\OutOfBoundsException) {
             return null;
@@ -64,6 +71,31 @@ class TwigBlockValidatorKernel extends Kernel
     }
 
     public function registerContainerConfiguration(LoaderInterface $loader): void
+    {}
+
+    public function boot(): void
     {
+        parent::boot();
+
+        if (null !== static::getShopwareVersion()) {
+            BlockValidatorExtension::$preferredLabel = 'shopware';
+        }
+    }
+
+    protected function build(ContainerBuilder $container): void
+    {
+        parent::build($container);
+
+        if (null !== $version = static::getShopwareVersion()) {
+            $commands = [
+                TwigBlockValidateCommand::class,
+                TwigBlockAnnotateCommand::class,
+            ];
+
+            foreach ($commands as $command) {
+                $container->getDefinition($command)
+                    ->addMethodCall('setVersion', [$version]);
+            }
+        }
     }
 }

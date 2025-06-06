@@ -40,8 +40,6 @@ class TwigBlockValidatorBundle extends AbstractBundle
 {
     final public    const VERSION     = '0.1.0-beta';
 
-    final protected const CONFIG_EXTS = '.{yaml,yml}';
-
     /**
      * @see https://symfony.com/doc/7.2/bundles.html#bundle-directory-structure
      * @see https://symfony.com/doc/4.x/bundles.html#bundle-directory-structure
@@ -62,60 +60,41 @@ class TwigBlockValidatorBundle extends AbstractBundle
 
     /**
      * Looks for service definition files inside the `Resources/config`
-     *  directory and loads `yml`/`yaml` files.
+     *  directory and loads `services.yaml` files.
      */
     protected function registerContainerFile(ContainerBuilder $container): void
     {
-        $fileLocator = new FileLocator($this->getPath());
-        $loaderResolver = new LoaderResolver([
-            new YamlFileLoader($container, $fileLocator),
+        $locator    = new FileLocator('Resources/config');
+        $resolver   = new LoaderResolver([
+            new YamlFileLoader($container, $locator),
         ]);
-        $delegatingLoader = new DelegatingLoader($loaderResolver);
+        $configDir    = $this->getPath() . '/Resources/config';
+        $configLoader = new DelegatingLoader($resolver);
 
-        foreach ($this->getServicesFilePathArray($this->getPath() . '/Resources/config/services.*') as $path) {
-            $delegatingLoader->load($path);
-        }
+        $configLoader->load($configDir.'/services.yaml');
 
         if ('test' === $container->getParameter('kernel.environment')) {
-            foreach ($this->getServicesFilePathArray($this->getPath() . '/Resources/config/services_test.*') as $testPath) {
-                $delegatingLoader->load($testPath);
-            }
+            $configLoader->load($configDir.'/services_test.yaml');
         }
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function getServicesFilePathArray(string $path): array
-    {
-        $pathArray = \glob($path);
-
-        if ($pathArray === false) {
-            return [];
-        }
-
-        return $pathArray;
     }
 
     protected function buildDefaultConfig(ContainerBuilder $container): void
     {
-        $locator = new FileLocator('Resources/config');
-
+        $locator  = new FileLocator('Resources/config');
         $resolver = new LoaderResolver([
             new YamlFileLoader($container, $locator),
             new GlobFileLoader($container, $locator),
             new DirectoryLoader($container, $locator),
         ]);
 
+        $configDir    = $this->getPath() . '/Resources/config';
         $configLoader = new DelegatingLoader($resolver);
 
-        $confDir = $this->getPath() . '/Resources/config';
-
-        $configLoader->load($confDir . '/{packages}/*' . self::CONFIG_EXTS, 'glob');
+        $configLoader->load($configDir . '/{packages}/*.yaml', 'glob');
 
         $env = $container->getParameter('kernel.environment');
         \assert(\is_string($env));
 
-        $configLoader->load($confDir . '/{packages}/' . $env . '/*' . self::CONFIG_EXTS, 'glob');
+        $configLoader->load($configDir.'/{packages}/'.$env.'/*.yaml', 'glob');
     }
 }

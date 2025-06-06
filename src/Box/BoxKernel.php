@@ -36,10 +36,18 @@ class BoxKernel extends TwigBlockValidatorKernel
         parent::__construct($environment, $debug);
     }
 
-    // TODO: Load the current project's kernel and use twig.
-
     public function getProjectDir(): string
     {
         return __DIR__.'/../..';
+    }
+
+    /**
+     * Check whether the application is currently running as `phar` archive.
+     *
+     * @see https://github.com/box-project/box/blob/main/doc/faq.md#detecting-that-you-are-inside-a-phar
+     */
+    final public static function isPhar(): bool
+    {
+        return '' !== \Phar::running(false);
     }
 }
