@@ -29,7 +29,7 @@
     "symfony/finder": "^7.2 | ^6.4 | ^5.4",
     "symfony/framework-bundle": "^7.2 | ^6.4 | ^5.4",
     "symfony/monolog-bundle": "^3.6",
-    "symfony/runtime": "^7.3",
+    "symfony/runtime": "^7.2 | ^6.4 | ^5.4",
     "symfony/twig-bundle": "^7.2 | ^6.4 | ^5.4",
     "symfony/yaml": "^7.2 | ^6.4 | ^5.4",
     "twig/twig": "^3.15"
