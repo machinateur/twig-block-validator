@@ -32,10 +32,12 @@ use Machinateur\TwigBlockValidator\Command\TwigBlockAnnotateCommand;
 use Machinateur\TwigBlockValidator\Command\TwigBlockValidateCommand;
 use Machinateur\TwigBlockValidator\Twig\Extension\BlockValidatorExtension;
 use Symfony\Bundle\DebugBundle\DebugBundle;
+use Symfony\Bundle\FrameworkBundle\Console\Application as FrameworkApplication;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\MonologBundle\MonologBundle;
 use Symfony\Bundle\TwigBundle\TwigBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
+use Symfony\Component\Console\Application;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Kernel;
 
@@ -97,5 +99,13 @@ class TwigBlockValidatorKernel extends Kernel
                     ->addMethodCall('setVersion', [$version]);
             }
         }
+    }
+
+    /**
+     * Create the standard symfony kernel console application.
+     */
+    public function createApplication(): Application
+    {
+        return new FrameworkApplication($this);
     }
 }

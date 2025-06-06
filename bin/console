@@ -27,10 +27,9 @@ return static function (array & $context) {
     $debug = ($context['APP_DEBUG'] ?? ($env !== 'prod')) && !$input->hasParameterOption('--no-debug', true);
 
     $kernel      = new TwigBlockValidatorKernel($env, $debug);
-    $application = new Application($kernel);
-
     $kernel->boot();
 
+    $application = $kernel->createApplication();
     if (TwigBlockValidatorKernel::getShopwareVersion()) {
         $application->setName('Twig Block Validator (for Shopware 6)');
     } else {

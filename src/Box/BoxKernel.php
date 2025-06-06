@@ -27,7 +27,10 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Box;
 
+use Machinateur\TwigBlockValidator\Command\TwigBlockAnnotateCommand;
+use Machinateur\TwigBlockValidator\Command\TwigBlockValidateCommand;
 use Machinateur\TwigBlockValidator\TwigBlockValidatorKernel;
+use Symfony\Component\Console\Application;
 
 class BoxKernel extends TwigBlockValidatorKernel
 {
@@ -40,6 +43,37 @@ class BoxKernel extends TwigBlockValidatorKernel
     {
         return __DIR__.'/../..';
     }
+
+    /**
+     * Create a custom application for the box runtime.
+     */
+    public function createApplication(): Application
+    {
+        $container   = $this->getContainer();
+        /**
+         * @see https://github.com/box-project/box/blob/main/doc/configuration.md#pretty-git-tag-placeholder-git-version
+         *
+         * @noinspection PhpClassConstantAccessedViaChildClassInspection
+         */
+        $application = new Application('Twig Block Validator', BoxKernel::BUNDLE_VERSION);
+        if (BoxKernel::isPhar()) {
+            // Use actual release tag, when running the phar archive.
+            $application->setVersion('@box_release_build@');
+        }
+
+        $validateCommand = $container->get(TwigBlockValidateCommand::class);
+        $validateCommand->setName('validate');
+        $annotateCommand = $container->get(TwigBlockAnnotateCommand::class);
+        $annotateCommand->setName('annotate');
+
+        $application->addCommands([
+            $validateCommand,
+            $annotateCommand,
+        ]);
+
+        return $application;
+    }
+
 
     /**
      * Check whether the application is currently running as `phar` archive.
