@@ -68,11 +68,14 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
 
     public readonly NamespacedPathnameBuilder $namespacedPathnameBuilder;
 
+    /**
+     * @param Environment $platformTwig
+     */
     public function __construct(
-        Environment                               $platformTwig,
-        private readonly CacheInterface           $cache,
-        private readonly EventDispatcherInterface $dispatcher,
-        ?string                                   $version = null,
+        object                                      $platformTwig,
+        protected readonly CacheInterface           $cache,
+        protected readonly EventDispatcherInterface $dispatcher,
+        ?string                                     $version = null,
     ) {
         $loader = new FilesystemLoader();
 
@@ -84,8 +87,6 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
         CommentExtension::setLexer($this);
         $this->addExtension(new CommentExtension());
 
-        // Add the parser extension, needed for block tracking.
-        BlockValidatorExtension::setParser($this);
         // Use node visitor directly, instead of using the extension class, to extract the block collection.
         $this->addNodeVisitor(
             $this->nodeVisitor = new BlockNodeVisitor(defaultVersion: $version)
@@ -94,14 +95,32 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
         // No cache, because that would hinder lexing on load, and thus needed to properly collect comments.
         $this->setCache(false);
 
+        // TODO: Add event to print console feedback.
+
+        $this->initExtensions($platformTwig);
+
+        // Add the parser extension, needed for block tracking.
+        BlockValidatorExtension::setParser($this);
+
+        $this->namespacedPathnameBuilder = new NamespacedPathnameBuilder($loader);
+    }
+
+    /**
+     * @param Environment $platformTwig
+     */
+    protected function initExtensions(object $platformTwig): void
+    {
         // https://github.com/shopware/shopware/blob/6.6.x/src/Core/Framework/Adapter/Twig/StringTemplateRenderer.php
         foreach ($platformTwig->getExtensions() as $extension) {
+
             if ($this->hasExtension($extension::class)) {
                 continue;
             }
+
             $this->addExtension($extension);
         }
-        if ($this->hasExtension(CoreExtension::class) && $platformTwig->hasExtension(CoreExtension::class)) {
+
+        if ($this->hasExtension(CoreExtension::class)) {
             /** @var CoreExtension $coreExtensionInternal */
             $coreExtensionInternal = $this->getExtension(CoreExtension::class);
             /** @var CoreExtension $coreExtensionGlobal */
@@ -111,8 +130,6 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
             $coreExtensionInternal->setDateFormat(...$coreExtensionGlobal->getDateFormat());
             $coreExtensionInternal->setNumberFormat(...$coreExtensionGlobal->getNumberFormat());
         }
-
-        $this->namespacedPathnameBuilder = new NamespacedPathnameBuilder($loader);
     }
 
     public function render($name, array $context = []): string

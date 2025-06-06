@@ -1,0 +1,7 @@
+{% sw_extends '@Storefront/storefront/page/non-existent.html.twig' %}
+
+{# Test case: A tenplate does not exist in shopware, but in two other namespaces. Those will call each other alternating between the two infinitely. #}
+
+{% block page %}
+    template
+{% endblock %}

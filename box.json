@@ -3,6 +3,9 @@
   "directories": [
     "config", "src", "vendor", "var"
   ],
+  "files": [
+    "templates/.gitignore"
+  ],
   "finder": [
     {
       "name":    "*.php",
@@ -14,7 +17,8 @@
       "in":   "src/Resources/config"
     }
   ],
-  "compression": "BZ2",
+  "compression": "GZ",
   "output": "build/twig-block-validator.phar",
-  "banner-file": "LICENSE"
+  "banner-file": "LICENSE",
+  "git-version": "box_release_build"
 }

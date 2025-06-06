@@ -6,9 +6,12 @@ declare(strict_types=1);
 use Machinateur\TwigBlockValidator\Box\BoxKernel;
 use Machinateur\TwigBlockValidator\Command\TwigBlockAnnotateCommand;
 use Machinateur\TwigBlockValidator\Command\TwigBlockValidateCommand;
-use Machinateur\TwigBlockValidator\TwigBlockValidatorBundle;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Runtime\SymfonyRuntime;
 
+// Set up default runtime, to mitigate `humbug/php-scoper` not picking up the namespaces from strings in `vendor/autoload.php`.
+$_SERVER['APP_RUNTIME']                           = SymfonyRuntime::class;
+// Disable .env support, since this will run inside the `phar` archive.
 $_SERVER['APP_RUNTIME_OPTIONS']['disable_dotenv'] = true;
 
 require_once __DIR__ . '/../vendor/autoload_runtime.php';
@@ -20,10 +23,25 @@ return static function (array & $context) {
     $kernel->boot();
 
     $container   = $kernel->getContainer();
-    $application = new Application('Twig Block Validator', TwigBlockValidatorBundle::VERSION);
+    /**
+     * @see https://github.com/box-project/box/blob/main/doc/configuration.md#pretty-git-tag-placeholder-git-version
+     *
+     * @noinspection PhpClassConstantAccessedViaChildClassInspection
+     */
+    $application = new Application('Twig Block Validator', BoxKernel::BUNDLE_VERSION);
+    if (BoxKernel::isPhar()) {
+        // Use actual release tag, when running the phar archive.
+        $application->setVersion('@box_release_build@');
+    }
+
+    $validateCommand = $container->get(TwigBlockValidateCommand::class);
+    $validateCommand->setName('validate');
+    $annotateCommand = $container->get(TwigBlockAnnotateCommand::class);
+    $annotateCommand->setName('annotate');
+
     $application->addCommands([
-            $container->get(TwigBlockValidateCommand::class),
-            $container->get(TwigBlockAnnotateCommand::class),
+        $validateCommand,
+        $annotateCommand,
     ]);
 
     return $application;

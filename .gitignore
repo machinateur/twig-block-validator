@@ -3,9 +3,12 @@
 /vendor/
 
 .phpunit.result.cache
+/phpunit.xml
 
 /public/
 /var/
 
 /build/
 !/build/.gitignore
+
+/.twig-block-validator/

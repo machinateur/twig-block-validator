@@ -27,7 +27,6 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Twig\Extension;
 
-use Composer\Semver\Semver;
 use Machinateur\TwigBlockValidator\Twig\BlockStackParser;
 use Machinateur\TwigBlockValidator\Twig\NodeVisitor\BlockNodeVisitor;
 use Twig\Environment;
@@ -51,6 +50,8 @@ use Twig\Extension\AbstractExtension;
  *
  * This extension depends on `machinateur/twig-comment-lexer` for processing twig comments.
  *  So make sure to also install the lexer correctly for the environment.
+ *
+ * This extension does not expose any filters or other capabilities.
  *
  * @see BlockNodeVisitor
  */
@@ -126,13 +127,5 @@ class BlockValidatorExtension extends AbstractExtension
     public static function hashFile(string $file): string
     {
         return \hash_file(self::ALGO, $file);
-    }
-
-    public function getNodeVisitors(): array
-    {
-        // TODO: Remove or keep. This extension should be used and added to the environment internally. But the visitor cannot be retrieved at the moment.
-        return [
-            new BlockNodeVisitor(),
-        ];
     }
 }

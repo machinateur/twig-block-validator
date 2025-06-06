@@ -23,13 +23,4 @@
  * SOFTWARE.
  */
 
-declare(strict_types=1);
-
-namespace Machinateur\TwigBlockValidator\Tests\Extension;
-
-use PHPUnit\Framework\TestCase;
-
-class ShopwareBlockHashExtensionTest extends TestCase
-{
-    // TODO: Implement test based on example template.
-}
+require \dirname(__DIR__).'/vendor/autoload.php';
