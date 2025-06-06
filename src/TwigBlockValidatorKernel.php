@@ -48,7 +48,6 @@ class TwigBlockValidatorKernel extends Kernel
     public static function getShopwareVersion(): ?string
     {
         try {
-            // See https://github.com/humbug/php-scoper/issues/678.
             return InstalledVersions::getVersion('shopware/storefront');
         } catch (\OutOfBoundsException) {
             return null;
