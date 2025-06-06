@@ -28,4 +28,4 @@ docker compose up -d
 docker compose exec shop bash -c 'sudo composer self-update'
 docker compose exec shop bash -c 'composer update --lock'
 docker compose exec shop bash -c 'composer install'
-docker compose exec shop bash -c 'composer require machinateur/twig-block-validator:dev-release/0.1.0 -W'
+docker compose exec shop bash -c "composer require machinateur/twig-block-validator:dev-$(git branch --show-current)"
