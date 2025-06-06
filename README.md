@@ -13,7 +13,7 @@ When dealing with many plugins and templates, it can get confusing quite fast.
 
 It also provides a way to automatically add and update the block version comment on your templates.
 
-> This project is still a beta version!
+> This project is still an early version!
 >
 > It's missing some guardrails, so edge-cases might still lead to internal errors or bugs.
 
@@ -27,7 +27,7 @@ Requirements:
 In your shopware project or plugin, run:
 
 ```bash
-composer require --dev machinateur/twig-block-validator@dev
+composer require --dev machinateur/twig-block-validator
 ```
 
 Also make sure the bundle is available in the desired environments, usually `dev` and `test`. So in `config/bundles.php`:
@@ -62,7 +62,7 @@ The above command will load all available templates based on the `debug:twig` co
 bin/console debug:twig --format json --no-debug \
   | jq -r -c '.loader_paths | to_entries[] | . as { key: $ns, value: $paths } | $paths | map( $ns + ":" + . ) | .[]' \
   | xargs printf ' -t "%s"' \
-  | xargs bin/console twig:block:annotate -c '@DemoVendor/basecom/demo-plugin/src/Resources/views' -y var/twig-block-validator/templates
+  | xargs bin/console twig:block:annotate -y -c '@DemoVendor/basecom/demo-plugin/src/Resources/views' var/twig-block-validator/templates
 ```
 
 The above command will load all available templates based on the `debug:twig` command (JSON output), then annotate `@DemoVendor/basecom/demo-plugin/src/Resources/views`
@@ -70,13 +70,13 @@ The above command will load all available templates based on the `debug:twig` co
 
 Next, those can be used to patch or compare the template source code, which is typically tracked via a VCS.
 
-#### Validate the `tests/res_sw` dir
+#### Validate the `templates/nested` dir
 
 To validate against the dev-dependency `shopware/storefront:^6.4` installed at `vendor/shopware/storefront/Resources/views`,
- expecting version `6.7` in the comments in `tests/res_sw/` (`__main__` as default namespace), run:
+ expecting version `6.6` in the comments in `tests/nested/` (`__main__` as default namespace), run:
 
 ```
-$ time bin/shopware twig:block:validate -t '@Storefront:vendor/shopware/storefront/Resources/views' -c tests/res_sw/ -r 6.7
+$ time bin/shopware twig:block:validate -t '@Storefront:vendor/shopware/storefront/Resources/views' -c tests/nested/ -r 6.7
 
  ! [NOTE] Adding namespace "__main__"...                                                                                
 
@@ -112,11 +112,12 @@ Here's [the example template](tests/res_sw/template.html.twig) that would produc
 I just generated a random SHA265 for this test.
 
 It's also possible to use `twig-block` here,
- but since this was inspired by [Shopware's PhpStorm plugin](https://github.com/shopwareLabs/shopware6-phpstorm-plugin), `shopware-block` is also supported.  
+ but since this was inspired by [Shopware's PhpStorm plugin](https://github.com/shopwareLabs/shopware6-phpstorm-plugin), `shopware-block` is also supported.
+Which one is used is determined by `shopware/storefront` being installed (this is checked using composer).
 
-In general, the version is recommended, but since this tool is not strictly limited to working with
+In general, the version part of the comment is recommended, but since this tool is not strictly limited to working with
  shopware, it is not enforced. The provided version (`-r` flag) will be the default version, if none is set for a block.
-  If not given, it will try to use the
+  If not given, it will try to use the current shopware version, if available from the kernel.
 
 #### Annotate `@Storefront` itself
 
@@ -127,10 +128,6 @@ The following command will go through the templates of `shopware/storefront`,
 ```bash
 $ bin/shopware twig:block:annotate -c @Storefront:vendor/shopware/storefront/Resources/views \
   -r 6.6.10.3 ./var/cache/twig-block-validator/views
-
- To annotate the templates in-place can lead to permanent loss of data!
- Continue? (yes/no) [no]:
- > yes
 
  ! [NOTE] Adding namespace "Storefront"...                                                                              
 
@@ -147,42 +144,8 @@ $ bin/shopware twig:block:annotate -c @Storefront:vendor/shopware/storefront/Res
  ! [NOTE] Found 0 comments in 324 templates.                                                                            
 ```
 
-The result:
-
-```bash
-$ tree var/cache/twig-block-validator/views
-
-var/cache/twig-block-validator/views
-├── storefront
-│   ├── component
-│   │   ├── account
-│   │   │   ├── customer-group-register-address-form.twig
-│   │   │   └── customer-group-register.html.twig
-│   │   ├── address
-│   │   │   └── address-manager-modal-list.html.twig
-│   │   ├── listing
-│   │   │   └── filter
-│   │   │       └── filter-rating-select.html.twig
-│   │   ├── product
-│   │   │   ├── card
-│   │   │   │   ├── box-image.html.twig
-│   │   │   │   └── box-wishlist.html.twig
-│   │   │   └── feature
-│   │   │       └── types
-│   │   │           └── feature-attribute.html.twig
-│   │   └── wishlist
-│   │       └── listing.html.twig
-│   ├── layout
-│   │   └── header
-│   │       └── header-minimal.html.twig
-│   └── page
-│       └── account
-│           ├── order
-│           │   ├── address.html.twig
-│           │   └── confirm-shipping.html.twig
-│           └── order-history
-│               └── cancel-order-modal.html.twig
-```
+This will also work, and annotate the storefront amongst its own templates.
+ Just an experiment I tried.
 
 ### How to validate
 
@@ -248,10 +211,6 @@ Options:
 
 There are a total of four different CLIs available:
 
-- `bin/shopware`:
-  A shopware integrated console.
-  - Runs a full shopware-aware CLI (in `dev` env), which supports all built-in twig extensions.
-  - If used inside a project directly as a bundle, it supports any custom functions, blocks, etc.
 - `bin/console`:
   A symfony console application.
   - Runs a symfony kernel with symfony framework and debug commands (in `dev` or `test`).
@@ -266,6 +225,18 @@ There are a total of four different CLIs available:
   - Only supports the twig extensions that are available in the symfony context.
 
 These can be copied to the `bin/` directory of your project (if not already present).
+
+### Shopware test container
+
+I've put in a small docker-compose setup, at `tests/shopware/` which may be used to test against a real shopware instance.
+
+```bash
+cd tests/shopware/
+
+bash ./init.sh
+
+docker compose exec -it shop bash
+```
 
 ## Standalone
 
@@ -297,7 +268,7 @@ export APP_DEBUG=0
 
 # prepare cache
 bin/console cache:clear
-rm -rf var/cache/prod
+rm -rf var/cache
 bin/console cache:warmup
 # check if everything is fine
 bin/box -V

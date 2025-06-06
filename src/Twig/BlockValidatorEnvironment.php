@@ -68,11 +68,8 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
 
     public readonly NamespacedPathnameBuilder $namespacedPathnameBuilder;
 
-    /**
-     * @param Environment $platformTwig
-     */
     public function __construct(
-        object                                      $platformTwig,
+        Environment                                 $platformTwig,
         protected readonly CacheInterface           $cache,
         protected readonly EventDispatcherInterface $dispatcher,
         ?string                                     $version = null,
@@ -105,10 +102,7 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
         $this->namespacedPathnameBuilder = new NamespacedPathnameBuilder($loader);
     }
 
-    /**
-     * @param Environment $platformTwig
-     */
-    protected function initExtensions(object $platformTwig): void
+    protected function initExtensions(Environment $platformTwig): void
     {
         // https://github.com/shopware/shopware/blob/6.6.x/src/Core/Framework/Adapter/Twig/StringTemplateRenderer.php
         foreach ($platformTwig->getExtensions() as $extension) {
@@ -414,6 +408,7 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
     }
 
     /**
+     * Get collected blocks.
      *
      * This method **must** be called after {@see BlockValidatorEnvironment::load()} for any given template.
      *
