@@ -13,7 +13,7 @@ When dealing with many plugins and templates, it can get confusing quite fast.
 
 It also provides a way to automatically add and update the block version comment on your templates.
 
-> This project is still a beta version!
+> This project is still an early version!
 >
 > It's missing some guardrails, so edge-cases might still lead to internal errors or bugs.
 
