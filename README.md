@@ -297,7 +297,7 @@ export APP_DEBUG=0
 
 # prepare cache
 bin/console cache:clear
-rm -rf var/cache/prod
+rm -rf var/cache
 bin/console cache:warmup
 # check if everything is fine
 bin/box -V
