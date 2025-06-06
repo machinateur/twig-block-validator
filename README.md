@@ -27,7 +27,7 @@ Requirements:
 In your shopware project or plugin, run:
 
 ```bash
-composer require --dev machinateur/twig-block-validator@dev
+composer require --dev machinateur/twig-block-validator
 ```
 
 Also make sure the bundle is available in the desired environments, usually `dev` and `test`. So in `config/bundles.php`:
