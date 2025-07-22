@@ -33,6 +33,7 @@ use Machinateur\TwigBlockValidator\TwigBlockValidatorOutput;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Twig\Environment;
+use Twig\Loader\ChainLoader;
 use Twig\Loader\FilesystemLoader;
 
 /**
@@ -81,10 +82,25 @@ abstract class AbstractConsoleCommand extends Command
      */
     protected function getPlatformTemplatePaths(): array
     {
+        if (BoxKernel::isPhar()) {
+            return [];
+        }
+
         $platformPaths  = [];
         $platformLoader = $this->platformTwig->getLoader();
 
-        if ($platformLoader instanceof FilesystemLoader && ! BoxKernel::isPhar()) {
+        if ($platformLoader instanceof ChainLoader) {
+            // Find the filesystem loader, if chained (default).
+            foreach ($platformLoader->getLoaders() as $platformLoader) {
+                if ($platformLoader instanceof FilesystemLoader) {
+                    break;
+                }
+
+                // Pass if no filesystem loader is found. This relies on fall-through of the loop scope.
+            }
+        }
+
+        if ($platformLoader instanceof FilesystemLoader) {
             foreach ($platformLoader->getNamespaces() as $namespace) {
                 $platformPaths[$namespace] = $platformLoader->getPaths($namespace);
             }
