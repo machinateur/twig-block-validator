@@ -34,6 +34,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Twig\Environment;
 
 class TwigBlockAnnotateCommand extends AbstractConsoleCommand
 {
@@ -42,9 +43,10 @@ class TwigBlockAnnotateCommand extends AbstractConsoleCommand
     public function __construct(
         private readonly TwigBlockAnnotator $annotator,
         TwigBlockValidatorOutput            $output,
+        Environment                         $platformTwig,
         ?string                             $name = null,
     ) {
-        parent::__construct($output, $name);
+        parent::__construct($output, $platformTwig, $name);
     }
 
     protected function configure(): void
@@ -78,6 +80,17 @@ class TwigBlockAnnotateCommand extends AbstractConsoleCommand
             ->confirm("To annotate the templates in-place can lead to permanent loss of data!\n Continue?" , (bool)$input->getOption('yes'))
         ) {
             return Command::SUCCESS;
+        }
+
+        // Fallback to platform twig paths, if none are given.
+        if (0 === \count($templatePaths)) {
+            $templatePaths = $this->getPlatformTemplatePaths();
+        }
+        // Fallback to version injected from shopware.
+        if (null === $version) {
+            $version = $this->getVersion();
+        } elseif (false === $version) {
+            $version = null;
         }
 
         $this->annotator->annotate($annotatePaths, $templatePaths, $version);

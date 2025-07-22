@@ -58,6 +58,7 @@ trait ConsoleCommandTrait
 
         $paths   = [];
         foreach ($templatePaths as $path) {
+            // TODO: Make sure this does not mess up things on Windows with absolute paths.
             if (\str_contains($path, ':')) {
                 if ($path[0] === '@') {
                     $path = \substr($path, 1);

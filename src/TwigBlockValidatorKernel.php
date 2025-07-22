@@ -28,8 +28,6 @@ declare(strict_types=1);
 namespace Machinateur\TwigBlockValidator;
 
 use Composer\InstalledVersions;
-use Machinateur\TwigBlockValidator\Command\TwigBlockAnnotateCommand;
-use Machinateur\TwigBlockValidator\Command\TwigBlockValidateCommand;
 use Machinateur\TwigBlockValidator\Twig\Extension\BlockValidatorExtension;
 use Symfony\Bundle\DebugBundle\DebugBundle;
 use Symfony\Bundle\FrameworkBundle\Console\Application as FrameworkApplication;
@@ -86,18 +84,6 @@ class TwigBlockValidatorKernel extends Kernel
     protected function build(ContainerBuilder $container): void
     {
         parent::build($container);
-
-        if (null !== $version = static::getShopwareVersion()) {
-            $commands = [
-                TwigBlockValidateCommand::class,
-                TwigBlockAnnotateCommand::class,
-            ];
-
-            foreach ($commands as $command) {
-                $container->getDefinition($command)
-                    ->addMethodCall('setVersion', [$version]);
-            }
-        }
     }
 
     /**

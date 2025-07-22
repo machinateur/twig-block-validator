@@ -32,6 +32,7 @@ use Machinateur\TwigBlockValidator\Validator\TwigBlockValidator;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Twig\Environment;
 
 class TwigBlockValidateCommand extends AbstractConsoleCommand
 {
@@ -43,9 +44,10 @@ class TwigBlockValidateCommand extends AbstractConsoleCommand
     public function __construct(
         private readonly TwigBlockValidator $validator,
         TwigBlockValidatorOutput            $output,
+        Environment                         $platformTwig,
         ?string                             $name = null,
     ) {
-        parent::__construct($output, $name);
+        parent::__construct($output, $platformTwig, $name);
     }
 
     protected function configure(): void
@@ -68,6 +70,17 @@ class TwigBlockValidateCommand extends AbstractConsoleCommand
 
         $templatePaths = $this->resolveNamespaces($templatePaths);
         $validatePaths = $this->resolveNamespaces($validatePaths);
+
+        // Fallback to platform twig paths, if none are given.
+        if (0 === \count($templatePaths)) {
+            $templatePaths = $this->getPlatformTemplatePaths();
+        }
+        // Fallback to version injected from shopware.
+        if (null === $version) {
+            $version = $this->getVersion();
+        } elseif (false === $version) {
+            $version = null;
+        }
 
         $this->validator->validate($validatePaths, $templatePaths, $version);
 

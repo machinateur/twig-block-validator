@@ -5,6 +5,7 @@ services:
     arguments:
       - '@Machinateur\TwigBlockValidator\Validator\TwigBlockValidator'
       - '@Machinateur\TwigBlockValidator\TwigBlockValidatorOutput'
+      - '@twig'
     tags:
       - 'console.command'
 
@@ -35,6 +36,7 @@ services:
     arguments:
       - '@Machinateur\TwigBlockValidator\Annotator\TwigBlockAnnotator'
       - '@Machinateur\TwigBlockValidator\TwigBlockValidatorOutput'
+      - '@twig'
     tags:
       - 'console.command'
 

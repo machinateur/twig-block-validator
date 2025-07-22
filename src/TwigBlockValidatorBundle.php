@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator;
 
+use Machinateur\TwigBlockValidator\Command\TwigBlockAnnotateCommand;
+use Machinateur\TwigBlockValidator\Command\TwigBlockValidateCommand;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Config\Loader\DelegatingLoader;
 use Symfony\Component\Config\Loader\LoaderResolver;
@@ -54,6 +56,18 @@ class TwigBlockValidatorBundle extends AbstractBundle
         parent::build($container);
 
         $this->registerContainerFile($container);
+
+        if (null !== $version = TwigBlockValidatorKernel::getShopwareVersion()) {
+            $commands = [
+                TwigBlockValidateCommand::class,
+                TwigBlockAnnotateCommand::class,
+            ];
+
+            foreach ($commands as $command) {
+                $container->getDefinition($command)
+                    ->addMethodCall('setVersion', [$version]);
+            }
+        }
 
         $this->buildDefaultConfig($container);
     }

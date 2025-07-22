@@ -39,41 +39,77 @@ Also make sure the bundle is available in the desired environments, usually `dev
 
 ## Usage
 
-This tool may also be used without Shopware, it supports both.
+Basic command line options include:
+
+- `-c` = Add a path/namespace to process
+
+This is the main option to define which template namespace/path to validate or annotate (depending on the command).
+ Multiple values may be given. The format is `@DemoVendor:.../path/to/stuff`.
+
+- `-t` = Add additional template context
+
+By default, the template context is inherited from the project's twig template paths. It is possible to define your own using this option.
+ Multiple values may be given. The format is `@DemoVendor:.../path/to/stuff`.
+
+- `-r` = Require a version
+
+When you completely omit the `-r|--use-version` option, to basically require "no version" in the block comments.
+ Without an assigned value, the option will use the installed shopware storefront version as requirement to check against.
+  And with a specific version given, that one will be used.
 
 ### Examples with Shopware
 
-#### Annotate whole project
+This tool may also be used without Shopware, it supports both.
+
+#### Annotate a shopware plugin
 
 Use the following commands to execute the validator for an existing Shopware Storefront project.
+
+```bash
+bin/console twig:block:validate -c '@DemoVendor:custom/static-plugins/demo-plugin/src/Resources/views'
+```
+
+The above command will load all available templates based the paths available to your project,
+ then validate `custom/static-plugins/demo-plugin/src/Resources/views` with `@DemoVendor` namespace.
+
+But at first you will need to annotate the existing blocks of your plugin, which is possible using the command below.
+
+```bash
+bin/console twig:block:annotate -y -c '@DemoVendor:custom/static-plugins/demo-plugin/src/Resources/views' var/twig-block-validator/templates
+```
+
+<details>
+<summary>In version <code>0.1.x</code> available paths had to be specified explicitly. Click to see more...</summary>
 
 ```bash
 # validate
 bin/console debug:twig --format json --no-debug \
   | jq -r -c '.loader_paths | to_entries[] | . as { key: $ns, value: $paths } | $paths | map( $ns + ":" + . ) | .[]' \
   | xargs printf ' -t "%s"' \
-  | xargs bin/console twig:block:validate -c '@DemoVendor/basecom/demo-plugin/src/Resources/views'
+  | xargs bin/console twig:block:validate -c '@DemoVendor:custom/static-plugins/demo-plugin/src/Resources/views'
 ```
 
-The above command will load all available templates based on the `debug:twig` command (JSON output), then validate `@DemoVendor/basecom/demo-plugin/src/Resources/views`.
+The above command will load all available templates based on the `debug:twig` command (JSON output), then validate `@DemoVendor:custom/static-plugins/demo-plugin/src/Resources/views`.
 
 ```bash
 # annotate
 bin/console debug:twig --format json --no-debug \
   | jq -r -c '.loader_paths | to_entries[] | . as { key: $ns, value: $paths } | $paths | map( $ns + ":" + . ) | .[]' \
   | xargs printf ' -t "%s"' \
-  | xargs bin/console twig:block:annotate -y -c '@DemoVendor/basecom/demo-plugin/src/Resources/views' var/twig-block-validator/templates
+  | xargs bin/console twig:block:annotate -y -c '@DemoVendor:custom/static-plugins/demo-plugin/src/Resources/views' var/twig-block-validator/templates
 ```
 
-The above command will load all available templates based on the `debug:twig` command (JSON output), then annotate `@DemoVendor/basecom/demo-plugin/src/Resources/views`
+</details>
+
+The above command will load all available templates based on the `debug:twig` command (JSON output), then annotate `@DemoVendor:custom/static-plugins/demo-plugin/src/Resources/views`
  and output the changed templates to `var/twig-block-validator/templates`. Omit the path, to do update annotations in-place.
 
 Next, those can be used to patch or compare the template source code, which is typically tracked via a VCS.
 
-#### Validate the `templates/nested` dir
+#### Validate a templates dir
 
 To validate against the dev-dependency `shopware/storefront:^6.4` installed at `vendor/shopware/storefront/Resources/views`,
- expecting version `6.6` in the comments in `tests/nested/` (`__main__` as default namespace), run:
+ expecting version `6.6` in the comments of `tests/nested/` (`__main__` as default namespace), run:
 
 ```
 $ time bin/shopware twig:block:validate -t '@Storefront:vendor/shopware/storefront/Resources/views' -c tests/nested/ -r 6.7
@@ -109,7 +145,7 @@ Here's [the example template](tests/res_sw/template.html.twig) that would produc
 {% endblock %}
 ```
 
-I just generated a random SHA265 for this test.
+I just generated a random SHA-265 for this test.
 
 It's also possible to use `twig-block` here,
  but since this was inspired by [Shopware's PhpStorm plugin](https://github.com/shopwareLabs/shopware6-phpstorm-plugin), `shopware-block` is also supported.
@@ -126,7 +162,7 @@ The following command will go through the templates of `shopware/storefront`,
   and finally write the changed templates to `./var/cache/twig-block-validator/views`.
 
 ```bash
-$ bin/shopware twig:block:annotate -c @Storefront:vendor/shopware/storefront/Resources/views \
+$ bin/shopware twig:block:annotate -c '@Storefront:vendor/shopware/storefront/Resources/views' \
   -r 6.6.10.3 ./var/cache/twig-block-validator/views
 
  ! [NOTE] Adding namespace "Storefront"...                                                                              
