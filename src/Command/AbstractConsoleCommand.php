@@ -27,10 +27,17 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Command;
 
+use Machinateur\TwigBlockValidator\Box\BoxKernel;
+use Machinateur\TwigBlockValidator\Twig\BlockValidatorEnvironment;
 use Machinateur\TwigBlockValidator\TwigBlockValidatorOutput;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputOption;
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
 
+/**
+ * @phpstan-import-type _NamespacedPathMap  from BlockValidatorEnvironment
+ */
 abstract class AbstractConsoleCommand extends Command
 {
     use ConsoleCommandTrait;
@@ -47,6 +54,7 @@ abstract class AbstractConsoleCommand extends Command
      */
     public function __construct(
         protected readonly TwigBlockValidatorOutput $output,
+        protected readonly Environment              $platformTwig,
         ?string                                     $name = null,
     ) {
         parent::__construct($name);
@@ -64,6 +72,25 @@ abstract class AbstractConsoleCommand extends Command
             ->addOption('validate', 'c', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Twig template path to validate')
             ->addOption('use-version', 'r', InputOption::VALUE_OPTIONAL, 'The version number required', $this->getVersion())
         ;
+    }
+
+    /**
+     * Copy filesystem loader paths from platform twig (only if supported and not running as phar).
+     *
+     * @return _NamespacedPathMap
+     */
+    protected function getPlatformTemplatePaths(): array
+    {
+        $platformPaths  = [];
+        $platformLoader = $this->platformTwig->getLoader();
+
+        if ($platformLoader instanceof FilesystemLoader && ! BoxKernel::isPhar()) {
+            foreach ($platformLoader->getNamespaces() as $namespace) {
+                $platformPaths[$namespace] = $platformLoader->getPaths($namespace);
+            }
+        }
+
+        return $platformPaths;
     }
 
     public function getVersion(): ?string

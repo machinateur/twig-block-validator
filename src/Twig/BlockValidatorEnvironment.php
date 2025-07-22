@@ -98,6 +98,7 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
 
         // Add the parser extension, needed for block tracking.
         BlockValidatorExtension::setParser($this);
+        $this->addExtension(new BlockValidatorExtension());
 
         $this->namespacedPathnameBuilder = new NamespacedPathnameBuilder($loader);
     }
@@ -491,8 +492,9 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
     {
         $this->resetGlobals();
 
-        $this->getLoader()
-            ->setPaths([]);
+        $this->setLoader(new FilesystemLoader());
+
+        // Clear cache.
         $this->setCache(false);
 
         $this->nodeVisitor->resetCollection();
