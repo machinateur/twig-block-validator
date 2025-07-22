@@ -86,6 +86,12 @@ class TwigBlockAnnotateCommand extends AbstractConsoleCommand
         if (0 === \count($templatePaths)) {
             $templatePaths = $this->getPlatformTemplatePaths();
         }
+        // Fallback to version injected from shopware.
+        if (null === $version) {
+            $version = $this->getVersion();
+        } elseif (false === $version) {
+            $version = null;
+        }
 
         $this->annotator->annotate($annotatePaths, $templatePaths, $version);
         $this->annotator->setPath(null);

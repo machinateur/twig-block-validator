@@ -75,6 +75,12 @@ class TwigBlockValidateCommand extends AbstractConsoleCommand
         if (0 === \count($templatePaths)) {
             $templatePaths = $this->getPlatformTemplatePaths();
         }
+        // Fallback to version injected from shopware.
+        if (null === $version) {
+            $version = $this->getVersion();
+        } elseif (false === $version) {
+            $version = null;
+        }
 
         $this->validator->validate($validatePaths, $templatePaths, $version);
 

@@ -71,7 +71,7 @@ abstract class AbstractConsoleCommand extends Command
         $this
             ->addOption('template', 't', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Twig template path to load')
             ->addOption('validate', 'c', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Twig template path to validate')
-            ->addOption('use-version', 'r', InputOption::VALUE_OPTIONAL, 'The version number required', $this->getVersion())
+            ->addOption('use-version', 'r', InputOption::VALUE_OPTIONAL, 'The version number to require', false)
         ;
     }
 
