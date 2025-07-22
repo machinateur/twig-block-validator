@@ -161,7 +161,7 @@ The following command will go through the templates of `shopware/storefront`,
  put the annotation comment for those blocks, that extend another template (and therefor have a parent),
   and finally write the changed templates to `./var/cache/twig-block-validator/views`.
 
-```bash
+```
 $ bin/shopware twig:block:annotate -c '@Storefront:vendor/shopware/storefront/Resources/views' \
   -r 6.6.10.3 ./var/cache/twig-block-validator/views
 
