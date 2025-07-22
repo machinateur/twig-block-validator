@@ -102,7 +102,7 @@ abstract class AbstractConsoleCommand extends Command
 
         if ($platformLoader instanceof FilesystemLoader) {
             foreach ($platformLoader->getNamespaces() as $namespace) {
-                if ('!' !== $namespace[0]) {
+                if ('!' === $namespace[0]) {
                     continue;
                 }
 
