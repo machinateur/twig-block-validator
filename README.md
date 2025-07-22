@@ -15,7 +15,7 @@ It also provides a way to automatically add and update the block version comment
 
 > This project is still an early version!
 >
-> It's missing some guardrails, so edge-cases might still lead to internal errors or bugs.
+> Feature ideas, bug reports and contributions welcome. Thanks!
 
 ## Installation
 
