@@ -51,3 +51,18 @@ services:
   Machinateur\TwigBlockValidator\Service\TwigBlockResolver:
     arguments:
       - '@twig_block_validator.twig'
+
+  Machinateur\TwigBlockValidator\Command\TwigBlockInspectCommand:
+    public: true
+    arguments:
+      - '@Machinateur\TwigBlockValidator\Inspector\TwigBlockInspector'
+      - '@Machinateur\TwigBlockValidator\TwigBlockValidatorOutput'
+      - '@twig'
+    tags:
+      - 'console.command'
+
+  Machinateur\TwigBlockValidator\Inspector\TwigBlockInspector:
+    arguments:
+      - '@twig_block_validator.twig'
+      - '@Machinateur\TwigBlockValidator\Service\TwigBlockResolver'
+      - '@event_dispatcher'
