@@ -57,6 +57,7 @@ trait CommentCollectionTrait
 
             [$hash, $version] = $parsed;
         } catch (\InvalidArgumentException) {
+            // Ignore comment, if it does not match.
             return;
         }
 
