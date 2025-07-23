@@ -92,6 +92,9 @@ class TwigBlockAnnotator implements ResetInterface
 
     public function annotate(array $scopePaths, array $templatePaths = [], ?string $version = null): void
     {
+        $scopePaths    = \array_map('array_unique', $scopePaths);
+        $templatePaths = \array_map('array_unique', $templatePaths);
+
         // First reset the validator's environment, in case this is called more than once in the same process.
         $this->twig->reset();
 
