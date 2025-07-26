@@ -56,7 +56,7 @@ class TwigBlockInspectCommand extends AbstractConsoleCommand
         parent::configure();
 
         $this
-            ->setDescription('Inspect block versions in twig templates')
+            ->setDescription('Inspect block comments in twig templates')
             //->setHelp()
             ->addOption('check-all', 'a', InputOption::VALUE_NONE, 'Check all available template paths')
         ;
@@ -67,11 +67,11 @@ class TwigBlockInspectCommand extends AbstractConsoleCommand
         $this->output->init($input, $output);
 
         $templatePaths = (array)$input->getOption('template');
-        $validatePaths = (array)$input->getOption('validate');
+        $inspectPaths = (array)$input->getOption('validate');
         $version       = $input->getOption('use-version');
 
         $templatePaths = $this->resolveNamespaces($templatePaths);
-        $validatePaths = $this->resolveNamespaces($validatePaths);
+        $inspectPaths = $this->resolveNamespaces($inspectPaths);
 
         // Fallback to platform twig paths, if none are given.
         if (0 === \count($templatePaths)) {
@@ -86,16 +86,16 @@ class TwigBlockInspectCommand extends AbstractConsoleCommand
 
         // Check all available paths, when `-a` option is given.
         if ((bool)$input->getOption('check-all')) {
-            if (0 === \count($validatePaths)) {
+            if (0 === \count($inspectPaths)) {
                 // Replace paths.
-                $validatePaths = $templatePaths;
+                $inspectPaths = $templatePaths;
             } else {
                 // Merge paths.
-                $validatePaths = \array_merge_recursive($templatePaths, $validatePaths);
+                $inspectPaths = \array_merge_recursive($templatePaths, $inspectPaths);
             }
         }
 
-        $this->inspector->inspect($validatePaths, $templatePaths, $version);
+        $this->inspector->inspect($inspectPaths, $templatePaths, $version);
 
         $this->output->reset();
 
