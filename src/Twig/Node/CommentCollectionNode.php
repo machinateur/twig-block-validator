@@ -59,9 +59,8 @@ class CommentCollectionNode extends Node implements CommentCollectionInterface, 
         // No-op.
     }
 
-    public function reset(): static
+    public function reset(): void
     {
         $this->comments = [];
-        return $this;
     }
 }
