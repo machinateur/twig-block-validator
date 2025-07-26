@@ -214,6 +214,9 @@ Options:
   -v|vv|vvv, --verbose             Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
 ```
 
+The exit-code of the validate command will be `0` when no violations were found and no twig errors occured, else `1`.
+ This allows for better CI integration and other automated checks.
+
 ### How to annotate
 
 The annotation can be performed by calling the CLI command `twig:block:annotate`.
