@@ -64,5 +64,4 @@ services:
   Machinateur\TwigBlockValidator\Inspector\TwigBlockInspector:
     arguments:
       - '@twig_block_validator.twig'
-      - '@Machinateur\TwigBlockValidator\Service\TwigBlockResolver'
       - '@event_dispatcher'

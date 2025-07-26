@@ -128,8 +128,11 @@ class BlockNodeVisitor implements NodeVisitorInterface
 
     public function resetCollection(): CommentCollectionNode
     {
-        $collection = $this->getCollection();
-        $this->setCollection(new CommentCollectionNode());
+        $collection = clone $this->getCollection();
+
+        $this->getCollection()
+            ->reset();
+
         return $collection;
     }
 

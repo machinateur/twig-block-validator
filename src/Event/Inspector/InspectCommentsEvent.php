@@ -25,43 +25,29 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\TwigBlockValidator\Twig\Node;
+namespace Machinateur\TwigBlockValidator\Event\Inspector;
 
-use Symfony\Contracts\Service\ResetInterface;
-use Twig\Attribute\YieldReady;
-use Twig\Compiler;
-use Twig\Node\Node;
+use Machinateur\TwigBlockValidator\Event\NotifiableInterface;
+use Machinateur\TwigBlockValidator\Event\NotifiableTrait;
+use Machinateur\TwigBlockValidator\Twig\Node\CommentCollectionInterface;
 
 /**
- * An AST representation of the block comments within a set of templates.
- *
- * The implementation logic for {@see CommentCollectionInterface} is externalized
- *  to {@see CommentCollectionTrait}, which is more reusable.
+ * @phpstan-import-type _Comment            from CommentCollectionInterface
+ * @phpstan-import-type _CommentCollection  from CommentCollectionInterface
  */
-#[YieldReady]
-class CommentCollectionNode extends Node implements CommentCollectionInterface, ResetInterface
+class InspectCommentsEvent implements NotifiableInterface
 {
-    use CommentCollectionTrait;
+    use NotifiableTrait;
+
+    public const CALL_BEGIN = 'begin';
+    public const CALL_END   = 'end';
+    public const CALL_STEP  = 'step';
 
     /**
-     * Disallow setting any child nodes, same as with {@see \Twig\Node\EmptyNode}.
+     * @param _CommentCollection $comments
      */
-    public function setNode(string $name, Node $node): void
-    {
-        throw new \LogicException('ContextTagNode cannot have children.');
-    }
-
-    /**
-     * Compiling a `ShopwareBlockCollectionNode` is no-op, as it will never have children. :(
-     */
-    public function compile(Compiler $compiler): void
-    {
-        // No-op.
-    }
-
-    public function reset(): static
-    {
-        $this->comments = [];
-        return $this;
-    }
+    public function __construct(
+        public readonly array   $comments,
+        public readonly ?string $version,
+    ) {}
 }

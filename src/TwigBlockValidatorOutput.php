@@ -29,6 +29,8 @@ namespace Machinateur\TwigBlockValidator;
 
 use Machinateur\TwigBlockValidator\Event\Annotator\AnnotateBlocksErrorEvent;
 use Machinateur\TwigBlockValidator\Event\Annotator\AnnotateBlocksEvent;
+use Machinateur\TwigBlockValidator\Event\Inspector\InspectCommentsErrorEvent;
+use Machinateur\TwigBlockValidator\Event\Inspector\InspectCommentsEvent;
 use Machinateur\TwigBlockValidator\Event\TwigCollectBlocksEvent;
 use Machinateur\TwigBlockValidator\Event\TwigCollectCommentsEvent;
 use Machinateur\TwigBlockValidator\Event\TwigLoadFilesEvent;
@@ -73,6 +75,9 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
 
             AnnotateBlocksEvent::class         => 'onAnnotateBlocks',
             AnnotateBlocksErrorEvent::class    => 'onAnnotateBlocksError',
+
+            InspectCommentsEvent::class         => 'onInspectComments',
+            InspectCommentsErrorEvent::class    => 'onInspectCommentsError',
         ];
     }
 
@@ -293,6 +298,42 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
     }
 
     public function onAnnotateBlocksError(AnnotateBlocksErrorEvent $event): void
+    {
+        $this->console?->warning([
+            'Twig errors!',
+        ]);
+
+        $this->listingTwigErrors($event->errors);
+    }
+
+    public function onInspectComments(InspectCommentsEvent $event): void
+    {
+        $table          = $this->console?->createTable();
+
+        $event->callback(ValidateCommentsEvent::CALL_BEGIN,
+            static fn () => $table?->setHeaders(['template', 'parent template', 'block', 'block lines', 'comment'])
+        );
+        $event->callback(ValidateCommentsEvent::CALL_STEP,
+            static function (array $comment) use ($table) {
+                if (null === $table) {
+                    return;
+                }
+
+                $row = [
+                    ...$comment,
+                    'block_lines' => \sprintf('%d-%d', ...$comment['block_lines']),
+                ];
+                unset($row['hash'], $row['version']);
+
+                $table->addRow($row);
+            }
+        );
+        $event->callback(ValidateCommentsEvent::CALL_END,
+            static fn () => $table?->render()
+        );
+    }
+
+    public function onInspectCommentsError(InspectCommentsErrorEvent $event): void
     {
         $this->console?->warning([
             'Twig errors!',

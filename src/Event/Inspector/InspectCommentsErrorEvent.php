@@ -25,43 +25,16 @@
 
 declare(strict_types=1);
 
-namespace Machinateur\TwigBlockValidator\Twig\Node;
+namespace Machinateur\TwigBlockValidator\Event\Inspector;
 
-use Symfony\Contracts\Service\ResetInterface;
-use Twig\Attribute\YieldReady;
-use Twig\Compiler;
-use Twig\Node\Node;
+use Twig\Error\Error as TwigError;
 
-/**
- * An AST representation of the block comments within a set of templates.
- *
- * The implementation logic for {@see CommentCollectionInterface} is externalized
- *  to {@see CommentCollectionTrait}, which is more reusable.
- */
-#[YieldReady]
-class CommentCollectionNode extends Node implements CommentCollectionInterface, ResetInterface
+readonly class InspectCommentsErrorEvent
 {
-    use CommentCollectionTrait;
-
     /**
-     * Disallow setting any child nodes, same as with {@see \Twig\Node\EmptyNode}.
+     * @param list<TwigError> $errors
      */
-    public function setNode(string $name, Node $node): void
-    {
-        throw new \LogicException('ContextTagNode cannot have children.');
-    }
-
-    /**
-     * Compiling a `ShopwareBlockCollectionNode` is no-op, as it will never have children. :(
-     */
-    public function compile(Compiler $compiler): void
-    {
-        // No-op.
-    }
-
-    public function reset(): static
-    {
-        $this->comments = [];
-        return $this;
-    }
+    public function __construct(
+        public array $errors,
+    ) {}
 }
