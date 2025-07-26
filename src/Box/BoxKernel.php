@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace Machinateur\TwigBlockValidator\Box;
 
 use Machinateur\TwigBlockValidator\Command\TwigBlockAnnotateCommand;
+use Machinateur\TwigBlockValidator\Command\TwigBlockInspectCommand;
 use Machinateur\TwigBlockValidator\Command\TwigBlockValidateCommand;
 use Machinateur\TwigBlockValidator\TwigBlockValidatorKernel;
 use Symfony\Component\Console\Application;
@@ -65,10 +66,13 @@ class BoxKernel extends TwigBlockValidatorKernel
         $validateCommand->setName('validate');
         $annotateCommand = $container->get(TwigBlockAnnotateCommand::class);
         $annotateCommand->setName('annotate');
+        $inspectCommand = $container->get(TwigBlockInspectCommand::class);
+        $inspectCommand->setName('inspect');
 
         $application->addCommands([
             $validateCommand,
             $annotateCommand,
+            $inspectCommand,
         ]);
 
         return $application;
