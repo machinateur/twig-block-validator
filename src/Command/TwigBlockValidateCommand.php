@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Command;
 
+use Machinateur\TwigBlockValidator\Event\Validator\ValidateCommentsErrorEvent;
+use Machinateur\TwigBlockValidator\Event\Validator\ValidateCommentsEvent;
 use Machinateur\TwigBlockValidator\TwigBlockValidatorOutput;
 use Machinateur\TwigBlockValidator\Validator\TwigBlockValidator;
 use Symfony\Component\Console\Command\Command;
@@ -37,6 +39,9 @@ use Twig\Environment;
 class TwigBlockValidateCommand extends AbstractConsoleCommand
 {
     final public const DEFAULT_NAME = 'twig:block:validate';
+
+    private array $invalidComments = [];
+    private array $twigErrors      = [];
 
     /**
      * @param string|null $name     The override command name. This is useful for adding it as composer script.
@@ -62,6 +67,9 @@ class TwigBlockValidateCommand extends AbstractConsoleCommand
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $this->invalidComments = [];
+        $this->twigErrors      = [];
+
         $this->output->init($input, $output);
 
         $templatePaths = (array)$input->getOption('template');
@@ -86,6 +94,27 @@ class TwigBlockValidateCommand extends AbstractConsoleCommand
 
         $this->output->reset();
 
-        return Command::SUCCESS;
+        return empty($this->invalidComments)
+            && empty($this->twigErrors)
+            ? Command::SUCCESS
+            : Command::FAILURE
+        ;
+    }
+
+    public function onValidateComments(ValidateCommentsEvent $event): void
+    {
+        $event->callback(ValidateCommentsEvent::CALL_STEP, function (array $comment): void {
+            if ($comment['match']['hash'] && $comment['match']['version']) {
+                return;
+            }
+
+            // Track mismatches in comments so it can control the exit code.
+            $this->invalidComments[] = $comment;
+        });
+    }
+
+    public function onValidateCommentsError(ValidateCommentsErrorEvent $event): void
+    {
+        $this->twigErrors = $event->errors;
     }
 }
