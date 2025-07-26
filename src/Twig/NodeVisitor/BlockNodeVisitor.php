@@ -155,7 +155,6 @@ class BlockNodeVisitor implements NodeVisitorInterface
                 continue;
             }
 
-
             // Delete the comment from the list, as it was resolved.
             unset($this->comments[$index]);
             // There can only be one comment on the prev-line, so we break out right here.
