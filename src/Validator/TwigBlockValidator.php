@@ -144,8 +144,12 @@ class TwigBlockValidator
         $comment['source_version'] = $defaultVersion;
 
         $matchHash    = $hash === $sourceHash;
-        $matchVersion = (null !== $version && null !== $defaultVersion)
-            && Semver::satisfies($version, '~'.$defaultVersion);
+        if (null !== $version && null !== $defaultVersion) {
+            $matchVersion = Semver::satisfies($version, '~'.$defaultVersion);
+        } else {
+            // Only check if different at all.
+            $matchVersion = $version === $defaultVersion;
+        }
 
         $comment['match'] = [
             'hash'    => $matchHash,
