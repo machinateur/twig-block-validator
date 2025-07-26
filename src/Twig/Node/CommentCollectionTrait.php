@@ -57,18 +57,32 @@ trait CommentCollectionTrait
 
             [$hash, $version] = $parsed;
         } catch (\InvalidArgumentException) {
-            return;
+            // Ignore comment, if it does not match.
+            $hash = $version = null;
         }
 
-        // Make sure root-level is tracked. Use non-name character to avoid collisions.
-        //  The entry contains `null` for root-level comments (invalid).
-        $this->comments[] = [
+        try {
+            // Make sure root-level is tracked. Use non-name character to avoid collisions.
+            //  The entry contains `null` for root-level comments (invalid).
+            $this->comments[] = $this->createComment($comment, $hash, $version, $defaultVersion);
+        } catch (\InvalidArgumentException) {
+            // Ignore comment, if it does not match.
+        }
+    }
+
+    /**
+     * @throws \InvalidArgumentException    when the pattern does not match.
+     */
+    protected function createComment(string $comment, ?string $hash, ?string $version, ?string $defaultVersion): array
+    {
+        return [
             'template'        => $this->getTemplate(),
             'parent_template' => $this->getParentTemplate(),
             'block'           => $this->peekBlockStack(),
             'block_lines'     => $this->peekLines(),
             'hash'            => $hash,
             'version'         => $version ?? $defaultVersion,
+            'comment'         => $comment,
         ];
     }
 

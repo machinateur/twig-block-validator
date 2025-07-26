@@ -37,6 +37,7 @@ use Machinateur\TwigBlockValidator\Event\TwigRegisterPathsErrorEvent;
 use Machinateur\TwigBlockValidator\Event\TwigRegisterPathsEvent;
 use Machinateur\TwigBlockValidator\Twig\Extension\BlockValidatorExtension;
 use Machinateur\TwigBlockValidator\Twig\Node\CommentCollectionInterface;
+use Machinateur\TwigBlockValidator\Twig\Node\StrictCommentCollectionNode;
 use Machinateur\TwigBlockValidator\Twig\Node\TwigBlockStackInterface;
 use Machinateur\TwigBlockValidator\Twig\NodeVisitor\BlockNodeVisitor;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -86,7 +87,7 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
 
         // Use node visitor directly, instead of using the extension class, to extract the block collection.
         $this->addNodeVisitor(
-            $this->nodeVisitor = new BlockNodeVisitor(defaultVersion: $version)
+            $this->nodeVisitor = new BlockNodeVisitor(new StrictCommentCollectionNode(), $version)
         );
 
         // No cache, because that would hinder lexing on load, and thus needed to properly collect comments.

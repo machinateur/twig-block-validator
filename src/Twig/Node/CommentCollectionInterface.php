@@ -35,8 +35,9 @@ namespace Machinateur\TwigBlockValidator\Twig\Node;
  *     'parent_template' : string|null,
  *     'block'           : string|null,
  *     'block_lines'     : _LineRange,
- *     'hash'            : string,
+ *     'hash'            : string|null,
  *     'version'         : string|null,
+ *     'comment'         : string,
  * }
  * @phpstan-type _CommentCollection array<_Comment>
  */

@@ -83,7 +83,7 @@ class BlockValidatorExtension extends AbstractExtension
     /**
      * Match the given comment against the defined comment-pattern for `twig-block` (or `shopware-block`) comments.
      *
-     * @return array<array{0:string,1:int}>
+     * @return array<string|null>
      *
      * @throws \InvalidArgumentException    when the pattern does not match.
      */

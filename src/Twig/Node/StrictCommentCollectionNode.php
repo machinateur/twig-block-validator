@@ -27,40 +27,21 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Twig\Node;
 
-use Symfony\Contracts\Service\ResetInterface;
 use Twig\Attribute\YieldReady;
-use Twig\Compiler;
-use Twig\Node\Node;
 
-/**
- * An AST representation of the block comments within a set of templates.
- *
- * The implementation logic for {@see CommentCollectionInterface} is externalized
- *  to {@see CommentCollectionTrait}, which is more reusable.
- */
 #[YieldReady]
-class CommentCollectionNode extends Node implements CommentCollectionInterface, ResetInterface
+class StrictCommentCollectionNode extends CommentCollectionNode
 {
-    use CommentCollectionTrait;
-
     /**
-     * Disallow setting any child nodes, same as with {@see \Twig\Node\EmptyNode}.
+     * @throws \InvalidArgumentException    when the pattern does not match.
      */
-    public function setNode(string $name, Node $node): void
+    protected function createComment(string $comment, ?string $hash, ?string $version, ?string $defaultVersion): array
     {
-        throw new \LogicException('ContextTagNode cannot have children.');
-    }
+        // In strict mode, only matching comments are tracked.
+        if (null === $hash) {
+            throw new \InvalidArgumentException('Comment does not match required pattern.');
+        }
 
-    /**
-     * Compiling a `ShopwareBlockCollectionNode` is no-op, as it will never have children. :(
-     */
-    public function compile(Compiler $compiler): void
-    {
-        // No-op.
-    }
-
-    public function reset(): void
-    {
-        $this->comments = [];
+        return parent::createComment($comment, $hash, $version, $defaultVersion);
     }
 }
