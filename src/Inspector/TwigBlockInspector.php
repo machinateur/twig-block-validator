@@ -60,10 +60,6 @@ class TwigBlockInspector
      */
     public function inspect(array $scopePaths, array $templatePaths = [], ?string $version = null): void
     {
-        // TODO: Implement.
-        //  The challenge with this will likely be getting the twig environment, node visitor and comment collection node
-        //   to also collect non-hash comments as well. Filtering should be moved from the collection trait to the validator/inspector class.
-
         $scopePaths    = \array_map('array_unique', $scopePaths);
         $templatePaths = \array_map('array_unique', $templatePaths);
 
