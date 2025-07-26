@@ -44,10 +44,10 @@ class ValidateCommentsEvent implements NotifiableInterface
     public const CALL_STEP  = 'step';
 
     /**
-     * @param _CommentCollection $blocks
+     * @param _CommentCollection $comments
      */
     public function __construct(
-        public readonly array   $blocks,
+        public readonly array   $comments,
         public readonly ?string $version,
     ) {}
 }

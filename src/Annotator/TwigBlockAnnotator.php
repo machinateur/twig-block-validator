@@ -104,7 +104,7 @@ class TwigBlockAnnotator implements ResetInterface
         }
 
         $nodeVisitor = $this->twig->getBlockNodeVisitor();
-        // Get the previous default version to restore it after validation.
+        // Get the previous default version to restore it after annotation.
         $defaultVersion = $nodeVisitor->getDefaultVersion();
         $nodeVisitor->setDefaultVersion($version);
 
