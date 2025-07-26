@@ -227,7 +227,7 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
                         : $comment['version'],
                     'valid'       => \sprintf('[%s]', $comment['valid'] ? ' ' : 'x'),
                 ];
-                unset($row['block_lines'], $row['source_hash'], $row['source_version'], $row['match']);
+                unset($row['block_lines'], $row['source_hash'], $row['source_version'], $row['match'], $row['comment']);
 
                 $table->addRow($row);
 

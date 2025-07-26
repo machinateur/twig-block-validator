@@ -8,6 +8,7 @@ services:
       - '@twig'
     tags:
       - 'console.command'
+      - { name: 'kernel.event_listener', method: 'onValidateComments' }
 
   Machinateur\TwigBlockValidator\Validator\TwigBlockValidator:
     arguments:
