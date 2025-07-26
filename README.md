@@ -58,6 +58,8 @@ When you completely omit the `-r|--use-version` option, to basically require "no
  Without an assigned value, the option will use the installed shopware storefront version as requirement to check against.
   And with a specific version given, that one will be used.
 
+_Note_: If shopware is not available, even with `-r` specified, the fallback behaviour will be to require "no version".
+
 ### Examples with Shopware
 
 This tool may also be used without Shopware, it supports both.
