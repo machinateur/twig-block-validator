@@ -12,6 +12,7 @@ When dealing with many plugins and templates, it can get confusing quite fast.
  Let this tool help you with those twig blocks and validate if they're still up to date with their parent's content.
 
 It also provides a way to automatically add and update the block version comment on your templates.
+ Existing blocks and their comments may also be inspected without running any validation or pattern matching.
 
 > This project is still an early version!
 >
@@ -189,7 +190,10 @@ The validation can be performed by calling the CLI command `twig:block:validate`
  Here's it's synopsis:
 
 ```
-$ bin/twig-block-validate -h
+$ bin/console twig:block:validate -h
+
+Description:
+  Validate block versions in twig templates
 
 Usage:
   twig:block:validate [options]
@@ -197,7 +201,7 @@ Usage:
 Options:
   -t, --template=TEMPLATE          Twig template path to load (multiple values allowed)
   -c, --validate=VALIDATE          Twig template path to validate (multiple values allowed)
-  -r, --use-version[=USE-VERSION]  The version number required
+  -r, --use-version[=USE-VERSION]  The version number to require [default: false]
   -h, --help                       Display help for the given command. When no command is given display help for the list command
       --silent                     Do not output any message
   -q, --quiet                      Only errors are displayed. All other output is suppressed
@@ -215,18 +219,23 @@ Options:
 The annotation can be performed by calling the CLI command `twig:block:annotate`.
  Here's it's synopsis:
 
-```Usage:
-$ bin/twig-block-annotate -h
+```
+$ bin/console twig:block:annotate -h
 
+Description:
+  Annotate block versions in twig templates
+
+Usage:
   twig:block:annotate [options] [--] [<output-path>]
 
 Arguments:
-  output-path                      Where to write the annotated templates
+  output-path                      Where to write the annotated templates (optional)
 
 Options:
   -t, --template=TEMPLATE          Twig template path to load (multiple values allowed)
   -c, --validate=VALIDATE          Twig template path to validate (multiple values allowed)
-  -r, --use-version[=USE-VERSION]  The version number required
+  -r, --use-version[=USE-VERSION]  The version number to require [default: false]
+  -y, --yes                        Silently approve annotating template in-place
   -h, --help                       Display help for the given command. When no command is given display help for the list command
       --silent                     Do not output any message
   -q, --quiet                      Only errors are displayed. All other output is suppressed
@@ -237,11 +246,38 @@ Options:
       --no-debug                   Switch off debug mode.
       --profile                    Enables profiling (requires debug).
   -v|vv|vvv, --verbose             Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
-
 ```
 
 > Caution! Always back up your templates and use a VCS.
 >  A bug or user error can cause permanent loss of data!
+
+### How to inspect
+
+```
+$ bin/console twig:block:inspect -h 
+
+Description:
+  Inspect block comments in twig templates
+
+Usage:
+  twig:block:inspect [options]
+
+Options:
+  -t, --template=TEMPLATE          Twig template path to load (multiple values allowed)
+  -c, --validate=VALIDATE          Twig template path to validate (multiple values allowed)
+  -r, --use-version[=USE-VERSION]  The version number to require [default: false]
+  -a, --check-all                  Check all available template paths
+  -h, --help                       Display help for the given command. When no command is given display help for the list command
+      --silent                     Do not output any message
+  -q, --quiet                      Only errors are displayed. All other output is suppressed
+  -V, --version                    Display this application version
+      --ansi|--no-ansi             Force (or disable --no-ansi) ANSI output
+  -n, --no-interaction             Do not ask any interactive question
+  -e, --env=ENV                    The Environment name. [default: "dev"]
+      --no-debug                   Switch off debug mode.
+      --profile                    Enables profiling (requires debug).
+  -v|vv|vvv, --verbose             Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
+```
 
 ### Which CLI to use
 
@@ -258,6 +294,10 @@ There are a total of four different CLIs available:
 - `bin/twig-block-annotate`:
   A symfony command application.
   - Runs only the `twig:block:annotate` command as standalone application.
+  - Only supports the twig extensions that are available in the symfony context.
+- `bin/twig-block-inspect`:
+  A symfony command application.
+  - Runs only the `twig:block:inspect` command as standalone application.
   - Only supports the twig extensions that are available in the symfony context.
 
 These can be copied to the `bin/` directory of your project (if not already present).
