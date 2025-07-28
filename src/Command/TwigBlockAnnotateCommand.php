@@ -74,9 +74,7 @@ class TwigBlockAnnotateCommand extends AbstractConsoleCommand
 
         if ($outputPath = $input->getArgument('output-path')) {
             $this->annotator->setPath($outputPath);
-        }
-
-        if ( ! $this->output->getConsole()
+        } elseif ( ! $this->output->getConsole()
             ->confirm("To annotate the templates in-place can lead to permanent loss of data!\n Continue?" , (bool)$input->getOption('yes'))
         ) {
             return Command::SUCCESS;

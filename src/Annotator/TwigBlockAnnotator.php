@@ -245,7 +245,7 @@ class TwigBlockAnnotator implements ResetInterface
 
         $comment     = BlockValidatorExtension::formatComment($sourceHash, $sourceVersion);
         $commentLine = $blockLinesStart - 1;
-        $prevLine    = $sourceCodeLines[$commentLine];
+        #$prevLine    = $sourceCodeLines[$commentLine];
         // Move cursor to block's start tag, to match its indentation.
         $prevLine    = $sourceCodeLines[$blockLinesStart];
 

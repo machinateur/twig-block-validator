@@ -51,6 +51,8 @@ class BlockNodeVisitor implements NodeVisitorInterface
 
     public function __construct(?CommentCollectionNode $collection = null, private ?string $defaultVersion = null)
     {
+        // No worry for now, that we use the "lax" version here,
+        //  because TwigValidatorEnvironment provides the "strict" version of the collection node.
         $this->collection = $collection ?? new CommentCollectionNode();
     }
 
@@ -150,7 +152,7 @@ class BlockNodeVisitor implements NodeVisitorInterface
     {
         // Here, we rely on the comments from a `module.body` being visited prior to the `module.blocks` node.
         foreach ($this->comments as $index => $comment) {
-            // The comment has to be located exactly oon the line before the block start.
+            // The comment has to be located exactly on the line before the block start.
             if (1 !== $block->getTemplateLine() - $comment->getTemplateLine()) {
                 continue;
             }

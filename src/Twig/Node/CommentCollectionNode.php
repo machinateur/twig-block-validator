@@ -61,6 +61,14 @@ class CommentCollectionNode extends Node implements CommentCollectionInterface, 
 
     public function reset(): void
     {
-        $this->comments = [];
+        // TwigTemplateTrait
+        $this->template       = null;
+        $this->parentTemplate = null;
+        // TwigBlockStackTrait
+        $this->blockStack     = [];
+        $this->lines          = null;
+        $this->blocks         = [];
+        // CommentCollectionTrait
+        $this->comments       = [];
     }
 }
