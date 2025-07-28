@@ -59,6 +59,7 @@ class TwigBlockInspectCommand extends AbstractConsoleCommand
             ->setDescription('Inspect block comments in twig templates')
             //->setHelp()
             ->addOption('check-all', 'a', InputOption::VALUE_NONE, 'Check all available template paths')
+            ->addOption('strict-mode', 's', InputOption::VALUE_NONE, 'Match comments in strict mode')
         ;
     }
 
@@ -67,8 +68,9 @@ class TwigBlockInspectCommand extends AbstractConsoleCommand
         $this->output->init($input, $output);
 
         $templatePaths = (array)$input->getOption('template');
-        $inspectPaths = (array)$input->getOption('validate');
+        $inspectPaths  = (array)$input->getOption('validate');
         $version       = $input->getOption('use-version');
+        $strictMode    = (bool)$input->getOption('strict-mode');
 
         $templatePaths = $this->resolveNamespaces($templatePaths);
         $inspectPaths = $this->resolveNamespaces($inspectPaths);
@@ -95,7 +97,7 @@ class TwigBlockInspectCommand extends AbstractConsoleCommand
             }
         }
 
-        $this->inspector->inspect($inspectPaths, $templatePaths, $version);
+        $this->inspector->inspect($inspectPaths, $templatePaths, $version, $strictMode);
 
         $this->output->reset();
 
