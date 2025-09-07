@@ -237,12 +237,12 @@ class TwigBlockAnnotator implements ResetInterface
             \preg_quote($commentTags[1], '#'),
         ];
 
-        $comment     = BlockValidatorExtension::formatComment($sourceHash, $sourceVersion);
+        $comment   = BlockValidatorExtension::formatComment($sourceHash, $sourceVersion);
         // Move cursor to block's start tag, to match its indentation.
-        $blockLine   = $sourceCodeLines[$blockLinesStart];
+        $blockLine = $sourceCodeLines[$blockLinesStart];
 
         // Match block's start line, as the previous line might have no indentation.
-        $blockLinePattern  = \vsprintf('{^\s*}sx', $params);
+        $blockLinePattern = \vsprintf('{^\s*}sx', $params);
         if (1 !== \preg_match($blockLinePattern, $blockLine, $blockLineMatch, flags: \PREG_OFFSET_CAPTURE)) {
             throw new SyntaxError(\sprintf('The block-line for block "%s" was not found but expected.', $blockName), $blockLinesStart, $sourceContext);
         }
@@ -252,7 +252,7 @@ class TwigBlockAnnotator implements ResetInterface
         \assert(0 === $blockLineMatch[0][1]);
 
         // Add indentation and maintain tags (i.e. `{#`, `#}`), but usually, overwritten blocks are at "col=0" in child templates (if not nested).
-        $comment          = $blockLineMatch[0][0] . $commentTags[0] . $comment . $commentTags[1];
+        $comment    = $blockLineMatch[0][0] . $commentTags[0] . $comment . $commentTags[1];
 
         if ($created) {
             // Increment offset.
