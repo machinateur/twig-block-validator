@@ -29,3 +29,9 @@ docker compose exec shop bash -c 'sudo composer self-update'
 docker compose exec shop bash -c 'composer update --lock'
 docker compose exec shop bash -c 'composer install'
 docker compose exec shop bash -c "composer require --dev machinateur/twig-block-validator:dev-$(git branch --show-current)"
+
+# Useful commands:
+#docker compose exec shop bash -c 'composer reinstall shopware/storefront'
+#docker compose exec shop bash -c 'bin/console twig:block:inspect -c @Storefront:vendor/shopware/storefront/Resources/views/storefront/ -r'
+#docker compose exec shop bash -c 'bin/console twig:block:validate -c @Storefront:vendor/shopware/storefront/Resources/views/storefront/ -r'
+#docker compose exec shop bash -c 'bin/console twig:block:annotate -c @Storefront:vendor/shopware/storefront/Resources/views/storefront/ -r'
