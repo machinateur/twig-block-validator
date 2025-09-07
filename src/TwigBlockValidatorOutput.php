@@ -245,6 +245,7 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
                 }
             }
         );
+        // TODO: Add better output (possibly only with verbose / `-vv`) that counts the number of blocks/comments shown.
         $event->callback(ValidateCommentsEvent::CALL_END,
             static fn () => $table?->render()
         );
@@ -292,6 +293,7 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
                 $table->addRow($row);
             }
         );
+        // TODO: Add better output (possibly only with verbose / `-vv`) that counts the number of blocks/comments shown.
         $event->callback(AnnotateBlocksEvent::CALL_END,
             static fn () => $table?->render()
         );
@@ -328,6 +330,7 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
                 $table->addRow($row);
             }
         );
+        // TODO: Add better output (possibly only with verbose / `-vv`) that counts the number of blocks/comments shown.
         $event->callback(ValidateCommentsEvent::CALL_END,
             static fn () => $table?->render()
         );
