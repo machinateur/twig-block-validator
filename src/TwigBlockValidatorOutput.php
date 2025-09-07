@@ -347,7 +347,7 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
      */
     protected function listingTwigErrors(array $errors): void
     {
-        $newline = "\n  ";
+        $newline = "\n   ";
 
         $this->console?->listing(
             \array_map(static function (TwigError $error) use ($newline): string {
