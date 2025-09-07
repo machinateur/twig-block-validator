@@ -50,6 +50,7 @@ use Twig\Environment;
 use Twig\Error\Error as TwigError;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 use Twig\Extension\CoreExtension;
 use Twig\Lexer;
 use Twig\Loader\FilesystemLoader;
@@ -245,7 +246,7 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
                 $event = new TwigLoadFilesEvent($namespace, $paths, $finder)
             );
 
-            /** @var list<LoaderError> $errors */
+            /** @var list<TwigError> $errors */
             $errors = [];
 
             $event->notify(TwigLoadFilesEvent::CALL_BEGIN);
@@ -258,7 +259,7 @@ class BlockValidatorEnvironment extends Environment implements ResetInterface
                     $this->load($template);
 
                     $event->notify(TwigLoadFilesEvent::CALL_STEP, $file);
-                } catch (LoaderError $error) {
+                } catch (TwigError $error) {
                     $errors[] = $error;
 
                     continue;

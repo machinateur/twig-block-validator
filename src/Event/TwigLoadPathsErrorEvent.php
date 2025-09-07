@@ -27,12 +27,12 @@ declare(strict_types=1);
 
 namespace Machinateur\TwigBlockValidator\Event;
 
-use Twig\Error\LoaderError;
+use Twig\Error\Error as TwigError;
 
 readonly class TwigLoadPathsErrorEvent
 {
     /**
-     * @param list<LoaderError> $errors
+     * @param list<TwigError> $errors
      */
     public function __construct(
         public array $errors,
