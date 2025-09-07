@@ -40,7 +40,7 @@ use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
 class TwigBlockValidatorBundle extends AbstractBundle
 {
-    final public const VERSION = '0.3.1';
+    final public const VERSION = '0.4.0';
 
     /**
      * @see https://symfony.com/doc/7.2/bundles.html#bundle-directory-structure
