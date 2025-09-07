@@ -231,10 +231,7 @@ Description:
   Annotate block versions in twig templates
 
 Usage:
-  twig:block:annotate [options] [--] [<output-path>]
-
-Arguments:
-  output-path                      Where to write the annotated templates (optional)
+  twig:block:annotate [options]
 
 Options:
   -t, --template=TEMPLATE          Twig template path to load (multiple values allowed)
