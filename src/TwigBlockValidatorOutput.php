@@ -347,9 +347,27 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
      */
     protected function listingTwigErrors(array $errors): void
     {
+        $newline = "\n  ";
+
         $this->console?->listing(
-            \array_map(static fn (TwigError $error) => $error->getMessage()
-                . (($prev = $error->getPrevious()) instanceof \Throwable ? "\n  " . $prev->getMessage() : ''), $errors)
+            \array_map(static function (TwigError $error) use ($newline): string {
+                $source = $error->getSourceContext();
+
+                $message = '';
+                if (null !== $source) {
+                    $message      .= 'Path:    ' . $source->getPath()
+                        . $newline . 'Line:    ' . $source->getName() . ':' . $error->getTemplateLine()
+                        . $newline;
+                }
+
+                $message .= 'Message: ' . $error->getMessage();
+
+                if (($prev = $error->getPrevious()) instanceof \Throwable) {
+                    $message .= $newline . $prev->getMessage();
+                }
+
+                return $message;
+            }, $errors)
         );
     }
 
