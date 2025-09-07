@@ -103,7 +103,7 @@ class TwigBlockValidateCommand extends AbstractConsoleCommand
 
     public function onValidateComments(ValidateCommentsEvent $event): void
     {
-        $event->callback(ValidateCommentsEvent::CALL_STEP, function (array $comment): void {
+        $event->callback(ValidateCommentsEvent::CALL_STEP, function (ValidateCommentsEvent $event, array $comment): void {
             if ($comment['match']['hash'] && $comment['match']['version']) {
                 return;
             }

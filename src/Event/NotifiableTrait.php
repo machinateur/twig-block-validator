@@ -44,7 +44,7 @@ trait NotifiableTrait
         }
 
         foreach ($this->callbacks[$name] as $callback) {
-            $callback(...$args);
+            $callback($this, ...$args);
         }
     }
 

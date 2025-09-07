@@ -158,6 +158,7 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
     public function onTwigLoadPathsError(TwigLoadPathsErrorEvent $event): void
     {
         $this->console?->warning('Twig loader errors!');
+
         $this->listingTwigErrors($event->errors);
     }
 
@@ -170,23 +171,23 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
 
         if ($console->isVeryVerbose()) {
             $event->callback(TwigLoadFilesEvent::CALL_BEGIN,
-                static fn () => $console?->note('Loading files:')
+                static fn (TwigLoadFilesEvent $event) => $console?->note('Loading files:')
             );
             $event->callback(TwigLoadFilesEvent::CALL_STEP,
-                static fn (SplFileInfo $file) => $console?->text(\sprintf('  * %s', $file->getRelativePathname()))
+                static fn (TwigLoadFilesEvent $event, SplFileInfo $file) => $console?->text(\sprintf('  * %s', $file->getRelativePathname()))
             );
             $event->callback(TwigLoadFilesEvent::CALL_END,
-                static fn () => $console?->comment('Count: ' . $event->finder->count())
+                static fn (TwigLoadFilesEvent $event) => $console?->comment('Count: ' . $event->finder->count())
             );
         } else {
             $event->callback(TwigLoadFilesEvent::CALL_BEGIN,
-                static fn () => $console?->progressStart($event->finder->count())
+                static fn (TwigLoadFilesEvent $event) => $console?->progressStart($event->finder->count())
             );
             $event->callback(TwigLoadFilesEvent::CALL_STEP,
-                static fn (SplFileInfo $file) => $console?->progressAdvance()
+                static fn (TwigLoadFilesEvent $event, SplFileInfo $file) => $console?->progressAdvance()
             );
             $event->callback(TwigLoadFilesEvent::CALL_END,
-                static fn () => $console?->progressFinish()
+                static fn (TwigLoadFilesEvent $event) => $console?->progressFinish()
             );
         }
     }
@@ -208,10 +209,10 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
         $table          = $this->console?->createTable();
 
         $event->callback(ValidateCommentsEvent::CALL_BEGIN,
-            static fn () => $table?->setHeaders(['template', 'parent template', 'block', 'hash', 'version', 'mismatch'])
+            static fn (ValidateCommentsEvent $event) => $table?->setHeaders(['template', 'parent template', 'block', 'hash', 'version', 'mismatch'])
         );
         $event->callback(ValidateCommentsEvent::CALL_STEP,
-            static function (array $comment) use ($console, $table, $defaultVersion) {
+            static function (ValidateCommentsEvent $event, array $comment) use ($console, $table, $defaultVersion) {
                 if (null === $table) {
                     return;
                 }
@@ -245,9 +246,11 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
                 }
             }
         );
-        // TODO: Add better output (possibly only with verbose / `-vv`) that counts the number of blocks/comments shown.
         $event->callback(ValidateCommentsEvent::CALL_END,
-            static fn () => $table?->render()
+            static function (ValidateCommentsEvent $event) use ($table): void {
+                // TODO: Add better output (possibly only with verbose / `-vv`) that counts the number of blocks/comments shown.
+                $table?->render();
+            }
         );
     }
 
@@ -267,10 +270,10 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
         $table          = $this->console?->createTable();
 
         $event->callback(AnnotateBlocksEvent::CALL_BEGIN,
-            static fn () => $table?->setHeaders(['template', 'parent template', 'block', 'hash', 'version', 'created'])
+            static fn (AnnotateBlocksEvent $event) => $table?->setHeaders(['template', 'parent template', 'block', 'hash', 'version', 'created'])
         );
         $event->callback(AnnotateBlocksEvent::CALL_STEP,
-            static function (array $block, ?array $comment) use ($console, $table, $defaultVersion) {
+            static function (AnnotateBlocksEvent $event, array $block, ?array $comment) use ($console, $table, $defaultVersion) {
                 if (null === $table) {
                     return;
                 }
@@ -293,9 +296,11 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
                 $table->addRow($row);
             }
         );
-        // TODO: Add better output (possibly only with verbose / `-vv`) that counts the number of blocks/comments shown.
         $event->callback(AnnotateBlocksEvent::CALL_END,
-            static fn () => $table?->render()
+            static function (AnnotateBlocksEvent $event) use ($table): void {
+                // TODO: Add better output (possibly only with verbose / `-vv`) that counts the number of blocks/comments shown.
+                $table?->render();
+            }
         );
     }
 
@@ -312,11 +317,11 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
     {
         $table          = $this->console?->createTable();
 
-        $event->callback(ValidateCommentsEvent::CALL_BEGIN,
-            static fn () => $table?->setHeaders(['template', 'parent template', 'block', 'block lines', 'comment'])
+        $event->callback(InspectCommentsEvent::CALL_BEGIN,
+            static fn (InspectCommentsEvent $event) => $table?->setHeaders(['template', 'parent template', 'block', 'block lines', 'comment'])
         );
-        $event->callback(ValidateCommentsEvent::CALL_STEP,
-            static function (array $comment) use ($table) {
+        $event->callback(InspectCommentsEvent::CALL_STEP,
+            static function (InspectCommentsEvent $event, array $comment) use ($table) {
                 if (null === $table) {
                     return;
                 }
@@ -330,9 +335,11 @@ class TwigBlockValidatorOutput implements EventSubscriberInterface, ResetInterfa
                 $table->addRow($row);
             }
         );
-        // TODO: Add better output (possibly only with verbose / `-vv`) that counts the number of blocks/comments shown.
-        $event->callback(ValidateCommentsEvent::CALL_END,
-            static fn () => $table?->render()
+        $event->callback(InspectCommentsEvent::CALL_END,
+            static function (InspectCommentsEvent $event) use ($table): void {
+                // TODO: Add better output (possibly only with verbose / `-vv`) that counts the number of blocks/comments shown.
+                $table?->render();
+            }
         );
     }
 
