@@ -231,9 +231,10 @@ class TwigBlockAnnotator implements ResetInterface
             \preg_quote($commentTags[1], '#'),
         ];
 
-        $comment   = BlockValidatorExtension::formatComment($sourceHash, $sourceVersion);
+        $comment     = BlockValidatorExtension::formatComment($sourceHash, $sourceVersion);
+        $commentLine = $blockLinesStart - 1;
         // Move cursor to block's start tag, to match its indentation.
-        $blockLine = $sourceCodeLines[$blockLinesStart];
+        $blockLine   = $sourceCodeLines[$blockLinesStart];
 
         // Match block's start line, as the previous line might have no indentation.
         $blockLinePattern = \vsprintf('{^\s*}sx', $params);
@@ -249,11 +250,13 @@ class TwigBlockAnnotator implements ResetInterface
         $comment    = $blockLineMatch[0][0] . $commentTags[0] . $comment . $commentTags[1];
 
         if ($created) {
+            $commentLine++;
+
             // Increment offset.
             $this->addOffset($sourceName);
         }
 
-        \array_splice($sourceCodeLines, $blockLinesStart, (int) ( ! $created), $comment);
+        \array_splice($sourceCodeLines, $commentLine, (int) ( ! $created), $comment);
 
         // Reduce to source-code again
         $sourceCode = \implode("\n", $sourceCodeLines);
