@@ -36,11 +36,6 @@ use Twig\TokenStream;
 
 class BlockStackParser extends Parser
 {
-    public function parse(TokenStream $stream, $test = null, bool $dropNeedle = false): ModuleNode
-    {
-        return parent::parse($stream, $test, $dropNeedle);
-    }
-
     /**
      * @param string $name
      */

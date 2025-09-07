@@ -81,11 +81,6 @@ class TwigBlockValidatorKernel extends Kernel
         }
     }
 
-    protected function build(ContainerBuilder $container): void
-    {
-        parent::build($container);
-    }
-
     /**
      * Create the standard symfony kernel console application.
      */
