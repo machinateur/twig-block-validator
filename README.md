@@ -272,6 +272,7 @@ Options:
   -c, --validate=VALIDATE          Twig template path to validate (multiple values allowed)
   -r, --use-version[=USE-VERSION]  The version number to require [default: false]
   -a, --check-all                  Check all available template paths
+  -s, --strict-mode                Match comments in strict mode
   -h, --help                       Display help for the given command. When no command is given display help for the list command
       --silent                     Do not output any message
   -q, --quiet                      Only errors are displayed. All other output is suppressed

@@ -58,7 +58,7 @@ class TwigBlockInspector
      * @param _NamespacedPathMap $templatePaths
      * @param string|null        $version
      */
-    public function inspect(array $scopePaths, array $templatePaths = [], ?string $version = null): void
+    public function inspect(array $scopePaths, array $templatePaths = [], ?string $version = null, bool $strict = false): void
     {
         $scopePaths    = \array_map('array_unique', $scopePaths);
         $templatePaths = \array_map('array_unique', $templatePaths);
@@ -73,9 +73,12 @@ class TwigBlockInspector
         }
 
         $nodeVisitor = $this->twig->getBlockNodeVisitor();
-        // Get the previous collection instance to restore it after inspection.
-        $previousCollection = $nodeVisitor->getCollection();
-        $nodeVisitor->setCollection(new CommentCollectionNode());
+        if ( ! $strict) {
+            // Get the previous collection instance to restore it after inspection.
+            //  Only needed when in "lax" mode, i.e. $strict = false (default).
+            $previousCollection = $nodeVisitor->getCollection();
+            $nodeVisitor->setCollection(new CommentCollectionNode());
+        }
         // Get the previous default version to restore it after inspection.
         $previousDefaultVersion = $nodeVisitor->getDefaultVersion();
         $nodeVisitor->setDefaultVersion($version);
@@ -110,8 +113,10 @@ class TwigBlockInspector
             );
         }
 
-        // Restore the collection.
-        $nodeVisitor->setCollection($previousCollection);
+        if ( ! $strict) {
+            // Restore the collection.
+            $nodeVisitor->setCollection($previousCollection);
+        }
         // Restore the default version.
         $nodeVisitor->setDefaultVersion($previousDefaultVersion);
     }
