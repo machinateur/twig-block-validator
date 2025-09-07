@@ -77,11 +77,6 @@ class TwigBlockAnnotator implements ResetInterface
         return $this->offsets[$template] ?? 0;
     }
 
-    protected function hasOffset(string $template): bool
-    {
-        return 0 === $this->getOffset($template);
-    }
-
     protected function addOffset(string $template, int $offset = 1): void
     {
         // Make sure offset record exists.
@@ -152,7 +147,6 @@ class TwigBlockAnnotator implements ResetInterface
         // Reset the default version.
         $nodeVisitor->setDefaultVersion($defaultVersion);
     }
-
 
     /**
      * @param _Block $block
