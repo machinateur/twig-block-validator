@@ -83,7 +83,6 @@ class TwigBlockInspector
         $previousDefaultVersion = $nodeVisitor->getDefaultVersion();
         $nodeVisitor->setDefaultVersion($version);
 
-
         /** @var list<TwigError> $errors */
         $errors   = [];
         $comments = $this->twig->loadComments($scopePaths, $errors);
@@ -95,7 +94,11 @@ class TwigBlockInspector
 
             $event->notify(InspectCommentsEvent::CALL_BEGIN);
 
-            /** @var _CommentCollection $comments */
+            /**
+             * @var _CommentCollection $comments
+             *
+             * @noinspection PhpParameterByRefIsNotUsedAsReferenceInspection keep for consistency
+             */
             foreach ($comments as & $comment) {
                 try {
                     $event->notify(InspectCommentsEvent::CALL_STEP, $comment);
