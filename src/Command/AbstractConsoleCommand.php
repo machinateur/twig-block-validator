@@ -63,7 +63,11 @@ abstract class AbstractConsoleCommand extends Command
 
     public static function getDefaultName(): ?string
     {
-        return static::DEFAULT_NAME ?? parent::getDefaultName();
+        return static::DEFAULT_NAME ?? (
+            \method_exists(parent::class, 'getDefaultName')
+                ? parent::getDefaultName()
+                : null
+        );
     }
 
     protected function configure(): void
