@@ -59,12 +59,10 @@ use Twig\Source as TwigSource;
  */
 class TwigBlockAnnotator implements ResetInterface
 {
-    protected ?string $path = null;
-
     /**
      * @var array<string, int>
      */
-    private array     $offsets = [];
+    private array   $offsets = [];
 
     public function __construct(
         private readonly BlockValidatorEnvironment $twig,
@@ -73,21 +71,24 @@ class TwigBlockAnnotator implements ResetInterface
     ) {
     }
 
-    public function setPath(?string $path): void
+    protected function getOffset(string $template): int
     {
-        $this->path = $path;
+        // Get offset.
+        return $this->offsets[$template] ?? 0;
     }
 
-    protected function getPath(string $template): ?string
+    protected function hasOffset(string $template): bool
     {
-        if (null === $this->path) {
-            return null;
-        }
+        return 0 === $this->getOffset($template);
+    }
 
-        [$ns, $path] = $this->twig->namespacedPathnameBuilder->parseNamespacedPathname($template);
+    protected function addOffset(string $template, int $offset = 1): void
+    {
+        // Make sure offset record exists.
+        $this->offsets[$template] ??= 0;
 
-        return $this->path . '/' . $path;
-
+        // Add offset, if exists.
+        $this->offsets[$template] += $offset;
     }
 
     public function annotate(array $scopePaths, array $templatePaths = [], ?string $version = null): void
@@ -188,11 +189,6 @@ class TwigBlockAnnotator implements ResetInterface
         // Get the source contents and full source code of the template.
         $source = $this->twig->getLoader()
             ->getSourceContext($template);
-        $source = new TwigSource(
-            $source->getCode(),
-            $source->getName(),
-            $this->getPath($template) ?? $source->getPath(),
-        );
 
         $this->annotateBlock($block, $source, $created);
     }
@@ -228,10 +224,8 @@ class TwigBlockAnnotator implements ResetInterface
         // Splice in the portion of lines that are needed.
         $sourceCodeLines = \explode("\n", $sourceCode);
 
-        // Make sure offset record exists.
-        $this->offsets[$sourceName] ??= 0;
         // Add offset, if exists.
-        $blockLinesStart += $this->offsets[$sourceName];
+        $blockLinesStart += $this->getOffset($sourceName);
 
         $commentTags = $this->twig->getLexerOptions()['tag_comment'];
 
@@ -244,32 +238,28 @@ class TwigBlockAnnotator implements ResetInterface
         ];
 
         $comment     = BlockValidatorExtension::formatComment($sourceHash, $sourceVersion);
-        $commentLine = $blockLinesStart - 1;
-        #$prevLine    = $sourceCodeLines[$commentLine];
         // Move cursor to block's start tag, to match its indentation.
-        $prevLine    = $sourceCodeLines[$blockLinesStart];
+        $blockLine   = $sourceCodeLines[$blockLinesStart];
 
         // Match block's start line, as the previous line might have no indentation.
-        $prevLinePattern  = \vsprintf('{^\s*}sx', $params);
-        if (1 !== \preg_match($prevLinePattern, $prevLine, $prevLineMatch, flags: \PREG_OFFSET_CAPTURE)) {
-            throw new SyntaxError(\sprintf('The prev-line for block "%s" was not found but expected.', $blockName), $commentLine, $sourceContext);
+        $blockLinePattern  = \vsprintf('{^\s*}sx', $params);
+        if (1 !== \preg_match($blockLinePattern, $blockLine, $blockLineMatch, flags: \PREG_OFFSET_CAPTURE)) {
+            throw new SyntaxError(\sprintf('The block-line for block "%s" was not found but expected.', $blockName), $blockLinesStart, $sourceContext);
         }
 
         // The offset should be 0, as the pattern must start at the beginning of the line (string).
-        /** @var _MatchWithOffset $prevLineMatch */
-        \assert(0 === $prevLineMatch[0][1]);
+        /** @var _MatchWithOffset $blockLineMatch */
+        \assert(0 === $blockLineMatch[0][1]);
 
         // Add indentation and maintain tags (i.e. `{#`, `#}`), but usually, overwritten blocks are at "col=0" in child templates (if not nested).
-        $comment          = $prevLineMatch[0][0] . $commentTags[0] . $comment . $commentTags[1];
+        $comment          = $blockLineMatch[0][0] . $commentTags[0] . $comment . $commentTags[1];
 
         if ($created) {
-            ++$commentLine;
-
             // Increment offset.
-            $this->offsets[$sourceName]++;
+            $this->addOffset($sourceName);
         }
 
-        \array_splice($sourceCodeLines, $commentLine, (int) ! $created, $comment);
+        \array_splice($sourceCodeLines, $blockLinesStart, (int) ( ! $created), $comment);
 
         // Reduce to source-code again
         $sourceCode = \implode("\n", $sourceCodeLines);
@@ -298,9 +288,6 @@ class TwigBlockAnnotator implements ResetInterface
 
     public function reset(): void
     {
-        // Reset path.
-        $this->setPath(null);
-
         // Reset offsets.
         $this->offsets = [];
     }

@@ -30,7 +30,6 @@ namespace Machinateur\TwigBlockValidator\Command;
 use Machinateur\TwigBlockValidator\Annotator\TwigBlockAnnotator;
 use Machinateur\TwigBlockValidator\TwigBlockValidatorOutput;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -56,7 +55,6 @@ class TwigBlockAnnotateCommand extends AbstractConsoleCommand
         $this
             ->setDescription('Annotate block versions in twig templates')
             //->setHelp()
-            ->addArgument('output-path', InputArgument::OPTIONAL, 'Where to write the annotated templates (optional)')
             ->addOption('yes', 'y', InputOption::VALUE_NONE, 'Silently approve annotating template in-place')
         ;
     }
@@ -72,12 +70,10 @@ class TwigBlockAnnotateCommand extends AbstractConsoleCommand
         $templatePaths = $this->resolveNamespaces($templatePaths);
         $annotatePaths = $this->resolveNamespaces($annotatePaths);
 
-        if ($outputPath = $input->getArgument('output-path')) {
-            $this->annotator->setPath($outputPath);
-        } elseif ( ! $this->output->getConsole()
+        if ( ! $this->output->getConsole()
             ->confirm("To annotate the templates in-place can lead to permanent loss of data!\n Continue?" , (bool)$input->getOption('yes'))
         ) {
-            return Command::SUCCESS;
+            return Command::FAILURE;
         }
 
         // Fallback to platform twig paths, if none are given.
@@ -92,7 +88,6 @@ class TwigBlockAnnotateCommand extends AbstractConsoleCommand
         }
 
         $this->annotator->annotate($annotatePaths, $templatePaths, $version);
-        $this->annotator->setPath(null);
 
         $this->output->reset();
 
